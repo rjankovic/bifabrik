@@ -1,2 +1,2 @@
 # bifabrik
-Microsoft Fabric ETL toolbox
+Microsoft Fabric ETL toolbox - the assembly line for your lakehouse
