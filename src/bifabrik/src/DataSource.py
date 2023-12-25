@@ -1,3 +1,5 @@
+import spark.sql.SparkSession
+
 class DataSource:
-    def execute():
-        pass
+    def load(self, spark: SparkSession) -> pyspark.sql.DataFrame:
+        self._spark = spark
