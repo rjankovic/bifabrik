@@ -1,6 +1,6 @@
 from bifabrik.dst import DataDestination
-import spark.sql.SparkSession
-import pyspark.sql
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 
 class TableDestination(DataDestination):
     def __init__(self, spark: SparkSession, sourceDf: DataFrame, targetTableName: str):

@@ -1,5 +1,6 @@
 from bifabrik import DataLoader
-from pyspark.sql import SparkSession
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 
 def fromPath(spark: SparkSession, filePath: str) -> DataLoader:
     pass

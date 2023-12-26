@@ -1,6 +1,7 @@
 from src import DataSource
 from dst import TableDestination
-import spark.sql.SparkSession
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 #from dst import
         
 class DataLoader:

@@ -1,5 +1,5 @@
-import pyspark.sql
-import spark.sql.SparkSession
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 
 class DataDestination:
     def __init__(self, spark: SparkSession, sourceDf: DataFrame):

@@ -1,5 +1,6 @@
 from bifabrik.src import DataSource
-import spark.sql.SparkSession
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 import pandas as pd
 
 class CsvSource(DataSource):

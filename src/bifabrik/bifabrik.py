@@ -1,4 +1,5 @@
-import spark.sql.SparkSession
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
 from src import CsvSource
 import DataLoader
 
