@@ -3,7 +3,7 @@ import spark.sql.SparkSession
 import pyspark.sql
 
 class TableDestination(DataDestination):
-    __init__(self, spark: SparkSession, sourceDf: DataFrame, targetTableName: str):
+    def __init__(self, spark: SparkSession, sourceDf: DataFrame, targetTableName: str):
         super().__init__(spark, sourceDf)
         self._targetTableName = targetTableName
     

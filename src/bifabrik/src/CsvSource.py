@@ -3,7 +3,7 @@ import spark.sql.SparkSession
 import pandas as pd
 
 class CsvSource(DataSource):
-    __init__(self, spark: SparkSession):
+    def __init__(self, spark: SparkSession):
         super().__init__(spark)
         self._path = ""
         self._pattern = ""

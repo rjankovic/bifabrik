@@ -3,7 +3,7 @@ from src import CsvSource
 import DataLoader
 
 class bifabrik:
-    __init__(self, spark: SparkSession):
+    def __init__(self, spark: SparkSession):
         self._spark = spark
     
     def csv(self) -> DataLoader:
