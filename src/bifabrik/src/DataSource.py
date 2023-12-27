@@ -1,6 +1,16 @@
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
+from bifabrik.DataLoader import DataLoader
+from bifabrik.dst.TableDestination import TableDestination
 
 class DataSource:
-    def load(self, spark: SparkSession) -> DataFrame:
-        self._spark = spark
+    def __init__(self, dataLoader: DataLoader):
+        self._loader = dataLoader
+        dataLoader.source = self
+
+    def toDf(self) -> DataFrame:
+        pass
+
+    def toTable(self, targetTableName: str) -> TableDestination:
+        dst = TableDestination(self._loader, self.toDf(), targetTableName)
+        return dst
