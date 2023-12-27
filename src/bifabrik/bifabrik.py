@@ -1,7 +1,7 @@
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
-from src import CsvSource
-import DataLoader
+from bifabrik.src import CsvSource
+from bifabrik.DataLoader import DataLoader
 
 class bifabrik:
     def __init__(self, spark: SparkSession):

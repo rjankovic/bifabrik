@@ -1,4 +1,4 @@
-from bifabrik.src import DataSource
+from bifabrik.src.DataSource import DataSource
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
 import pandas as pd
@@ -18,7 +18,7 @@ class CsvSource(DataSource):
         self._pattern = pattern
         self._pathType = 'PATTERN'
     
-    def load(self) -> pyspark.sql.DataFrame:
+    def load(self) -> DataFrame:
         csv_path = f'/lakehouse/default/Files/{self._path}'
         pd_df = pd.read_csv(csv_path)
         df = self.spark.createDataFrame(pd_df)

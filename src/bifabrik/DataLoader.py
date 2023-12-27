@@ -1,5 +1,5 @@
-from src import DataSource
-from dst import TableDestination
+from bifabrik.src.DataSource import DataSource
+from bifabrik.dst.TableDestination import TableDestination
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
 #from dst import
@@ -10,8 +10,7 @@ class DataLoader:
         self._source = source
         self._stage = "src"
     
-    def toTable(targetTableName: str) -> DataDestination:
-        TableDestination
+    def toTable(targetTableName: str) -> TableDestination:
         self._stage = "dst"
         srcDf = self._source.load()
         dst = TableDestination(self._spar, srcDf, targetTableName)

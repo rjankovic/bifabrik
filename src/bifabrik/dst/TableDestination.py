@@ -1,4 +1,4 @@
-from bifabrik.dst import DataDestination
+from bifabrik.dst.DataDestination import DataDestination
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
 

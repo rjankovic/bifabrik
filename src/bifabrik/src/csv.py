@@ -1,4 +1,4 @@
-from bifabrik import DataLoader
+from bifabrik.DataLoader import DataLoader
 from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
 
