@@ -1,3 +1,4 @@
+import notebookutils.mssparkutils.fs
 import glob2
 
 def filePatternSearch(path: str) -> list[str]:
@@ -13,7 +14,7 @@ def filePatternSearch(path: str) -> list[str]:
             return res
         nextLevel = []
         for location in searchLocations:
-            subLocations = mssparkutils.fs.ls(location)
+            subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
             subLocationsFiltered = [x[0] for x in subLocationsFilteredT] 

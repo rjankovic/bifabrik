@@ -24,7 +24,7 @@ class CsvSource(DataSource):
         if len(fileDfs) == 0:
             return None
         df = fileDfs[0]
-        if len(fileDfs > 1):
+        if len(fileDfs) > 1:
             for i in range(1, len(fileDfs)):
                 df = df.union(fileDfs[i])
         return df
