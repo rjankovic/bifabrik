@@ -1,17 +1,12 @@
 # Csvsource
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 [Src](./index.md#src) /
 Csvsource
 
 > Auto-generated documentation for [src.bifabrik.src.CsvSource](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/src/CsvSource.py) module.
-
-- [Csvsource](#csvsource)
-  - [CsvSource](#csvsource)
-    - [CsvSource().path](#csvsource()path)
-    - [CsvSource().toDf](#csvsource()todf)
 
 ## CsvSource
 

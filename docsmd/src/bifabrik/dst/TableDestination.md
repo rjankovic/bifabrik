@@ -1,16 +1,12 @@
 # Tabledestination
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 [Dst](./index.md#dst) /
 Tabledestination
 
 > Auto-generated documentation for [src.bifabrik.dst.TableDestination](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/dst/TableDestination.py) module.
-
-- [Tabledestination](#tabledestination)
-  - [TableDestination](#tabledestination)
-    - [TableDestination().save](#tabledestination()save)
 
 ## TableDestination
 

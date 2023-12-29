@@ -1,14 +1,11 @@
 # Src
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 Src
 
 > Auto-generated documentation for [src.bifabrik.src](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/src/__init__.py) module.
-
-- [Src](#src)
-  - [Modules](#modules)
 
 ## Modules
 

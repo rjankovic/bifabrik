@@ -1,17 +1,12 @@
 # Sqlsource
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 [Src](./index.md#src) /
 Sqlsource
 
 > Auto-generated documentation for [src.bifabrik.src.SqlSource](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/src/SqlSource.py) module.
-
-- [Sqlsource](#sqlsource)
-  - [SqlSource](#sqlsource)
-    - [SqlSource().query](#sqlsource()query)
-    - [SqlSource().toDf](#sqlsource()todf)
 
 ## SqlSource
 

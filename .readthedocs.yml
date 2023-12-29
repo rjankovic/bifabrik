@@ -1,14 +1,14 @@
+# .readthedocs.yml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
 # Required
 version: 2
 
-# Image to use
-build:
-  image: testing
+# Build documentation with MkDocs
+mkdocs:
+  configuration: "mkdocs.yml"
+  fail_on_warning: false
 
-# Configuration
-python:
-  version: 3.10
-  install:
-    - requirements: docs/requirements.txt
-    - method: pip
-      path: .
+# Build all formats
+formats: all

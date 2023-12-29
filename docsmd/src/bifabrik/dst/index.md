@@ -1,14 +1,11 @@
 # Dst
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 Dst
 
 > Auto-generated documentation for [src.bifabrik.dst](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/dst/__init__.py) module.
-
-- [Dst](#dst)
-  - [Modules](#modules)
 
 ## Modules
 

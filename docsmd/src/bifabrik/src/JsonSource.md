@@ -1,17 +1,12 @@
 # Jsonsource
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 [Src](./index.md#src) /
 Jsonsource
 
 > Auto-generated documentation for [src.bifabrik.src.JsonSource](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/src/JsonSource.py) module.
-
-- [Jsonsource](#jsonsource)
-  - [JsonSource](#jsonsource)
-    - [JsonSource().path](#jsonsource()path)
-    - [JsonSource().toDf](#jsonsource()todf)
 
 ## JsonSource
 

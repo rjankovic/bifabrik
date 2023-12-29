@@ -1,8 +1,8 @@
-# Bifabrik Index
+# bifabrik Index
 
 > Auto-generated documentation index.
 
-A full list of [Bifabrik](https://github.com/rjankovic/bifabrik) project modules.
+A full list of [bifabrik](https://github.com/rjankovic/bifabrik) project modules.
 
     - [Bifabrik](src/bifabrik/index.md#bifabrik)
         - [bifabrik](src/bifabrik/bifabrik.md#bifabrik)

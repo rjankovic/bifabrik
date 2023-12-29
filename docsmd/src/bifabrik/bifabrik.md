@@ -1,17 +1,11 @@
 # bifabrik
 
-[Bifabrik Index](../../README.md#bifabrik-index) /
+[bifabrik Index](../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](./index.md#bifabrik) /
 bifabrik
 
 > Auto-generated documentation for [src.bifabrik.bifabrik](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/bifabrik.py) module.
-
-- [bifabrik](#bifabrik)
-  - [bifabrik](#bifabrik-1)
-    - [bifabrik().fromCsv](#bifabrik()fromcsv)
-    - [bifabrik().fromJson](#bifabrik()fromjson)
-    - [bifabrik().fromSql](#bifabrik()fromsql)
 
 ## bifabrik
 

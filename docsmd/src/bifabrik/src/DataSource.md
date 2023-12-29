@@ -1,17 +1,12 @@
 # Datasource
 
-[Bifabrik Index](../../../README.md#bifabrik-index) /
+[bifabrik Index](../../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](../index.md#bifabrik) /
 [Src](./index.md#src) /
 Datasource
 
 > Auto-generated documentation for [src.bifabrik.src.DataSource](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/src/DataSource.py) module.
-
-- [Datasource](#datasource)
-  - [DataSource](#datasource)
-    - [DataSource().toDf](#datasource()todf)
-    - [DataSource().toTable](#datasource()totable)
 
 ## DataSource
 

@@ -1,14 +1,11 @@
 # Dataloader
 
-[Bifabrik Index](../../README.md#bifabrik-index) /
+[bifabrik Index](../../README.md#bifabrik-index) /
 `src` /
 [Bifabrik](./index.md#bifabrik) /
 Dataloader
 
 > Auto-generated documentation for [src.bifabrik.DataLoader](https://github.com/rjankovic/bifabrik/blob/main/src/bifabrik/DataLoader.py) module.
-
-- [Dataloader](#dataloader)
-  - [DataLoader](#dataloader)
 
 ## DataLoader
 
