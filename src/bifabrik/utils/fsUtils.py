@@ -2,6 +2,14 @@ import notebookutils.mssparkutils.fs
 import glob2
 
 def filePatternSearch(path: str) -> list[str]:
+    """Searches the Files/ directory of the current lakehouse
+    using glob to match patterns. Returns the list of files as relative Spark paths.
+
+    Examples
+    --------
+    >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
+    ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
+    """
     res = []
     pathPts = path.split("/")
     searchLocations = ["Files/"]
