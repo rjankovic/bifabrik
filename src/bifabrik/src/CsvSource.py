@@ -5,11 +5,18 @@ import pandas as pd
 from bifabrik.utils import fsUtils
 
 class CsvSource(DataSource):
+    """CSV data source
+    """
+    
     def __init__(self, dataLoader):
         super().__init__(dataLoader)
         self._path = ""
     
     def path(self, path: str):
+        """Set the path (or pattern) to the source file.
+        It searches the Files/ folder in the current lakehouse, so 
+        e.g. path("datasource/*.csv") will match "Files/datasource/file1.csv", "Files/datasource/file1.csv", ...
+        """
         self._path = path
         return self
     
