@@ -46,6 +46,16 @@ bif.fromCsv.path('Sales/FactInternetSales_*.csv').toTable('FactInternetSales').s
 
 bif.fromSql.query("SELECT * FROM agg_sale_by_date_employee").toTable('aggregate_sale_by_date_employee').save()
 ```
+### Utilities
+Find files using pattern matching
+```python
+import bifabrik
+
+bifabrik.utils.fsUtils.filePatternSearch("DS/*/subfolder11/*.csv")
+
+#> ['Files/DS/subfolder1/subfolder11/sales3.csv', 'Files/DS/subfolder2/subfolder11/sales4.csv']
+```
+This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
 ## General Flow
 There's a lot of work to be done, but generally, it should work like this
 
