@@ -2,6 +2,6 @@
 
 <!--next-version-placeholder-->
 
-## v0.1.0 (01/01/2024)
+## v0.2.0 (2023-12-31)
 
 - First release of `bifabrik` - support for CSV / JSON / SQL sources, full load only, no logging, no recovery.
