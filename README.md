@@ -15,3 +15,17 @@ from bifabrik import bifabrik
 bif = bifabrik(spark)
 ```
 
+ 3. All set! Now you can
+
+```python
+# read CSV or JSON easily - instead of
+# df = spark.read.format("csv").option("header","true").options("inferSchema" , "true").load("Files/Sales/FactInternetSales_*.csv")
+# df.write.format("delta").mode("overwrite").saveAsTable("FactInternetSales")
+#
+# do this
+
+bif.fromCsv.path('Sales/FactInternetSales_*.csv').toTable('FactInternetSales')
+
+# and you also get better schema inference than you would with PySpark, as bifabrik will use pandas to load the files :)
+```
+
