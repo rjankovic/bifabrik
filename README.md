@@ -1,6 +1,8 @@
 # bifabrik
 Microsoft Fabric ETL toolbox - the assembly line for your lakehouse
 
+This is an **early build** - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues Thanks!
+
 ## What is the point?
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
@@ -59,4 +61,4 @@ This uses `glob2` internally, but does not support the recursive pattern (`**/..
 ## General Flow
 There's a lot of work to be done, but generally, it should work like this
 
-![Code Flow](https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png)
+![https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png](https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png)
