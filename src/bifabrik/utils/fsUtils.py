@@ -12,7 +12,7 @@ def filePatternSearch(path: str) -> list[str]:
     """
     res = []
     pathPts = path.split("/")
-    searchLocations = ["Files/"]
+    searchLocations = ["Files"]
     if len(pathPts) == 0:
         return res
     
