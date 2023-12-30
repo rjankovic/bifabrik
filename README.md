@@ -46,3 +46,7 @@ bif.fromCsv.path('Sales/FactInternetSales_*.csv').toTable('FactInternetSales').s
 
 bif.fromSql.query("SELECT * FROM agg_sale_by_date_employee").toTable('aggregate_sale_by_date_employee').save()
 ```
+## General Flow
+There's a lot of work to be done, but generally, it should work like this
+
+![Code Flow](https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png)
