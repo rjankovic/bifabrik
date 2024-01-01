@@ -9,8 +9,9 @@ This is an **early build** - if you find a problem, please report it here: https
 
 ## Usage
 1. First, add `bifabrik` to your Fabric environment
+![image](https://github.com/rjankovic/bifabrik/assets/2221666/8f8f3ad6-5214-4ec4-bf06-677730aed090)
 
-2. In a Fabric notebook, create an instance of bifabrik and give it access to spark
+3. In a Fabric notebook, create an instance of bifabrik and give it access to spark
 
 ```python
 from bifabrik import bifabrik
