@@ -9,28 +9,36 @@ class Task:
         self._result = None
         self._error = None
 
-    def prepare():
+    def execute(self, input: any):
+        """Obtain the result (typically a dataframe) or save the data in case of a destination
+        """
         pass
 
-    def execute():
+    def cleanup(self):
+        """Cleanup after the execution (archive processed files, remove temp data)
+        """
         pass
 
-    def cleanup():
-        pass
-
-    def rollback():
+    def rollback(self):
+        """Revert changes made during a failed execution (restore modified delta tables or processed files)
+        """
         pass
 
     @property
     def error(self):
+        """The error message from the last execution (str)
+        """
         return self._error
     
     @property
     def result(self):
+        """The result (if any) of a completed task - typically a pyspark.sql.dataframe.DataFrame"""
         return self._result
     
     def getTaskResult(self) -> any:
-        return self._pipeline.getResult(self)
+        """Execute all tasks in the pipeline up to this one and return its result
+        """
+        return self._pipeline.getTaskesult(self)
 
     def clearResults(self):
         self._result = None

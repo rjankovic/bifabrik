@@ -1,9 +1,11 @@
 from bifabrik.base.Task import Task
+import uuid
 
 class Pipeline:
     
     def __init__(self) -> None:
         self._tasks = []
+        self._id = str(uuid.uuid4())
 
     def addTask(self, t: Task):
         self._tasks.append(t)
@@ -12,6 +14,8 @@ class Pipeline:
         return self._tasks
     
     def getTaskResult(self, task) -> any:
+        """Execute all tasks in the pipeline up to the given one and return its result
+        """
         targetIdx = self._tasks.index(task)
         self._executeUpToIndex(targetIdx)
         return task.result
@@ -24,21 +28,32 @@ class Pipeline:
         self.clearResults()
         self.getTaskResult(self._tasks[taskCount - 1])
 
+    def cleanup(self):
+        for ix in range(0, len(self._tasks) - 1):
+            self._tasks[ix].cleanup()
+
     def clearResults(self):
         for t in self._tasks:
             t.clearResults()
     
     def _executeUpToIndex(self, index: int):
+        prevResult = None
+
         for ix in range(0, index):
             tsk = self._tasks[ix]
             if tsk.result != None:
+                prevResult = tsk.result
                 continue
             
             if tsk.error != None:
                 raise Exception(tsk.error)
             
-            tsk.execute()
-
+            tsk.execute(prevResult)
+            prevResult = tsk.result
+    
+    @property
+    def id(self) -> str:
+        return self._id
 
 
 
