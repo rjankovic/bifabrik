@@ -3,9 +3,10 @@ import uuid
 
 class Pipeline:
     
-    def __init__(self) -> None:
+    def __init__(self, spark) -> None:
         self._tasks = []
         self._id = str(uuid.uuid4())
+        self.spark = spark
 
     def addTask(self, t: Task):
         self._tasks.append(t)

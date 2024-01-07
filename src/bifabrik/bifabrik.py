@@ -3,7 +3,9 @@ from pyspark.sql.dataframe import DataFrame
 from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
-from bifabrik.src.bifabrik.base.Task import DataLoader
+
+from bifabrik.base.Task import Task
+from bifabrik.base.Pipeline import Pipeline
 
 class bifabrik:
     """The starting point for using the library.
@@ -29,8 +31,8 @@ class bifabrik:
     def __init__(self, spark: SparkSession):
         self._spark = spark
     
-    def _prepLoader(self):
-        return DataLoader(self._spark)
+    def _prepPipeline(self) -> Pipeline:
+        return Pipeline(self._spark)
     
     @property
     def fromCsv(self) -> CsvSource:
@@ -44,7 +46,7 @@ class bifabrik:
         >>>
         >>> bif.fromCsv.path('orders*.csv').toTable('Orders').save()
         """
-        ds = CsvSource(self._prepLoader())
+        ds = CsvSource(self._prepPipeline())
         return ds
     
     @property
@@ -59,7 +61,7 @@ class bifabrik:
         >>>
         >>> bif.fromJson.path('invoices.json').toTable('Invoices').save()
         """
-        ds = JsonSource(self._prepLoader())
+        ds = JsonSource(self._prepPipeline())
         return ds
     
     @property
@@ -74,5 +76,5 @@ class bifabrik:
         >>>
         >>> bif.fromSql.query('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').save()
         """
-        ds = SqlSource(self._prepLoader())
+        ds = SqlSource(self._prepPipeline())
         return ds
