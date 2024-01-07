@@ -3,7 +3,7 @@ from pyspark.sql.dataframe import DataFrame
 from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
-from bifabrik.DataLoader import DataLoader
+from bifabrik.src.bifabrik.base.Task import DataLoader
 
 class bifabrik:
     """The starting point for using the library.
