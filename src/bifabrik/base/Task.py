@@ -8,7 +8,7 @@ class Task:
         self._error = None
         self._completed = False
 
-    def execute(self, input: any):
+    def execute(self, input):
         """Obtain the result (typically a dataframe) or save the data in case of a destination
         """
         pass
