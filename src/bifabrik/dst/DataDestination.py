@@ -1,7 +1,8 @@
 # from pyspark.sql.session import SparkSession
 # from pyspark.sql.dataframe import DataFrame
+from bifabrik.base.Task import Task
 
-class DataDestination:
+class DataDestination(Task):
     def __init__(self, parentPipeline):
         super().__init__(parentPipeline)
 

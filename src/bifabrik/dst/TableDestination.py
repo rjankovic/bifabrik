@@ -1,5 +1,5 @@
 from bifabrik.dst.DataDestination import DataDestination
-from bifabrik.dst.base import Pipeline
+from bifabrik.base.Pipeline import Pipeline
 from pyspark.sql.dataframe import DataFrame
 
 class TableDestination(DataDestination):

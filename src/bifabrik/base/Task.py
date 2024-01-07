@@ -42,7 +42,7 @@ class Task:
     def getTaskResult(self) -> any:
         """Execute all tasks in the pipeline up to this one and return its result
         """
-        return self._pipeline.getTaskesult(self)
+        return self._pipeline.getTaskResult(self)
 
     def clearResults(self):
         self._result = None
