@@ -7,8 +7,7 @@ class Task:
         self._spark = parentPipeline.spark
         self._name = name
         self._result = None
-        self._completed = False
-        self._success = False
+        self._error = None
 
     def prepare():
         pass
@@ -23,8 +22,16 @@ class Task:
         pass
 
     @property
-    def name(self):
-        return self._name
+    def error(self):
+        return self._error
     
-    def getTaskResult(self):
-        self._pipeline.getResult(self)
+    @property
+    def result(self):
+        return self._result
+    
+    def getTaskResult(self) -> any:
+        return self._pipeline.getResult(self)
+
+    def clearResults(self):
+        self._result = None
+        self._error = None

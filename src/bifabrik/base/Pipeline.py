@@ -13,6 +13,32 @@ class Pipeline:
     
     def getTaskResult(self, task) -> any:
         targetIdx = self._tasks.index(task)
+        self._executeUpToIndex(targetIdx)
+        return task.result
+    
+    def execute(self) -> any:
+        taskCount = len(self._tasks)
+        if taskCount == 0:
+            return None
+        
+        self.clearResults()
+        self.getTaskResult(self._tasks[taskCount - 1])
+
+    def clearResults(self):
+        for t in self._tasks:
+            t.clearResults()
+    
+    def _executeUpToIndex(self, index: int):
+        for ix in range(0, index):
+            tsk = self._tasks[ix]
+            if tsk.result != None:
+                continue
+            
+            if tsk.error != None:
+                raise Exception(tsk.error)
+            
+            tsk.execute()
+
 
 
 
