@@ -1,13 +1,12 @@
 class Task:
     
-    def __init__(self, parentPipeline, name):
-        
+    def __init__(self, parentPipeline):
         parentPipeline.addTask(self)
         self._pipeline = parentPipeline
         self._spark = parentPipeline.spark
-        self._name = name
         self._result = None
         self._error = None
+        self._completed = False
 
     def execute(self, input: any):
         """Obtain the result (typically a dataframe) or save the data in case of a destination
@@ -35,6 +34,11 @@ class Task:
         """The result (if any) of a completed task - typically a pyspark.sql.dataframe.DataFrame"""
         return self._result
     
+    @property
+    def completed(self):
+        """Indicator of the task being completed"""
+        return self._completed
+    
     def getTaskResult(self) -> any:
         """Execute all tasks in the pipeline up to this one and return its result
         """
@@ -43,3 +47,4 @@ class Task:
     def clearResults(self):
         self._result = None
         self._error = None
+        self._completed = False

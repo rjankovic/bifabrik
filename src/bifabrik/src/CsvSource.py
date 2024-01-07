@@ -1,5 +1,4 @@
 from bifabrik.src.DataSource import DataSource
-from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
 import pandas as pd
 from bifabrik.utils import fsUtils
@@ -8,8 +7,8 @@ class CsvSource(DataSource):
     """CSV data source
     """
     
-    def __init__(self, dataLoader):
-        super().__init__(dataLoader)
+    def __init__(self, parentPipeline):
+        super().__init__(parentPipeline)
         self._path = ""
     
     def path(self, path: str):
@@ -20,7 +19,7 @@ class CsvSource(DataSource):
         self._path = path
         return self
     
-    def toDf(self) -> DataFrame:
+    def execute(self, input):
         source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
         for src_file in source_files:
@@ -34,4 +33,6 @@ class CsvSource(DataSource):
         if len(fileDfs) > 1:
             for i in range(1, len(fileDfs)):
                 df = df.union(fileDfs[i])
-        return df
+        
+        self._result = df
+        self._completed = True

@@ -1,15 +1,13 @@
 from bifabrik.dst.DataDestination import DataDestination
-from pyspark.sql.session import SparkSession
+from bifabrik.dst.base import Pipeline
 from pyspark.sql.dataframe import DataFrame
 
 class TableDestination(DataDestination):
     """Saves data to a lakehouse table.
     """
-    def __init__(self, dataLoader, sourceDf: DataFrame, targetTableName: str):
-        super().__init__(dataLoader, sourceDf)
+    def __init__(self, pipeline: Pipeline, targetTableName: str):
+        super().__init__(pipeline)
         self._targetTableName = targetTableName
     
-    def save(self):
-        """Save the data to a lakehouse table. This is the "commit" method at the end of the chain.
-        """
-        self._sourceDf.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save("Tables/" + self._targetTableName)
+    def execute(self, input: DataFrame) -> None:
+        input.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save("Tables/" + self._targetTableName)

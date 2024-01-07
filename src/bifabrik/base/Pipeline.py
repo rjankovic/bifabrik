@@ -41,7 +41,9 @@ class Pipeline:
 
         for ix in range(0, index):
             tsk = self._tasks[ix]
-            if tsk.result != None:
+            if tsk.completed == True:
+                if tsk.error != None:
+                    raise Exception(tsk.error)
                 prevResult = tsk.result
                 continue
             
