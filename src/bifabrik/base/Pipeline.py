@@ -40,7 +40,7 @@ class Pipeline:
     def _executeUpToIndex(self, index: int):
         prevResult = None
 
-        for ix in range(0, index):
+        for ix in range(0, index+1):
             tsk = self._tasks[ix]
             if tsk.completed == True:
                 if tsk.error != None:

@@ -15,7 +15,7 @@ class SqlSource(DataSource):
         self._query = query
         return self
     
-    def texecute(self, input) -> DataFrame:
+    def execute(self, input) -> DataFrame:
         df = self._spark.sql(self._query)
         self._result = df
         self._completed = True
