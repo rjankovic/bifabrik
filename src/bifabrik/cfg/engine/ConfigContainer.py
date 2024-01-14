@@ -22,3 +22,9 @@ class ConfigContainer:
             raise Exception(f'Configuration key not found: {name}.')
         setattr(self.__propDict[name], name, value)
         return self
+    
+    def mergeCofiguration(self,other: ConfigContainer):
+        """Meges another configuration into this one; the 'other' config container takes priority"""
+        for key in other.__propDict:
+            if key in __propDict:
+                setattr(self.__propDict[key], key, getattr(other.__propDict[key], key))
