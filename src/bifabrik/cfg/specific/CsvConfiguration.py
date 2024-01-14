@@ -1,7 +1,9 @@
 from bifabrik.cfg.Configuration import Configuration
+from bifabrik.cfg.Configuration import CfgProperty
 
 class CsvConfiguration(Configuration):
     def __init__(self):
+        self._explicitProps = {}
         self.__delimiter = ','
         self.__header = 'infer'
         self.__thousands = None
@@ -11,83 +13,83 @@ class CsvConfiguration(Configuration):
         self.__escapechar = None
         self.__encoding = 'utf-8'
 
-    @property
+    @CfgProperty
     def delimiter(self) -> str:
         """From pandas:
         Character or regex pattern to treat as the delimiter. If sep=None, the C engine cannot automatically detect the separator, but the Python parsing engine can, meaning the latter will be used and automatically detect the separator from only the first valid row of the file by Pythons builtin sniffer tool
         """
         return self.__delimiter
-    @delimiter.setter
+    @delimiter.setter(key='delimiter')
     def delimiter(self, val):
         self.__delimiter = val
 
-    @property
+    @CfgProperty
     def header(self) -> str:
         """From pandas:
         Row number(s) containing column labels and marking the start of the data (zero-indexed). Default behavior is to infer the column names: if no names are passed the behavior is identical to header=0 and column names are inferred from the first line of the file, if column names are passed explicitly to names then the behavior is identical to header=None. Explicitly pass header=0 to be able to replace existing names. The header can be a list of integers that specify row locations for a MultiIndex on the columns e.g. [0, 1, 3]. Intervening rows that are not specified will be skipped (e.g. 2 in this example is skipped). Note that this parameter ignores commented lines and empty lines if skip_blank_lines=True, so header=0 denotes the first line of data rather than the first line of the file.
         """
         return self.__header
-    @header.setter
+    @header.setter(key='header')
     def header(self, val):
         self.__header = val
 
-    @property
+    @CfgProperty
     def thousands(self) -> str:
         """From pandas:
         Character acting as the thousands separator in numerical values.
         """
         return self.__thousands
-    @thousands.setter
+    @thousands.setter(key='thousands')
     def thousands(self, val):
         self.__thousands = val
 
-    @property
+    @CfgProperty
     def decimal(self) -> str:
         """From pandas:
         Character to recognize as decimal point (e.g., use ‘,’ for European data).
         """
         return self.__decimal
-    @decimal.setter
+    @decimal.setter(key='decimal')
     def decimal(self, val):
         self.__decimal = val
 
-    @property
+    @CfgProperty
     def quotechar(self) -> str:
         """From pandas:
         Character used to denote the start and end of a quoted item. Quoted items can include the delimiter and it will be ignored.
         """
         return self.__quotechar
-    @quotechar.setter
+    @quotechar.setter(key='quotechar')
     def quotechar(self, val):
         self.__quotechar = val
 
-    @property
+    @CfgProperty
     def quoting(self) -> int:
         """From pandas:
         {0 or csv.QUOTE_MINIMAL, 1 or csv.QUOTE_ALL, 2 or csv.QUOTE_NONNUMERIC, 3 or csv.QUOTE_NONE}, default csv.QUOTE_MINIMAL
         Control field quoting behavior per csv.QUOTE_* constants. Default is csv.QUOTE_MINIMAL (i.e., 0) which implies that only fields containing special characters are quoted (e.g., characters defined in quotechar, delimiter, or lineterminator.
         """
         return self.__quoting
-    @quoting.setter
+    @quoting.setter(key='quoting')
     def quoting(self, val):
         self.__quoting = val
 
-    @property
+    @CfgProperty
     def escapechar(self) -> int:
         """From pandas:
         Character used to escape other characters.
         """
         return self.__escapechar
-    @escapechar.setter
+    @escapechar.setter(key='escapechar')
     def escapechar(self, val):
         self.__escapechar = val
 
-    @property
+    @CfgProperty
     def encoding(self) -> int:
         """From pandas:
         How encoding errors are treated. https://docs.python.org/3/library/codecs.html#standard-encodings
         """
         return self.__encoding
-    @encoding.setter
+    @encoding.setter(key='encoding')
     def encoding(self, val):
         self.__encoding = val
