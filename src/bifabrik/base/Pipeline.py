@@ -10,6 +10,7 @@ class Pipeline:
         self.spark = spark
         self.configuration = configuration
 
+    #t: bifabrik.base.Task.Task
     def addTask(self, t: Task):
         self._tasks.append(t)
 

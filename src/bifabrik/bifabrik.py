@@ -5,8 +5,9 @@ from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 
-from bifabrik.base.Task import Task
+
 from bifabrik.base.Pipeline import Pipeline
+#from bifabrik.base.Task import Task
 
 class bifabrik:
     """The starting point for using the library.

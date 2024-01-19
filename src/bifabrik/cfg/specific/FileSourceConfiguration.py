@@ -1,5 +1,5 @@
-from bifabrik.cfg.Configuration import Configuration
-from bifabrik.cfg.Configuration import CfgProperty
+from bifabrik.cfg.engine.Configuration import Configuration
+from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class FileSourceConfiguration(Configuration):
     def __init__(self):
