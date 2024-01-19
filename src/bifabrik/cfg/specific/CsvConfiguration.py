@@ -11,7 +11,6 @@ class CsvConfiguration(Configuration):
         self.__quotechar = '"'
         self.__quoting = 0
         self.__escapechar = None
-        self.__encoding = 'utf-8'
 
     @CfgProperty
     def delimiter(self) -> str:
@@ -83,13 +82,3 @@ class CsvConfiguration(Configuration):
     @escapechar.setter(key='escapechar')
     def escapechar(self, val):
         self.__escapechar = val
-
-    @CfgProperty
-    def encoding(self) -> int:
-        """From pandas:
-        How encoding errors are treated. https://docs.python.org/3/library/codecs.html#standard-encodings
-        """
-        return self.__encoding
-    @encoding.setter(key='encoding')
-    def encoding(self, val):
-        self.__encoding = val

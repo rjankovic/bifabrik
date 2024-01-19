@@ -1,9 +1,10 @@
 from bifabrik.src.DataSource import DataSource
+from bifabrik.cfg.CsvSourceConfiguration import CsvSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
 import pandas as pd
 from bifabrik.utils import fsUtils
 
-class CsvSource(DataSource):
+class CsvSource(DataSource, CsvSourceConfiguration):
     """CSV data source
     """
     
@@ -20,11 +21,23 @@ class CsvSource(DataSource):
         return self
     
     def execute(self, input):
+        mergedConfig = self._pipeline.configuration.merge(self)
+
         source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
         for src_file in source_files:
             csv_path = f'/lakehouse/default/{src_file}'
-            pd_df = pd.read_csv(csv_path)
+            pd_df = pd.read_csv(
+                filepath_or_buffer = csv_path, 
+                encoding = mergedConfig.fileSource.encoding,
+                delimiter = mergedConfig.csv.delimiter,
+                header = mergedConfig.csv.header,
+                thousands = mergedConfig.csv.thousands,
+                decimal = mergedConfig.csv.decimal,
+                quotechar = mergedConfig.csv.quotechar,
+                quoting = mergedConfig.csv.quoting,
+                escapechar = mergedConfig.csv.escapechar
+                )
             df = self._spark.createDataFrame(pd_df)
             fileDfs.append(df)
         if len(fileDfs) == 0:

@@ -3,6 +3,7 @@ from pyspark.sql.dataframe import DataFrame
 from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
+from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 
 from bifabrik.base.Task import Task
 from bifabrik.base.Pipeline import Pipeline
@@ -30,9 +31,10 @@ class bifabrik:
     """
     def __init__(self, spark: SparkSession):
         self._spark = spark
+        self.__configuration = CompleteConfiguration()
     
     def _prepPipeline(self) -> Pipeline:
-        return Pipeline(self._spark)
+        return Pipeline(self._spark, self.__configuration)
     
     @property
     def fromCsv(self) -> CsvSource:
@@ -78,3 +80,9 @@ class bifabrik:
         """
         ds = SqlSource(self._prepPipeline())
         return ds
+    
+    @property
+    def cfg(self) -> CompleteConfiguration:
+        return self.__configuration
+    
+    

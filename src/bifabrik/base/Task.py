@@ -1,6 +1,9 @@
+from bifabrik.cfg.engine.ConfigContainer import ConfigContainer
+from bifabrik.base.Pipeline import Pipeline
+
 class Task:
     
-    def __init__(self, parentPipeline):
+    def __init__(self, parentPipeline: Pipeline):
         parentPipeline.addTask(self)
         self._pipeline = parentPipeline
         self._spark = parentPipeline.spark

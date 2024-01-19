@@ -1,12 +1,14 @@
 from bifabrik.base.Task import Task
+from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 import uuid
 
 class Pipeline:
     
-    def __init__(self, spark) -> None:
+    def __init__(self, spark, configuration: CompleteConfiguration) -> None:
         self._tasks = []
         self._id = str(uuid.uuid4())
         self.spark = spark
+        self.configuration = configuration
 
     def addTask(self, t: Task):
         self._tasks.append(t)

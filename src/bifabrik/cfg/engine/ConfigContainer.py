@@ -1,4 +1,4 @@
-from bifabrik.cfg.Configuration import CfgProperty
+from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class ConfigContainer:
     def __init__(self):
