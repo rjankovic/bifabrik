@@ -16,3 +16,8 @@ class DataDestination(Task):
         """Save the data to the destination. This is the "run" method at the end of the chain.
         """
         self._pipeline.execute()
+
+    def run(self) -> None:
+        """Save the data to the destination. This is the "run" method at the end of the chain.
+        """
+        self._pipeline.execute()

@@ -1,3 +1,4 @@
+import copy
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class ConfigContainer:
@@ -33,9 +34,15 @@ class ConfigContainer:
         setattr(self.__propDict[name], name, value)
         return self
 
+    def mergeToCopy(self, other):
+        """Meges another configuration into this one; the 'other' config container takes priority.
+        Returns a new configuration without affecting the original"""
+        cp = self.copy()
+        return cp.merge(other)
+
+    
     def merge(self, other):
         """Meges another configuration into this one; the 'other' config container takes priority"""
-        
         #print("self")
         #for key in self.__propDict:
         #    print(self.__propDict[key]._explicitProps)
@@ -50,6 +57,11 @@ class ConfigContainer:
                 if key in self.__propDict:
                     setattr(self.__propDict[key], key, getattr(other.propDict[key], key))
         return self
+    
+    def copy(self):
+        """Cretes a deep copy of the config container"""
+        return copy.deepcopy(self)
+
     
     @property
     def propDict(self):

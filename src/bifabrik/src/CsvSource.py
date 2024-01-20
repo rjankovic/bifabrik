@@ -22,7 +22,7 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         return self
     
     def execute(self, input):
-        mergedConfig = self._pipeline.configuration.merge(self)
+        mergedConfig = self._pipeline.configuration.mergeToCopy(self)
 
         source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
