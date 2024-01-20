@@ -2,13 +2,13 @@ from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class ConfigContainer:
     def __init__(self):
-        self.d = dir(self)
+        self.__propDict = dict()
         self.getList()
     
     def getList(self):
         a = dir(self)
         dnu = list(filter(lambda x: not x.startswith("_"), a))
-        res = dict()
+        #res = dict()
         for e in dnu:
             attr = getattr(self, e)
             attrType = type(attr)
@@ -19,8 +19,8 @@ class ConfigContainer:
                     if isinstance(cfgatt, CfgProperty):
                         #print("PROP " + cfgp + " in " + e + " (" + str(attr) + ")")
                         #print(cfgp)
-                        res[cfgp] = attr
-        self.__propDict = res
+                        self.__propDict[cfgp] = attr
+        #self.__propDict = res
         #print(res)
     
        
@@ -43,10 +43,17 @@ class ConfigContainer:
         #for key in other.__propDict:
         #    print(other.__propDict[key]._explicitProps)
 
-        for key in other.__propDict:
+        for key in other.propDict:
             # that have an explicit value set in the source
-            if key in other.__propDict[key]._explicitProps:
+            if key in other.propDict[key]._explicitProps:
                 # and are among target attributes
                 if key in self.__propDict:
-                    setattr(self.__propDict[key], key, getattr(other.__propDict[key], key))
+                    setattr(self.__propDict[key], key, getattr(other.propDict[key], key))
         return self
+    
+    @property
+    def propDict(self):
+        """Dictionary mapping available configuration properties to the Configuration objects containing them.
+        For internal use.
+        """
+        return self.__propDict

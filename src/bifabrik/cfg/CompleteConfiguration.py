@@ -6,7 +6,7 @@ class CompleteConfiguration(ConfigContainer):
 
     def __init__(self):
         self.__csv = CsvConfiguration()
-        self.__fileSource = CsvConfiguration()
+        self.__fileSource = FileSourceConfiguration()
         super().__init__()
         
 

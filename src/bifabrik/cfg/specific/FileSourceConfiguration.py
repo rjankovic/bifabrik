@@ -2,6 +2,8 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class FileSourceConfiguration(Configuration):
+    """Configuration related to loading data from files (aspects common for all file formats)
+    """
     def __init__(self):
         self._explicitProps = {}
         self.__encoding = 'utf-8'

@@ -10,6 +10,7 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     
     def __init__(self, parentPipeline):
         super().__init__(parentPipeline)
+        CsvSourceConfiguration.__init__(self)
         self._path = ""
     
     def path(self, path: str):

@@ -2,6 +2,8 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class CsvConfiguration(Configuration):
+    """Configuration related to loading CSV files
+    """
     def __init__(self):
         self._explicitProps = {}
         self.__delimiter = ','
