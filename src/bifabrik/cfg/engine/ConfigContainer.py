@@ -13,7 +13,10 @@ class ConfigContainer:
         noUnderscoreRootAttrNames = list(filter(lambda x: not x.startswith("_"), rootAttribs))
         
         # for adding config options from the partial configs
-        self.__doc__ = self.__doc__ + '\n\nConfiguration setters:'
+        if self.__doc__ is None:
+            self.__doc__ = 'Configuration options:'
+        else:
+            self.__doc__ = self.__doc__ + '\n\nConfiguration options:'
 
         for rootAttrName in noUnderscoreRootAttrNames:
             rootAttr = getattr(self, rootAttrName)
@@ -34,13 +37,13 @@ class ConfigContainer:
                             def directSetter(val):
                                 self.option(cfgpName, val)
                                 return self
-                            directSetter.__doc__ = f'{cfgAttribute.__doc__} \n(from {rootAttrName} configuration)'
+                            directSetter.__doc__ = f'{(cfgAttribute.__doc__ or "")} \n(from {rootAttrName} configuration)'
                             directSetter.__name__ = cfgpName
                             setattr(self, cfgpName, directSetter)
 
                         # (don't use this - the __doc__ is in the type)
                         # instanceAttr = getattr(attr, cfgp)
-                        self.__doc__ = self.__doc__ + f'\n{cfgpName}: {cfgAttribute.__doc__}\n'
+                        self.__doc__ = (self.__doc__ or "") + f'\n{cfgpName}: {cfgAttribute.__doc__}\n'
 
        
     def option(self, name, value = None):
