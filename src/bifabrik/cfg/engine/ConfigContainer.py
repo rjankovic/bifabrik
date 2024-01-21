@@ -10,7 +10,7 @@ class ConfigContainer:
     
     def setterFactory(self, attrName):
         def directSetter(val):
-            print(f'DSETTER: {str(self)} - set {attrName} to {val}')
+            #print(f'DirectSetter: {str(self)} - set {attrName} to {val}')
             self.option(attrName, val)
             return self
         return directSetter
@@ -41,18 +41,7 @@ class ConfigContainer:
 
                         hasA = hasattr(self, cfgpName)
                         if hasA == False:
-                            # def directSetter(val):
-                            #     print(f'DSETTER: {str(self)} - set {cfgpName} to {val}')
-                            #     self.option(cfgpName, val)
-                            #     return self
-
-                            # Define functions
-# functions = []
-# for i in range(10):
-#     functions.append(factory(i))
-# # Run functions
-# for f in functions:
-#     f()                     
+                            
                             directSetter = self.setterFactory(cfgpName)
                             directSetter.__doc__ = f'{(cfgAttribute.__doc__ or "")} \n(from {rootAttrName} configuration)'
                             directSetter.__name__ = cfgpName
