@@ -21,13 +21,16 @@ class CompleteConfiguration(ConfigContainer):
 
     @property
     def csv(self) -> CsvConfiguration:
+        """CSV files settings"""
         return self.__csv
     
     @property
     def fileSource(self) -> FileSourceConfiguration:
+        """General file loading settings"""
         return self.__fileSource
     
     def serialize(self) -> str:
+        """Serializes the configuration to a string"""
         res = {}
         rootAttribs = dir(self)
         noUnderscoreRootAttrNames = list(filter(lambda x: not x.startswith("_"), rootAttribs))
@@ -41,6 +44,7 @@ class CompleteConfiguration(ConfigContainer):
 
     @staticmethod
     def deserialize(json_data):
+        """Deserializes a CompleteConfiguration from a string"""
         json_dict = json.loads(json_data)
         cfg = CompleteConfiguration()
         for cfgAttrName in json_dict:
@@ -49,10 +53,12 @@ class CompleteConfiguration(ConfigContainer):
         return cfg
     
     def saveToFile(self, path):
+        """Saves the configuration to a JSON file"""
         serialized = self.serialize()
         notebookutils.mssparkutils.fs.put(path, serialized, True)
 
     def loadFromFile(self, path):
+        """Loads the configuration values from a JSON file"""
         json_data = notebookutils.mssparkutils.fs.head(path, 1024 * 1024 * 1024)
         deser = CompleteConfiguration.deserialize(json_data)
         self.merge(deser)
