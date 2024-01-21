@@ -8,6 +8,13 @@ class ConfigContainer:
         self.__propDict = dict()
         self.setCfgOptions()
     
+    def setterFactory(self, attrName):
+        def directSetter(val):
+            print(f'DSETTER: {str(self)} - set {attrName} to {val}')
+            self.option(attrName, val)
+            return self
+        return directSetter
+    
     def setCfgOptions(self):
         rootAttribs = dir(self)
         noUnderscoreRootAttrNames = list(filter(lambda x: not x.startswith("_"), rootAttribs))
@@ -34,9 +41,19 @@ class ConfigContainer:
 
                         hasA = hasattr(self, cfgpName)
                         if hasA == False:
-                            def directSetter(val):
-                                self.option(cfgpName, val)
-                                return self
+                            # def directSetter(val):
+                            #     print(f'DSETTER: {str(self)} - set {cfgpName} to {val}')
+                            #     self.option(cfgpName, val)
+                            #     return self
+
+                            # Define functions
+# functions = []
+# for i in range(10):
+#     functions.append(factory(i))
+# # Run functions
+# for f in functions:
+#     f()                     
+                            directSetter = self.setterFactory(cfgpName)
                             directSetter.__doc__ = f'{(cfgAttribute.__doc__ or "")} \n(from {rootAttrName} configuration)'
                             directSetter.__name__ = cfgpName
                             setattr(self, cfgpName, directSetter)
