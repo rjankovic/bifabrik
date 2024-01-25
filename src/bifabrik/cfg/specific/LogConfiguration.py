@@ -21,63 +21,38 @@ class LogConfiguration(Configuration):
     def loggingEnabled(self, val):
         self.__loggingEnabled = val
 
-    # @CfgProperty
-    # def header(self) -> str:
-    #     """From pandas:
-    #     Row number(s) containing column labels and marking the start of the data (zero-indexed). Default behavior is to infer the column names: if no names are passed the behavior is identical to header=0 and column names are inferred from the first line of the file, if column names are passed explicitly to names then the behavior is identical to header=None. Explicitly pass header=0 to be able to replace existing names. The header can be a list of integers that specify row locations for a MultiIndex on the columns e.g. [0, 1, 3]. Intervening rows that are not specified will be skipped (e.g. 2 in this example is skipped). Note that this parameter ignores commented lines and empty lines if skip_blank_lines=True, so header=0 denotes the first line of data rather than the first line of the file.
-    #     """
-    #     return self.__header
-    # @header.setter(key='header')
-    # def header(self, val):
-    #     self.__header = val
+    @CfgProperty
+    def logLakehouse(self) -> str:
+        """The lakehouse to which logs will be saved
+        """
+        return self.__logLakehouse
+    @logLakehouse.setter(key='logLakehouse')
+    def logLakehouse(self, val):
+        self.__logLakehouse = val
 
-    # @CfgProperty
-    # def thousands(self) -> str:
-    #     """From pandas:
-    #     Character acting as the thousands separator in numerical values.
-    #     """
-    #     return self.__thousands
-    # @thousands.setter(key='thousands')
-    # def thousands(self, val):
-    #     self.__thousands = val
+    @CfgProperty
+    def loggingLevel(self) -> str:
+        """debug / info / warning / error / critical
+        """
+        return self.__loggingLevel
+    @loggingLevel.setter(key='loggingLevel')
+    def loggingLevel(self, val):
+        self.__loggingLevel = val
 
-    # @CfgProperty
-    # def decimal(self) -> str:
-    #     """From pandas:
-    #     Character to recognize as decimal point (e.g., use ‘,’ for European data).
-    #     """
-    #     return self.__decimal
-    # @decimal.setter(key='decimal')
-    # def decimal(self, val):
-    #     self.__decimal = val
+    @CfgProperty
+    def errorLogPath(self) -> str:
+        """The file to which to save error logs
+        """
+        return self.__errorLogPath
+    @errorLogPath.setter(key='errorLogPath')
+    def errorLogPath(self, val):
+        self.__errorLogPath = val
 
-    # @CfgProperty
-    # def quotechar(self) -> str:
-    #     """From pandas:
-    #     Character used to denote the start and end of a quoted item. Quoted items can include the delimiter and it will be ignored.
-    #     """
-    #     return self.__quotechar
-    # @quotechar.setter(key='quotechar')
-    # def quotechar(self, val):
-    #     self.__quotechar = val
-
-    # @CfgProperty
-    # def quoting(self) -> int:
-    #     """From pandas:
-    #     {0 or csv.QUOTE_MINIMAL, 1 or csv.QUOTE_ALL, 2 or csv.QUOTE_NONNUMERIC, 3 or csv.QUOTE_NONE}, default csv.QUOTE_MINIMAL
-    #     Control field quoting behavior per csv.QUOTE_* constants. Default is csv.QUOTE_MINIMAL (i.e., 0) which implies that only fields containing special characters are quoted (e.g., characters defined in quotechar, delimiter, or lineterminator.
-    #     """
-    #     return self.__quoting
-    # @quoting.setter(key='quoting')
-    # def quoting(self, val):
-    #     self.__quoting = val
-
-    # @CfgProperty
-    # def escapechar(self) -> int:
-    #     """From pandas:
-    #     Character used to escape other characters.
-    #     """
-    #     return self.__escapechar
-    # @escapechar.setter(key='escapechar')
-    # def escapechar(self, val):
-    #     self.__escapechar = val
+    @CfgProperty
+    def logPath(self) -> str:
+        """The file to which to save logs
+        """
+        return self.__logPath
+    @logPath.setter(key='logPath')
+    def quotechar(self, val):
+        self.__logPath = val
