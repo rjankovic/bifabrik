@@ -4,6 +4,7 @@ from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
+from bifabrik.utils.log import logger
 
 
 from bifabrik.base.Pipeline import Pipeline
@@ -33,6 +34,7 @@ class bifabrik:
     def __init__(self, spark: SparkSession):
         self._spark = spark
         self.__configuration = CompleteConfiguration()
+        print(logger)
     
     def _prepPipeline(self) -> Pipeline:
         return Pipeline(self._spark, self.__configuration)
