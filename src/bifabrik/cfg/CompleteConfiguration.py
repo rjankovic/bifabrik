@@ -1,5 +1,7 @@
 import json
 from bifabrik.cfg.engine.ConfigContainer import ConfigContainer
+
+from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
 from bifabrik.cfg.specific.CsvConfiguration import CsvConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
 
@@ -14,6 +16,7 @@ class CompleteConfiguration(ConfigContainer):
     .option('delimiter') #getter
     """
     def __init__(self):
+        self.__log = LogConfiguration()
         self.__csv = CsvConfiguration()
         self.__fileSource = FileSourceConfiguration()
         super().__init__()
@@ -23,6 +26,11 @@ class CompleteConfiguration(ConfigContainer):
     def csv(self) -> CsvConfiguration:
         """CSV files settings"""
         return self.__csv
+    
+    @property
+    def log(self) -> LogConfiguration:
+        """Logging settings"""
+        return self.__log
     
     @property
     def fileSource(self) -> FileSourceConfiguration:

@@ -11,6 +11,7 @@ class LogConfiguration(Configuration):
         self.__loggingLevel = 'info'
         self.__errorLogPath = 'Files/BifabrikErrorLog.log'
         self.__logPath = 'Files/BifabrikLog.log'
+        self.__modified = False
 
     @CfgProperty
     def loggingEnabled(self) -> bool:
@@ -20,6 +21,7 @@ class LogConfiguration(Configuration):
     @loggingEnabled.setter(key='loggingEnabled')
     def loggingEnabled(self, val):
         self.__loggingEnabled = val
+        self.__modified = True
 
     @CfgProperty
     def logLakehouse(self) -> str:
@@ -29,6 +31,7 @@ class LogConfiguration(Configuration):
     @logLakehouse.setter(key='logLakehouse')
     def logLakehouse(self, val):
         self.__logLakehouse = val
+        self.__modified = True
 
     @CfgProperty
     def loggingLevel(self) -> str:
@@ -38,6 +41,7 @@ class LogConfiguration(Configuration):
     @loggingLevel.setter(key='loggingLevel')
     def loggingLevel(self, val):
         self.__loggingLevel = val
+        self.__modified = True
 
     @CfgProperty
     def errorLogPath(self) -> str:
@@ -47,6 +51,7 @@ class LogConfiguration(Configuration):
     @errorLogPath.setter(key='errorLogPath')
     def errorLogPath(self, val):
         self.__errorLogPath = val
+        self.__modified = True
 
     @CfgProperty
     def logPath(self) -> str:
@@ -56,3 +61,4 @@ class LogConfiguration(Configuration):
     @logPath.setter(key='logPath')
     def quotechar(self, val):
         self.__logPath = val
+        self.__modified = True
