@@ -20,8 +20,10 @@ class LogConfiguration(Configuration):
         return self.__loggingEnabled
     @loggingEnabled.setter(key='loggingEnabled')
     def loggingEnabled(self, val):
+        if self.__loggingEnabled != val:
+            self.__modified = True
         self.__loggingEnabled = val
-        self.__modified = True
+        
 
     @CfgProperty
     def logLakehouse(self) -> str:
@@ -30,8 +32,9 @@ class LogConfiguration(Configuration):
         return self.__logLakehouse
     @logLakehouse.setter(key='logLakehouse')
     def logLakehouse(self, val):
+        if self.__logLakehouse != val:
+            self.__modified = True
         self.__logLakehouse = val
-        self.__modified = True
 
     @CfgProperty
     def loggingLevel(self) -> str:
@@ -40,8 +43,9 @@ class LogConfiguration(Configuration):
         return self.__loggingLevel
     @loggingLevel.setter(key='loggingLevel')
     def loggingLevel(self, val):
+        if self.__loggingLevel != val:
+            self.__modified = True
         self.__loggingLevel = val
-        self.__modified = True
 
     @CfgProperty
     def errorLogPath(self) -> str:
@@ -50,9 +54,10 @@ class LogConfiguration(Configuration):
         return self.__errorLogPath
     @errorLogPath.setter(key='errorLogPath')
     def errorLogPath(self, val):
+        if self.__errorLogPath != val:
+            self.__modified = True
         self.__errorLogPath = val
-        self.__modified = True
-
+        
     @CfgProperty
     def logPath(self) -> str:
         """The file to which to save logs
@@ -60,5 +65,6 @@ class LogConfiguration(Configuration):
         return self.__logPath
     @logPath.setter(key='logPath')
     def quotechar(self, val):
+        if self.__logPath != val:
+            self.__modified = True
         self.__logPath = val
-        self.__modified = True

@@ -38,8 +38,7 @@ class bifabrik:
         print(logger)
     
     def _prepPipeline(self) -> Pipeline:
-        if self.__configuration.log.__modified:
-            log.updateLogger(self.__configuration.log)
+        log.updateLogger(self.__configuration.log)
         return Pipeline(self._spark, self.__configuration)
     
     @property
