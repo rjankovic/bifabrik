@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "bifabrik"
-version = "0.2.26"
+version = "0.2.27"
 description = "Microsoft Fabric ETL toolbox"
 authors = ["Radovan Jankovič"]
 license = "MIT"
 readme = "README.md"
+documentation = "https://rjankovic.github.io/bifabrik/"
+repository = "https://github.com/rjankovic/bifabrik"
 
 [tool.poetry.dependencies]
 python = "^3.10"
