@@ -68,3 +68,13 @@ def normalizeFileApiPath(path: str):
     
     r = '/lakehouse/default/Files' + r
     return r
+
+def getDefaultLakehouseAbfsPath() -> str:
+    for mp in notebookutils.mssparkutils.fs.mounts():
+        # print(mp.mountPoint)
+        # print(mp.source)
+        # print('-----')
+        if mp.mountPoint == '/default':
+            # print(f"Default Lakehouse is: {mp.source}")
+            return mp.source
+        return None

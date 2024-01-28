@@ -48,11 +48,12 @@ def setLogger(cfg: LogConfiguration):
     __logger.addHandler(__logHandler)
     __logger.addHandler(__errorLogHandler)
 
-def getLogger():
+@property
+def logger():
     """Returns the 'bifabrik' logger if it has been initialized (using setLogger(LogConfiguration))
-    Otherwise returns None
+    Otherwise returns a new logger
     """
-    return __logger
+    return logging.getLogger('bifabrik')
 
 def logCalls(f):
     """A decorator to log every call to function (function name and arg values).
