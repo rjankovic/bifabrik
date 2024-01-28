@@ -8,7 +8,7 @@ class LogConfiguration(Configuration):
         self._explicitProps = {}
         self.__loggingEnabled = True
         self.__logLakehouse = None
-        self.__loggingLevel = 'info'
+        self.__loggingLevel = 'INFO'
         self.__errorLogPath = 'Files/BifabrikErrorLog.log'
         self.__logPath = 'Files/BifabrikLog.log'
         self.__modified = False
@@ -25,20 +25,20 @@ class LogConfiguration(Configuration):
         self.__loggingEnabled = val
         
 
-    @CfgProperty
-    def logLakehouse(self) -> str:
-        """The lakehouse to which logs will be saved
-        """
-        return self.__logLakehouse
-    @logLakehouse.setter(key='logLakehouse')
-    def logLakehouse(self, val):
-        if self.__logLakehouse != val:
-            self.__modified = True
-        self.__logLakehouse = val
+    # @CfgProperty
+    # def logLakehouse(self) -> str:
+    #     """The lakehouse to which logs will be saved
+    #     """
+    #     return self.__logLakehouse
+    # @logLakehouse.setter(key='logLakehouse')
+    # def logLakehouse(self, val):
+    #     if self.__logLakehouse != val:
+    #         self.__modified = True
+    #     self.__logLakehouse = val
 
     @CfgProperty
     def loggingLevel(self) -> str:
-        """debug / info / warning / error / critical
+        """DEBUG / INFO / WARNING / ERROR / CRITICAL
         """
         return self.__loggingLevel
     @loggingLevel.setter(key='loggingLevel')

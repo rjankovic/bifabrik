@@ -44,3 +44,27 @@ def filePatternSearch(path: str) -> list[str]:
             return res
         else:
             searchLocations = nextLevel
+
+def normalizeFileApiPath(path: str):
+    """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
+    """
+    r = path
+    if not r.startswith('/'):
+        r = '/' + r
+
+    lhpt = '/lakehouse'
+    dfpt = '/default'
+    fpt = '/files'
+    lp = r.lower()
+    if lp.startswith(lhpt):
+        lp = lp[len(lhpt):]
+        r = r[len(lhpt):]
+    if lp.startswith(dfpt):
+        lp = lp[len(dfpt):]
+        r = r[len(dfpt):]
+    if lp.startswith(fpt):
+        lp = lp[len(fpt):]
+        r = r[len(fpt):]
+    
+    r = '/lakehouse/default/Files' + r
+    return r
