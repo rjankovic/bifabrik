@@ -35,7 +35,6 @@ class bifabrik:
     def __init__(self, spark: SparkSession):
         self._spark = spark
         self.__configuration = CompleteConfiguration()
-        print(logger)
     
     def _prepPipeline(self) -> Pipeline:
         log.setLogger(self.__configuration.log)
