@@ -7,4 +7,4 @@ from bifabrik.bifabrik import bifabrik
 from bifabrik.utils.fsUtils import getDefaultLakehouseAbfsPath
 
 if getDefaultLakehouseAbfsPath() is None:
-    print('Warning: the notebook is not attached to a lakehouse - some features of bifabrik will not work correctly.')
+    print('bifabrik warning: the notebook is not attached to a lakehouse - some features of bifabrik will not work correctly.')

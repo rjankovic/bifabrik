@@ -13,7 +13,7 @@ __errorLogHandler = None
 __logHandler = None
 
 # called by bifabrik when starting a pipeline
-def setLogger(cfg: LogConfiguration):
+def configureLogger(cfg: LogConfiguration) -> logging.Logger:
     """Initializes logging based on configuration"""
     # check if the logging cfg was modified
     if not cfg.__modified:
@@ -47,9 +47,10 @@ def setLogger(cfg: LogConfiguration):
 
     __logger.addHandler(__logHandler)
     __logger.addHandler(__errorLogHandler)
+    return __logger
 
-@property
-def logger():
+
+def getLogger():
     """Returns the 'bifabrik' logger if it has been initialized (using setLogger(LogConfiguration))
     Otherwise returns a new logger
     """
