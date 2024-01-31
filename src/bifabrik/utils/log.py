@@ -9,7 +9,7 @@ from collections import OrderedDict
 from itertools import *
 from bifabrik.utils.fsUtils import getDefaultLakehouseAbfsPath
 
-__logger = logging.getLogger('bifabrik')
+__logger = None #logging.getLogger('bifabrik')
 __errorLogHandler = None
 __logHandler = None
 __missingConfigWarningIssued = False
@@ -17,7 +17,6 @@ __missingConfigWarningIssued = False
 # called by bifabrik when starting a pipeline
 def configureLogger(cfg: LogConfiguration) -> logging.Logger:
     """Initializes logging based on configuration"""
-    # check if the logging cfg was modified
     
     global __logger
     global __errorLogHandler
@@ -29,8 +28,11 @@ def configureLogger(cfg: LogConfiguration) -> logging.Logger:
         __missingConfigWarningIssued = False
         return None
     
-    if not cfg.modified:
-        return
+    # check if the logging cfg was modified
+    # only do the setup if the log has not been set up yet or the cfg has been modified
+    if (not cfg.modified) and (__logger is not None):
+        if (len(__logger.handlers) > 0):
+            return
     cfg.modified = False
 
     __logger = logging.getLogger('bifabrik')
@@ -76,9 +78,11 @@ def getLogger(suppressWarnings = False):
         print('Error: The bifabrik logger has not been properly configured. Please use configureLogger(cfg: LogConfiguration) first.')
         __missingConfigWarningIssued = True
 
+    # this is done so that in case the log is not configured correcty, 
+    # calls to the logger still pass and don't crash data loads
     if __logger is None:    
         __logger = logging.getLogger('bifabrik')
-        
+
     return __logger
     #return logging.getLogger('bifabrik')
 
