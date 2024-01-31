@@ -7,15 +7,28 @@ from inspect import getcallargs, getfullargspec
 from collections.abc import Iterable
 from collections import OrderedDict
 from itertools import *
+from bifabrik.utils.fsUtils import getDefaultLakehouseAbfsPath
 
 __logger = logging.getLogger('bifabrik')
 __errorLogHandler = None
 __logHandler = None
+__missingConfigWarningIssued = False
 
 # called by bifabrik when starting a pipeline
 def configureLogger(cfg: LogConfiguration) -> logging.Logger:
     """Initializes logging based on configuration"""
     # check if the logging cfg was modified
+    
+    global __logger
+    global __errorLogHandler
+    global __logHandler
+    global __missingConfigWarningIssued
+
+    if getDefaultLakehouseAbfsPath() is None:
+        print('The logger cannot be setup because the notebook is not attached to a lakehouse. The logs would be written to the attached lakehouse under Files/.')
+        __missingConfigWarningIssued = False
+        return None
+    
     if not cfg.__modified:
         return
     cfg.__modified = False
@@ -50,11 +63,21 @@ def configureLogger(cfg: LogConfiguration) -> logging.Logger:
     return __logger
 
 
-def getLogger():
+def getLogger(suppressWarnings = False):
     """Returns the 'bifabrik' logger if it has been initialized (using setLogger(LogConfiguration))
     Otherwise returns a new logger
     """
-    return logging.getLogger('bifabrik')
+    global __logger
+    global __errorLogHandler
+    global __logHandler
+    global __missingConfigWarningIssued
+
+    if __missingConfigWarningIssued == False and __logger is None and suppressWarnings == False:
+        print('Error: The bifabrik logger has not been properly configured. Please use configureLogger(cfg: LogConfiguration) first.')
+        __missingConfigWarningIssued = True
+        __logger = logging.getLogger('bifabrik')
+    return __logger
+    #return logging.getLogger('bifabrik')
 
 def logCalls(f):
     """A decorator to log every call to function (function name and arg values).
@@ -64,7 +87,7 @@ def logCalls(f):
     @wraps(f)
     def func(*args, **kwargs):
         for line in __describe_call(f, *args, **kwargs):
-                __logger.info(line)
+                getLogger().info(line)
         return f(*args, **kwargs)
     return func
 
