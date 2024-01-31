@@ -29,9 +29,9 @@ def configureLogger(cfg: LogConfiguration) -> logging.Logger:
         __missingConfigWarningIssued = False
         return None
     
-    if not cfg.__modified:
+    if not cfg.modified:
         return
-    cfg.__modified = False
+    cfg.modified = False
 
     __logger = logging.getLogger('bifabrik')
 
@@ -75,7 +75,10 @@ def getLogger(suppressWarnings = False):
     if __missingConfigWarningIssued == False and __logger is None and suppressWarnings == False:
         print('Error: The bifabrik logger has not been properly configured. Please use configureLogger(cfg: LogConfiguration) first.')
         __missingConfigWarningIssued = True
+
+    if __logger is None:    
         __logger = logging.getLogger('bifabrik')
+        
     return __logger
     #return logging.getLogger('bifabrik')
 

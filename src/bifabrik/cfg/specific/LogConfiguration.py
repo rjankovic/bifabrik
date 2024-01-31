@@ -68,3 +68,15 @@ class LogConfiguration(Configuration):
         if self.__logPath != val:
             self.__modified = True
         self.__logPath = val
+
+    @property
+    def modified(self) -> bool:
+        return self.__modified
+    
+    @property
+    def modified(self) -> bool:
+        return self.__modified
+    
+    @modified.setter
+    def modified(self, val) -> bool:
+        self.__modified = val
