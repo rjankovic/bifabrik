@@ -64,7 +64,7 @@ class LogConfiguration(Configuration):
         """
         return self.__logPath
     @logPath.setter(key='logPath')
-    def quotechar(self, val):
+    def logPath(self, val):
         if self.__logPath != val:
             self.__modified = True
         self.__logPath = val
@@ -72,11 +72,6 @@ class LogConfiguration(Configuration):
     @property
     def modified(self) -> bool:
         return self.__modified
-    
-    @property
-    def modified(self) -> bool:
-        return self.__modified
-    
     @modified.setter
     def modified(self, val) -> bool:
         self.__modified = val
