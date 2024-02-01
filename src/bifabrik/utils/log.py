@@ -93,8 +93,8 @@ def logCalls(f):
     """
     @wraps(f)
     def func(*args, **kwargs):
-        for line in __describe_call(f, *args, **kwargs):
-                getLogger().info(line)
+        msg = __describe_call(f, *args, **kwargs)
+        getLogger().info(msg)
         return f(*args, **kwargs)
     return func
 
@@ -122,7 +122,7 @@ def __getcallargs_ordered(func, *args, **kwargs):
     return OrderedDict((name, argdict[name]) for name in __getargnames(func))
 
 def __describe_call(func, *args, **kwargs):
-    res = "Calling %s(" % func.__name__
+    res = "Calling %s("% func.__name__
     for argname, argvalue in __getcallargs_ordered(func, *args, **kwargs).items():
         res = res + ("\t%s = %s" % (argname, repr(argvalue)))
     res = res + ")"
