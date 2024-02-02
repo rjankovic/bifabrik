@@ -9,7 +9,7 @@ class FileSourceConfiguration(Configuration):
         self.__encoding = 'utf-8'
 
     @CfgProperty
-    def encoding(self) -> int:
+    def encoding(self) -> str:
         """From pandas:
         How encoding errors are treated. https://docs.python.org/3/library/codecs.html#standard-encodings
         """
