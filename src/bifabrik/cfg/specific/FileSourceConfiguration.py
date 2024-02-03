@@ -6,7 +6,8 @@ class FileSourceConfiguration(Configuration):
     """
     def __init__(self):
         self._explicitProps = {}
-        self.__encoding = 'utf-8'
+        self.__encoding = None
+        self.__locale = None
 
     @CfgProperty
     def encoding(self) -> str:
@@ -17,3 +18,13 @@ class FileSourceConfiguration(Configuration):
     @encoding.setter(key='encoding')
     def encoding(self, val):
         self.__encoding = val
+
+    @CfgProperty
+    def locale(self) -> str:
+        """From spark:
+        sets a locale as language tag in IETF BCP 47 format. If None is set, it uses the default value, en-US. For instance, locale is used while parsing dates and timestamps.
+        """
+        return self.__locale
+    @locale.setter(key='locale')
+    def jsonLocale(self, val):
+        self.__locale = val
