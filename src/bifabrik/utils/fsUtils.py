@@ -3,6 +3,56 @@ import glob2
 
 __mounts = None
 
+def normalizeFileApiPath(path: str):
+    """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
+    """
+    r = path
+    if not r.startswith('/'):
+        r = '/' + r
+
+    lhpt = '/lakehouse'
+    dfpt = '/default'
+    fpt = '/files'
+    lp = r.lower()
+    if lp.startswith(lhpt):
+        lp = lp[len(lhpt):]
+        r = r[len(lhpt):]
+    if lp.startswith(dfpt):
+        lp = lp[len(dfpt):]
+        r = r[len(dfpt):]
+    if lp.startswith(fpt):
+        lp = lp[len(fpt):]
+        r = r[len(fpt):]
+    
+    r = '/lakehouse/default/Files' + r
+    return r
+
+def normalizeRelativeSparkPath(path: str):
+    """Normalizes a file path to the form of "Files/folder/file.csv"
+    """
+    r = path
+    if not r.startswith('/'):
+        r = '/' + r
+    
+    lhpt = '/lakehouse'
+    dfpt = '/default'
+    fpt = '/files'
+    lp = r.lower()
+    
+    lp = r.lower()
+    if lp.startswith(lhpt):
+        lp = lp[len(lhpt):]
+        r = r[len(lhpt):]
+    if lp.startswith(dfpt):
+        lp = lp[len(dfpt):]
+        r = r[len(dfpt):]
+    if lp.startswith(fpt):
+        lp = lp[len(fpt):]
+        r = r[len(fpt):]
+    
+    r = 'Files' + r
+    return r
+
 def filePatternSearch(path: str) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
     using glob to match patterns. Returns the list of files as relative Spark paths.
@@ -13,7 +63,9 @@ def filePatternSearch(path: str) -> list[str]:
     ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
     """
     res = []
-    pathPts = path.split("/")
+    pathNorm = normalizeRelativeSparkPath(path)
+    pathNormTrim = pathNorm[len('Files/'):]
+    pathPts = pathNormTrim.split("/")
     searchLocations = ["Files"]
     if len(pathPts) == 0:
         return res
@@ -46,31 +98,6 @@ def filePatternSearch(path: str) -> list[str]:
             return res
         else:
             searchLocations = nextLevel
-
-def normalizeFileApiPath(path: str):
-    """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
-    """
-    r = path
-    if not r.startswith('/'):
-        r = '/' + r
-
-    lhpt = '/lakehouse'
-    dfpt = '/default'
-    fpt = '/files'
-    lp = r.lower()
-    if lp.startswith(lhpt):
-        lp = lp[len(lhpt):]
-        r = r[len(lhpt):]
-    if lp.startswith(dfpt):
-        lp = lp[len(dfpt):]
-        r = r[len(dfpt):]
-    if lp.startswith(fpt):
-        lp = lp[len(fpt):]
-        r = r[len(fpt):]
-    
-    r = '/lakehouse/default/Files' + r
-    return r
-
 
 def getMounts():
     global __mounts

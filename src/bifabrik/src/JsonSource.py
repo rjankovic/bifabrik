@@ -16,8 +16,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
     
     def path(self, path: str):
         """Set the path (or pattern) to the source file.
-        It searches the Files/ folder in the current lakehouse, so 
-        e.g. path("datasource/*.json") will match "Files/datasource/file1.json", "Files/datasource/file1.json", ...
+        It searches the Files/ folder in the current lakehouse
         """
         self._path = path
         return self
@@ -38,11 +37,11 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         readerBase = self._spark.read
         for key in mergedConfig.fileSource._explicitProps:
             lgr.info(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
-            print(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
+            #print(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
             readerBase.option(key, mergedConfig.fileSource._explicitProps[key])
         for key in mergedConfig.json._explicitProps:
             lgr.info(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
-            print(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
+            #print(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
             readerBase.option(key, mergedConfig.json._explicitProps[key])
 
         df = readerBase.json(source_files)

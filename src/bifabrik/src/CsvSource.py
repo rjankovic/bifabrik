@@ -15,8 +15,7 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     
     def path(self, path: str):
         """Set the path (or pattern) to the source file.
-        It searches the Files/ folder in the current lakehouse, so 
-        e.g. path("datasource/*.csv") will match "Files/datasource/file1.csv", "Files/datasource/file1.csv", ...
+        It searches the Files/ folder in the current lakehouse
         """
         self._path = path
         return self
