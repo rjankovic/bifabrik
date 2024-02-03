@@ -1,6 +1,8 @@
 import notebookutils.mssparkutils.fs
 import glob2
 
+__mounts = None
+
 def filePatternSearch(path: str) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
     using glob to match patterns. Returns the list of files as relative Spark paths.
@@ -69,8 +71,15 @@ def normalizeFileApiPath(path: str):
     r = '/lakehouse/default/Files' + r
     return r
 
+
+def getMounts():
+    global __mounts
+    if __mounts is None:
+        __mounts = notebookutils.mssparkutils.fs.mounts()
+    return __mounts
+
 def getDefaultLakehouseAbfsPath() -> str:
-    for mp in notebookutils.mssparkutils.fs.mounts():
+    for mp in getMounts():
         # print(mp.mountPoint)
         # print(mp.source)
         # print('-----')
