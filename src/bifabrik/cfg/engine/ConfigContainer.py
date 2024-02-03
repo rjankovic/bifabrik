@@ -33,6 +33,8 @@ class ConfigContainer:
                 for cfgpName in cfgPropNames:
                     cfgAttribute = getattr(attrType, cfgpName)
                     if isinstance(cfgAttribute, CfgProperty):
+                        if cfgpName in __propDict[cfgpName]:
+                            raise Exception(f'bifabrik configuration conflict: {cfgpName} is defined both in {__propDict[cfgpName]} ({type(__propDict[cfgpName])}) and {rootAttr} ({type(rootAttr)})')
                         self.__propDict[cfgpName] = rootAttr
 
                         # create a direct setter property for overriding the value in a fluent API
