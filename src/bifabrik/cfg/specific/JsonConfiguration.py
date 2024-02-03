@@ -19,7 +19,7 @@ class JsonConfiguration(Configuration):
         self.__multiLine = None
         self.__allowUnquotedControlChars = None
         self.__lineSep = None
-        self.samplingRatio = None
+        self.__samplingRatio = None
 
     @CfgProperty
     def primitivesAsString(self) -> str:

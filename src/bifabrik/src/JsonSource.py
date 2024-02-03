@@ -2,6 +2,8 @@ from bifabrik.src.DataSource import DataSource
 from bifabrik.cfg.JsonSourceConfiguration import JsonSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import fsUtils
+import logging
+import bifabrik.utils.log as lg
 
 class JsonSource(DataSource, JsonSourceConfiguration):
     """CSV data source
@@ -24,6 +26,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
     # df = spark.read.option("multiLine", "true").option('mode', 'PERMISSIVE').json("Files/JSON/ITA_TabZakazka.json")
 
     def execute(self, input) -> DataFrame:
+        lgr = lg.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
 
         # find source files
@@ -34,9 +37,13 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         # set spark options for all the configuration switches specified in the task's config
         readerBase = self._spark.read
         for key in mergedConfig.fileSource._explicitProps:
-            readerBase.option(key, mergedConfig.fileSource['key'])
+            lgr.info(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
+            print(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
+            readerBase.option(key, mergedConfig.fileSource._explicitProps[key])
         for key in mergedConfig.json._explicitProps:
-            readerBase.option(key, mergedConfig.json['key'])
+            lgr.info(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
+            print(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
+            readerBase.option(key, mergedConfig.json._explicitProps[key])
 
         df = readerBase.json(source_files)
         
