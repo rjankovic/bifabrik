@@ -1,6 +1,7 @@
 """
 Logging to 2 files (log file + error log file), can be used both independently and in bifabrik pipelines.
 The files use a CSV-like format so that they can be analysed using Spark
+You can also log function calls including the arguments using the @logCalls decorator
 
     Examples
     --------
