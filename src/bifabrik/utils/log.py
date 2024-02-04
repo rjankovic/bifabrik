@@ -1,3 +1,33 @@
+"""
+Logging to 2 files (log file + error log file), can be used both independently and in bifabrik pipelines.
+The files use a CSV-like format so that they can be analysed using Spark
+
+    Examples
+    --------
+    > from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
+    > from bifabrik.utils import log
+    > from bifabrik.utils.log import logCalls
+    >
+    > cfg = LogConfiguration()
+    > cfg.logPath = '/logFolder/log.csv'
+    > cfg.errorLogPath = '/logFolder/error_log.csv'
+    > cfg.loggingLevel = 'DEBUG'
+    > log.configureLogger(cfg)
+    >
+    > logger.info('test info log 1')
+    > logger.info('test info log 2')
+    > logger.error('error 1')
+    > logger.error('error 2')
+    > 
+    > @logCalls
+    > def loggedFunction(str):
+    >   print(str)
+    > 
+    > loggedFunction('functionLog1')
+    > loggedFunction('functionLog2')
+
+"""
+
 from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
 import bifabrik.utils.fsUtils as fsu
 
