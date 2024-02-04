@@ -2,7 +2,13 @@ from bifabrik.src.DataSource import DataSource
 from pyspark.sql.dataframe import DataFrame
 
 class SqlSource(DataSource):
-    """SQL (SparkSQL) data source
+    """SQL (SparkSQL) data source - executes a SparkSQL query
+
+    Examples
+    --------
+    > from bifabrik import bifabrik
+    > bif = bifabrik(spark)
+    > bif.fromSql.query('SELECT OrderId, CustomerId  FROM LH1.FactOrderLine WHERE ProductId = 791057').toTable('TransformedOrders1').run()
     """
 
     def __init__(self, parentPipeline):

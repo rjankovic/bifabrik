@@ -6,7 +6,14 @@ import logging
 import bifabrik.utils.log as lg
 
 class JsonSource(DataSource, JsonSourceConfiguration):
-    """CSV data source
+    """CSV data source. Uses the spark loader in the backend.
+    Supports (most of) the options from https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.DataFrameReader.json.html
+
+    Examples
+    --------
+    > from bifabrik import bifabrik
+    > bif = bifabrik(spark)
+    > bif.fromJson.path('Files/JSON/ITA_TabOrder.json').multiLine(True).toTable('TabOrder1').run()
     """
     
     def __init__(self, parentPipeline):

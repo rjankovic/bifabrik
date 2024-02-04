@@ -6,6 +6,14 @@ from bifabrik.utils import fsUtils
 
 class CsvSource(DataSource, CsvSourceConfiguration):
     """CSV data source
+    uses the pandas loaders
+    supports configuration options from https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
+    
+    Examples
+    --------
+    > from bifabrik import bifabrik
+    > bif = bifabrik(spark)
+    > bif.fromCsv.path('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
     """
     
     def __init__(self, parentPipeline):
