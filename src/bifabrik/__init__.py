@@ -1,3 +1,15 @@
+"""
+A collection of ETL tools for Microsoft Fabric
+Includes logging, configuration management and other tools
+
+For more info see https://rjankovic.github.io/bifabrik/
+
+Sample usage:
+    > from bifabrik import bifabrik
+    > bif = bifabrik(spark)
+    > bif.fromCsv.path('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
+"""
+
 # read version from installed package
 from importlib.metadata import version
 __version__ = version("bifabrik")

@@ -1,3 +1,7 @@
+"""
+File system utilities - glob pattern search, Fabric path normalization and more
+"""
+
 import notebookutils.mssparkutils.fs
 import glob2
 

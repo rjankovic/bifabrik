@@ -13,6 +13,8 @@ from bifabrik.base.Pipeline import Pipeline
 class bifabrik:
     """The starting point for using the library.
 
+    For more info see https://rjankovic.github.io/bifabrik/
+    
     To create an instance, pass the :class:`SparkSession` ("spark") from your Fabric notebook.
     You can then use various methods to load data to tables to the current lakehouse.
     The notebook has to have a default lakehouse selected - it references files from the Files/
