@@ -59,7 +59,9 @@ bifabrik.utils.fsUtils.filePatternSearch("DS/*/subfolder11/*.csv")
 #> ['Files/DS/subfolder1/subfolder11/sales3.csv', 'Files/DS/subfolder2/subfolder11/sales4.csv']
 ```
 This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
+<!---
 ## General Flow
 There's a lot of work to be done, but generally, it should work like this
 
 ![https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png](https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png)
+-->
