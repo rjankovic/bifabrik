@@ -36,7 +36,7 @@ display(spark.sql('SELECT * FROM Survey2021'))
 ```
 Or you can make use of pattern matching
 ```python
-# take all the files matching the pattern aned concat them
+# take all files matching the pattern and concat them
 bif.fromCsv.path('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').run()
 ```
 These are full loads, overwriting the target table if it exists.
