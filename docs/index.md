@@ -2,6 +2,7 @@
 
 ### Under construction
 
+|:-------------------------|
 |```pip install bifabrik```|
 |--------------------------|
 
