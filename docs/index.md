@@ -4,7 +4,7 @@
 
 <span style="font-family:Consolas; font-size:1.5em;">__pip install bifabrik__</span>
 
-A python library to make a BI dev's life easier when working with MS Fabric. Use fluent API for building simple ETL pipelines. 
+A python library to make a BI dev's life easier when working with MS Fabric. Use fluent API for building simple ETL pipelines. Avoid repetitive setup using configured preferences. And more.
 
  - [Quickstart](/tutorial/quickstart.md)
  - [Configuration](/tutorial/configuration.md)
