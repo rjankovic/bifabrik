@@ -1,7 +1,8 @@
 # Quickstart
 
 ## Install the library
-First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook
+First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook.
+
 ![bifabrik_install](https://github.com/rjankovic/bifabrik/assets/2221666/a7127858-2768-4b91-ae2d-71804a20ddcb)
 
 or add 
@@ -18,6 +19,7 @@ bif = bifabrik(spark)
 ```
 
 Also, __make sure that your notebook is attached to a lakehouse__. This is the lakehouse to which bifabrik will save data.
+
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
 
 ## Load CSV files
