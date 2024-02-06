@@ -1,1 +1,1 @@
-![image](/assets/images/bifabrik_install.png)
+![image](/docs/assets/images/bifabrik_install.png)
