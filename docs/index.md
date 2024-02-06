@@ -6,7 +6,7 @@
 
 A python library to make a BI dev's life easier when working with MS Fabric. Use fluent API for building simple ETL pipelines. Avoid repetitive setup using configured preferences. And more.
 
- - [Quickstart](/tutorial/quickstart.md)
+ - **[Quickstart](/tutorial/quickstart.md)**
  - [Configuration](/tutorial/configuration.md)
  - Data sources
    - [CSV](/tutorial/src_csv.md)
@@ -16,3 +16,5 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
 - Utilities
    - [File system](/tutorial/util_fs.md)
    - [Logging](/tutorial/util_log.md)
+
+**[Report an issue](https://github.com/rjankovic/bifabrik/issues)**  
