@@ -28,10 +28,18 @@ from bifabrik import bifabrik
 bif = bifabrik(spark)
 
 bif.fromCsv.path('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
+```
+...and the table is in place
 
-# ...and the table is in place
+```python
 display(spark.sql('SELECT * FROM Survey2021'))
 ```
+Or you can make use of pattern matching
+```python
+# take all the files matching the pattern aned concat them
+bif.fromCsv.path('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').run()
+```
+These are full loads, overwriting the target table if it exists.
 
 ## 'But my CSV is a bit...special'
 No problem, we'll tend to it.
