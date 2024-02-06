@@ -2,9 +2,7 @@
 
 ### Under construction
 
-|:-------------------------|
-|```pip install bifabrik```|
-|--------------------------|
+<span style="font-family:Courier; font-size:4em;">pip install bifabrik</span>
 
  - [ABC](/tutorial/quickstart.md)
  - [ABC](/tutorial/quickstart.md)
