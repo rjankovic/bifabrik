@@ -72,4 +72,4 @@ bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch3').run()
 
 # (You can still apply configuration in the individual loads, as seen above, to override the general configuration.)
 ```
-If you want to persist your configuration beyond the PySpark session, you can save it to a JSON file - see [Configuration](/tutorial/configuration.md)
+If you want to persist your configuration beyond the PySpark session, you can save it to a JSON file - see [Configuration](configuration.md)
