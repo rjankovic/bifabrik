@@ -67,9 +67,9 @@ bif.cfg.csv.delimiter = ';'
 bif.cfg.csv.decimal = ','
 
 # the configuration will be applied to all these loads
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch1').run()
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch2').run()
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch3').run()
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
+bif.fromCsv("Files/CsvFiles/dimDepartment.csv").toTable('DimDepartment').run()
+bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
 
 # (You can still apply configuration in the individual loads, as seen above, to override the general configuration.)
 ```
