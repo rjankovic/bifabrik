@@ -102,5 +102,6 @@ GROUP BY Industry_name_NZSIOC
 
 
 [__⇨__ Next - Configuration](configuration.md)
-[Back](/)
+
+[Back](../index.md)
 
