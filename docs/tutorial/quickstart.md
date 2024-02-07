@@ -16,6 +16,7 @@ To load data, `bifabrik` needs to access the spark session.
 ```python
 from bifabrik import bifabrik
 bif = bifabrik(spark)
+# 'bif' will be used in many code samples as a reference to the bifabrik class instance
 ```
 
 Also, __make sure that your notebook is attached to a lakehouse__. This is the lakehouse to which bifabrik will save data.
@@ -51,7 +52,7 @@ Let's say you have a European CSV with commas instead of decimal points and semi
 bif.fromCsv("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toTable('DimBranch').run()
 ```
 
-The backend uses pandas, so you can take advantage of many other options (see `help(bif.fromCsv())`)
+The backend uses pandas, so you can take advantage of many other options - see `help(bif.fromCsv())`
 
 ## Keep the configuration
 What, you have more files like that?  Well then, you probably don't want to repeat the setup each time.
