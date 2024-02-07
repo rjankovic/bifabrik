@@ -1,4 +1,4 @@
-[back](https://rjankovic.github.io/bifabrik/)
+[Back](https://rjankovic.github.io/bifabrik/)
 
 # Quickstart
 
