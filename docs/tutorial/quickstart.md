@@ -22,7 +22,7 @@ Also, __make sure that your notebook is attached to a lakehouse__. This is the l
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
 
-## Load CSV files
+## Load CSV files (JSON is similar)
 Simple tasks should be easy.
 
 ```python
