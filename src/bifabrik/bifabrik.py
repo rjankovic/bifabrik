@@ -41,7 +41,7 @@ class bifabrik:
         log.configureLogger(self.__configuration.log)
         return Pipeline(self._spark, self.__configuration)
     
-    #@property
+    
     def fromCsv(self, path: str = None) -> CsvSource:
         """Load data from CSV
         
@@ -51,13 +51,13 @@ class bifabrik:
         >>> from bifabrik import bifabrik
         >>> bif = bifabrik(spark)
         >>>
-        >>> bif.fromCsv.path('orders*.csv').toTable('Orders').save()
+        >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
         """
         ds = CsvSource(self._prepPipeline())
         ds.path(path)
         return ds
     
-    #@property
+    
     def fromJson(self, path: str = None) -> JsonSource:
         """Load data from JSON
         
@@ -67,13 +67,13 @@ class bifabrik:
         >>> from bifabrik import bifabrik
         >>> bif = bifabrik(spark)
         >>>
-        >>> bif.fromJson.path('invoices.json').toTable('Invoices').save()
+        >>> bif.fromJson('invoices.json').toTable('Invoices').run()
         """
         ds = JsonSource(self._prepPipeline())
         ds.path(path)
         return ds
     
-    #@property
+    
     def fromSql(self, query: str = None) -> SqlSource:
         """Load the result of a SQL query to a table
         
@@ -83,7 +83,7 @@ class bifabrik:
         >>> from bifabrik import bifabrik
         >>> bif = bifabrik(spark)
         >>>
-        >>> bif.fromSql.query('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').save()
+        >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
         """
         ds = SqlSource(self._prepPipeline())
         ds.query(query)
