@@ -16,6 +16,7 @@ To load data, `bifabrik` needs to access the spark session.
 ```python
 from bifabrik import bifabrik
 bif = bifabrik(spark)
+# 'bif' will be used in many code samples as a reference to the bifabrik class instance
 ```
 
 Also, __make sure that your notebook is attached to a lakehouse__. This is the lakehouse to which bifabrik will save data.
@@ -29,7 +30,7 @@ Simple tasks should be easy.
 from bifabrik import bifabrik
 bif = bifabrik(spark)
 
-bif.fromCsv.path('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
+bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
 ...and the table is in place
 
@@ -39,15 +40,43 @@ display(spark.sql('SELECT * FROM Survey2021'))
 Or you can make use of pattern matching
 ```python
 # take all files matching the pattern and concat them
-bif.fromCsv.path('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').run()
+bif.fromCsv('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').run()
 ```
 These are full loads, overwriting the target table if it exists.
 
-## "But my CSV is a bit...special"
-No problem, we'll tend to it.
+## Configure load preferences
+Is your CSV is a bit...special? No problem, we'll tend to it.
+
 Let's say you have a European CSV with commas instead of decimal points and semicolons instead of commas as separators.
 ```python
-bif.fromCsv.path("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toTable('DimBranch').run()
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toTable('DimBranch').run()
 ```
 
-The backend uses pandas, so you can take advantage of many other options (see `help(bif.fromCsv)`)
+The backend uses pandas, so you can take advantage of many other options - see `help(bif.fromCsv())`
+
+## Keep the configuration
+What, you have more files like that?  Well then, you probably don't want to repeat the setup each time.
+Good news is, the bifabrik object can keep all your preferences:
+
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+
+# set the configuration
+bif.cfg.csv.delimiter = ';'
+bif.cfg.csv.decimal = ','
+
+# the configuration will be applied to all these loads
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch1').run()
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch2').run()
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch3').run()
+
+# (You can still apply configuration in the individual loads, as seen above, to override the general configuration.)
+```
+If you want to persist your configuration beyond the PySpark session, you can save it to a JSON file - see [Configuration](configuration.md)
+
+> Consistent configuration is one of the core values of the project.
+> 
+> We like our lakehouses to be uniform in terms of loading patterns, table structures, tracking, etc. At the same time, we want to keep it [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
+> 
+> bifabrik configuration aims to cover many aspects of the lakehouse so that you can define your conventions once, use it repeatedly, and override when neccessary.
