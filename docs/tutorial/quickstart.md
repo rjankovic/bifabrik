@@ -43,5 +43,11 @@ bif.fromCsv.path('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').
 ```
 These are full loads, overwriting the target table if it exists.
 
-## 'But my CSV is a bit...special'
+## "But my CSV is a bit...special"
 No problem, we'll tend to it.
+Let's say you have a European CSV with commas instead of decimal points and semicolons instead of commas as separators.
+```python
+bif.fromCsv.path("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toTable('DimBranch').run()
+```
+
+The backend uses pandas, so you can take advantage of many other options (see `help(bif.fromCsv)`)
