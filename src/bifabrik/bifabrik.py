@@ -41,7 +41,7 @@ class bifabrik:
         log.configureLogger(self.__configuration.log)
         return Pipeline(self._spark, self.__configuration)
     
-    @property
+    #@property
     def fromCsv(self, path: str = None) -> CsvSource:
         """Load data from CSV
         
@@ -57,7 +57,7 @@ class bifabrik:
         ds.path(path)
         return ds
     
-    @property
+    #@property
     def fromJson(self, path: str = None) -> JsonSource:
         """Load data from JSON
         
@@ -73,7 +73,7 @@ class bifabrik:
         ds.path(path)
         return ds
     
-    @property
+    #@property
     def fromSql(self, query: str = None) -> SqlSource:
         """Load the result of a SQL query to a table
         
