@@ -42,7 +42,7 @@ class bifabrik:
         return Pipeline(self._spark, self.__configuration)
     
     @property
-    def fromCsv(self) -> CsvSource:
+    def fromCsv(self, path: str = None) -> CsvSource:
         """Load data from CSV
         
         Examples
@@ -54,10 +54,11 @@ class bifabrik:
         >>> bif.fromCsv.path('orders*.csv').toTable('Orders').save()
         """
         ds = CsvSource(self._prepPipeline())
+        ds.path(path)
         return ds
     
     @property
-    def fromJson(self) -> JsonSource:
+    def fromJson(self, path: str = None) -> JsonSource:
         """Load data from JSON
         
         Examples
@@ -69,10 +70,11 @@ class bifabrik:
         >>> bif.fromJson.path('invoices.json').toTable('Invoices').save()
         """
         ds = JsonSource(self._prepPipeline())
+        ds.path(path)
         return ds
     
     @property
-    def fromSql(self) -> SqlSource:
+    def fromSql(self, query: str = None) -> SqlSource:
         """Load the result of a SQL query to a table
         
         Examples
@@ -84,6 +86,7 @@ class bifabrik:
         >>> bif.fromSql.query('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').save()
         """
         ds = SqlSource(self._prepPipeline())
+        ds.query(query)
         return ds
     
     @property
