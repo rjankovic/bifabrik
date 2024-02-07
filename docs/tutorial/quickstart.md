@@ -1,5 +1,3 @@
-[Back](https://rjankovic.github.io/bifabrik/)
-
 # Quickstart
 
 ## Install the library
@@ -104,3 +102,5 @@ GROUP BY Industry_name_NZSIOC
 
 
 [__⇨__ Next - Configuration](configuration.md)
+[Back](/)
+
