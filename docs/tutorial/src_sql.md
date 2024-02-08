@@ -16,3 +16,5 @@ GROUP BY Industry_name_NZSIOC
 # The resulting table will be saved to the lakehouse attached to your notebook.
 # You can refer to a different source warehouse in the query, though.
 ```
+
+[Back](../index.md)
