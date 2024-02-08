@@ -13,7 +13,7 @@ class JsonConfiguration(Configuration):
         self.__allowSingleQuotes = None
         self.__allowNumericLeadingZero = None
         self.__allowBackslashEscapingAnyCharacter = None
-        self.__corruptRecordsMode = None
+        self.__jsonCorruptRecordsMode = None
         self.__jsonDateFormat = None
         self.__timestampFormat = None
         self.__multiLine = None
@@ -92,7 +92,7 @@ class JsonConfiguration(Configuration):
         self.__allowBackslashEscapingAnyCharacter = val
 
     @CfgProperty
-    def corruptRecordsMode(self) -> str:
+    def jsonCorruptRecordsMode(self) -> str:
         """From spark:
         allows a mode for dealing with corrupt records during parsing. If None is
 set, it uses the default value, PERMISSIVE.
@@ -103,10 +103,10 @@ DROPMALFORMED: ignores the whole corrupted records.
 
 FAILFAST: throws an exception when it meets corrupted records.
         """
-        return self.__corruptRecordsMode
-    @corruptRecordsMode.setter(key='corruptRecordsmode')
-    def corruptRecordsMode(self, val):
-        self.__corruptRecordsMode = val
+        return self.__jsonCorruptRecordsMode
+    @jsonCorruptRecordsMode.setter(key='jsonCorruptRecordsMode')
+    def jsonCorruptRecordsMode(self, val):
+        self.__jsonCorruptRecordsMode = val
 
     @CfgProperty
     def jsonDateFormat(self) -> str:
@@ -114,7 +114,7 @@ FAILFAST: throws an exception when it meets corrupted records.
         sets the string that indicates a date format. Custom date formats follow the formats at datetime pattern. # noqa This applies to date type. If None is set, it uses the default value, yyyy-MM-dd.
         """
         return self.__jsonDateFormat
-    @jsonDateFormat.setter(key='dateFormat')
+    @jsonDateFormat.setter(key='jsonDateFormat')
     def jsonDateFormat(self, val):
         self.__jsonDateFormat = val
 

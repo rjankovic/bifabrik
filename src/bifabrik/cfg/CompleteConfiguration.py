@@ -6,6 +6,8 @@ from bifabrik.cfg.specific.CsvConfiguration import CsvConfiguration
 from bifabrik.cfg.specific.JsonConfiguration import JsonConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
 
+import notebookutils.mssparkutils.fs
+
 class CompleteConfiguration(ConfigContainer):
     """
     Fluent API for configuration
