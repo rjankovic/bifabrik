@@ -78,6 +78,44 @@ bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
 # (You can still apply configuration in the individual loads, as seen above, to override the global configuration.)
 ```
 
+## Save configuration to a file
+
+If we want to keep our configuration across multiple Spark session, we'll need to save it to a file and load later. Here is how to do that with some JSON source settings:
+
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+
+bif.cfg.json.jsonDateFormat = 'dd/MM/yyyy'
+bif.cfg.json.jsonCorruptRecordsMode = 'FAILFAST'
+bif.cfg.json.multiLine = True
+
+bif.cfg.saveToFile('Files/cfg/default.json')
+```
+
+The saved config file looks like this:
+
+```json
+{
+    "csv": {},
+    "fileSource": {},
+    "json": {
+        "jsonDateFormat": "dd/MM/yyyy",
+        "jsonCorruptRecordsMode": "FAILFAST",
+        "multiLine": true
+    },
+    "log": {}
+}
+```
+Note that only the settings we gave an explicit value for are saved - all the default values stay as is.
+Later on you can load the configuration:
+
+```python
+bif.cfg.loadFromFile('Files/cfg/default.json')
+```
+
+
+
 [__⇨__ Next - Configuration](configuration.md)
 
 [Back](../index.md)
