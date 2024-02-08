@@ -19,4 +19,6 @@ fsu.filePatternSearch("fld1/*/data/*.csv")
 
 This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
 
+This utility is independent of the core `bifabrik` class - you don't need to initialize that one or pass the spark session here.
+
 [Back](../index.md)
