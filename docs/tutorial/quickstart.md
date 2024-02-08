@@ -67,9 +67,9 @@ bif.cfg.csv.delimiter = ';'
 bif.cfg.csv.decimal = ','
 
 # the configuration will be applied to all these loads
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch1').run()
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch2').run()
-bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch3').run()
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
+bif.fromCsv("Files/CsvFiles/dimDepartment.csv").toTable('DimDepartment').run()
+bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
 
 # (You can still apply configuration in the individual loads, as seen above, to override the general configuration.)
 ```
@@ -80,3 +80,28 @@ If you want to persist your configuration beyond the PySpark session, you can sa
 > We like our lakehouses to be uniform in terms of loading patterns, table structures, tracking, etc. At the same time, we want to keep it [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
 > 
 > bifabrik configuration aims to cover many aspects of the lakehouse so that you can define your conventions once, use it repeatedly, and override when neccessary.
+
+## SQL transformations
+Enough with the files! Let's make a simple SQL transformation, writing data to another SQL table - a straightforward full load:
+
+```python
+bif.fromSql('''
+
+SELECT Industry_name_NZSIOC AS Industry_Name 
+,AVG(`Value`) AS AvgValue
+FROM LakeHouse1.Survey2021
+WHERE Variable_Code = 'H35'
+GROUP BY Industry_name_NZSIOC
+
+''').toTable('SurveySummarized').run()
+
+# The resulting table will be saved to the lakehouse attached to your notebook.
+# You can refer to a different source warehouse in the query, though.
+```
+
+
+
+[__⇨__ Next - Configuration](configuration.md)
+
+[Back](../index.md)
+
