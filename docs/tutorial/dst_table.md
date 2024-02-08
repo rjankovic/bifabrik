@@ -1,6 +1,6 @@
 # Table destination
 
-Fro now, the only supported option is a full-load of a table into the default lakehouse attached to the notebook:
+For now, the only supported option is a full-load of a table into the default lakehouse attached to the notebook:
 
 ```python
 from bifabrik import bifabrik
