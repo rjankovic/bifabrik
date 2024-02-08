@@ -150,6 +150,5 @@ bif.cfg.csv.decimal = ','
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter('|').toTable('DimBranch').run()
 ```
 
-[__⇨__ Next - Configuration](configuration.md)
 
 [Back](../index.md)
