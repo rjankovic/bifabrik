@@ -90,7 +90,7 @@ bif.cfg.json.jsonDateFormat = 'dd/MM/yyyy'
 bif.cfg.json.jsonCorruptRecordsMode = 'FAILFAST'
 bif.cfg.json.multiLine = True
 
-bif.cfg.saveToFile('Files/cfg/default.json')
+bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
 ```
 
 The saved config file looks like this:
@@ -111,9 +111,31 @@ Note that only the settings we gave an explicit value for are saved - all the de
 Later on you can load the configuration:
 
 ```python
-bif.cfg.loadFromFile('Files/cfg/default.json')
+bif.cfg.loadFromFile('Files/cfg/jsonSrcSettings.json')
 ```
 
+## Default values and merging configurations
+
+All the settings have a default value - for example, for CSV it's the default behavior of [pandas.read_csv](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html). For JSON, it's the default spark JSON reader. When we start modifying the configuration, `bifabrik` keeps track of which settings were specified explicitly. When you then save the configuration to a file, only these explicit settings are saved, as we saw above. When we later load configuration from that file, only these explicitly set properties are set.
+
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+
+bif.cfg.json.jsonDateFormat = 'yyyy-MM-dd'
+bif.cfg.json.jsonCorruptRecordsMode = 'PERMISSIVE'
+bif.cfg.json.multiLine = False
+
+bif.cfg.csv.decimal = ','
+bif.cfg.csv.delimiter = ';'
+
+# now, the JSON settings will be overwritten, but the CSV settings stay
+bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
+```
+
+In other words, the loaded configuration is __merged__ into the current config state.
+
+Now, assume you had different parts of your configuration saved in different files.
 
 
 [__⇨__ Next - Configuration](configuration.md)
