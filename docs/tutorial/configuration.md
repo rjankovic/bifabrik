@@ -55,6 +55,28 @@ If you prefer the key-value setup as in PySpark, you can do that too:
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').option('delimiter', ';').option('decimal', ',').toTable('DimBranch').run()
 ```
 
+## Global preferences
+The `bifabrik` class has a configuration of its own - see
+
+```python
+bif = bifabrik(spark)
+help(bif.cfg)
+```
+
+This is gathered from all the other modules - data sources, destinations, etc. - so that you can configure all sorts of behavior in one place. This then gets applied to all subsequent pipelines.
+
+```python
+# set the configuration
+bif.cfg.csv.delimiter = ';'
+bif.cfg.csv.decimal = ','
+
+# the configuration will be applied to all these loads
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
+bif.fromCsv("Files/CsvFiles/dimDepartment.csv").toTable('DimDepartment').run()
+bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
+
+# (You can still apply configuration in the individual loads, as seen above, to override the global configuration.)
+```
 
 [__⇨__ Next - Configuration](configuration.md)
 
