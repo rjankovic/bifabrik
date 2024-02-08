@@ -135,8 +135,20 @@ bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
 
 In other words, the loaded configuration is __merged__ into the current config state.
 
-Now, assume you had different parts of your configuration saved in different files. Then you would load the configuration from each of them. 
+Now, assume you had different parts of your configuration saved in different files. Then you would load the configuration from each of them. Again, the configurations would be merged. In case of conflict, the config loaded later wins.
 
+This is also what happens when applying local configuration to a task in a pipeline - the local configuration is merged into the global one.
+
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+
+bif.cfg.csv.delimiter = ';'
+bif.cfg.csv.decimal = ','
+
+# the delimiter will be '|', but the decimal separator will stay ','
+bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter('|').toTable('DimBranch').run()
+```
 
 [__⇨__ Next - Configuration](configuration.md)
 
