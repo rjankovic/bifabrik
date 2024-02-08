@@ -135,7 +135,7 @@ bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
 
 In other words, the loaded configuration is __merged__ into the current config state.
 
-Now, assume you had different parts of your configuration saved in different files.
+Now, assume you had different parts of your configuration saved in different files. Then you would load the configuration from each of them. 
 
 
 [__⇨__ Next - Configuration](configuration.md)
