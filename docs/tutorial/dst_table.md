@@ -8,6 +8,7 @@ bif = bifabrik(spark)
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
+This writes a parquet (delta) file into the `Tables/` directory in the lakehouse and Fabric then makes a table out of it, as it does.
 
 There is a lot to be done - support for incremental loads, slowly changing dimensions, surrogate keys and more. Will keep you posted :)
 
