@@ -1,67 +1,112 @@
 # bifabrik
-Microsoft Fabric ETL toolbox - the assembly line for your lakehouse
+Microsoft Fabric ETL toolbox
 
-This is an **early build** - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues Thanks!
+This is an **early build** - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues. Thanks!
 
 ## What is the point?
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
 
-## Usage
-1. First, add `bifabrik` to your Fabric environment
-![image](https://github.com/rjankovic/bifabrik/assets/2221666/8f8f3ad6-5214-4ec4-bf06-677730aed090)
+For more detailed info, see the **[project page](https://rjankovic.github.io/bifabrik/)**
 
-3. In a Fabric notebook, create an instance of bifabrik and give it access to spark
+## Quickstart
+
+First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook.
+
+![bifabrik_install](https://github.com/rjankovic/bifabrik/assets/2221666/a7127858-2768-4b91-ae2d-71804a20ddcb)
+
+or add 
+```python
+%pip install bifabrik
+``` 
+at the beginning of the notebook.
+
+### Init the class
+To load data, `bifabrik` needs to access the spark session.
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+# 'bif' will be used in many code samples as a reference to the bifabrik class instance
+```
+
+Also, __make sure that your notebook is attached to a lakehouse__. This is the lakehouse to which bifabrik will save data.
+
+![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
+
+### Load CSV files (JSON is similar)
+Simple tasks should be easy.
 
 ```python
 from bifabrik import bifabrik
 bif = bifabrik(spark)
+
+bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
+...and the table is in place
 
-3. All set! Now you can
-
-    3.1. load CSV or JSON to tables easily
 ```python
-# instead of
-# df = spark.read.format("csv")
-# .option("header","true")
-# .option("inferSchema" , "true")
-# .load("Files/Sales/FactInternetSales_*.csv")
-# df.write.format("delta").mode("overwrite").saveAsTable("FactInternetSales")
-#
-# do this
-
-bif.fromCsv.path('Sales/FactInternetSales_*.csv').toTable('FactInternetSales').save()
-
-# and you also get better schema inference than you would with PySpark, as bifabrik will use pandas to load the files :)
+display(spark.sql('SELECT * FROM Survey2021'))
 ```
-    3.2. run straightforward SQL transformations
+Or you can make use of pattern matching
 ```python
-# (assume agg_sale_by_date_employee is some transformation view)
-# 
-# instead of
-# sale_by_date_employee = spark.sql("SELECT * FROM agg_sale_by_date_employee")
-# sale_by_date_employee.write.mode("overwrite")
-# .format("delta").option("overwriteSchema", "true")
-# .save("Tables/aggregate_sale_by_date_employee")
-#
-# do this
-
-bif.fromSql.query("SELECT * FROM agg_sale_by_date_employee").toTable('aggregate_sale_by_date_employee').save()
+# take all files matching the pattern and concat them
+bif.fromCsv('Files/*/annual-enterprise-survey-*.csv').toTable('SurveyAll').run()
 ```
-### Utilities
-Find files using pattern matching
+These are full loads, overwriting the target table if it exists.
+
+### Configure load preferences
+Is your CSV is a bit...special? No problem, we'll tend to it.
+
+Let's say you have a European CSV with commas instead of decimal points and semicolons instead of commas as separators.
 ```python
-import bifabrik
-
-bifabrik.utils.fsUtils.filePatternSearch("DS/*/subfolder11/*.csv")
-
-#> ['Files/DS/subfolder1/subfolder11/sales3.csv', 'Files/DS/subfolder2/subfolder11/sales4.csv']
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toTable('DimBranch').run()
 ```
-This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
-<!---
-## General Flow
-There's a lot of work to be done, but generally, it should work like this
 
-![https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png](https://github.com/rjankovic/bifabrik/blob/main/docs/bifabrik_arch2.drawio.png)
--->
+The backend uses pandas, so you can take advantage of many other options - see `help(bif.fromCsv())`
+
+### Keep the configuration
+What, you have more files like that?  Well then, you probably don't want to repeat the setup each time.
+Good news is, the bifabrik object can keep all your preferences:
+
+```python
+from bifabrik import bifabrik
+bif = bifabrik(spark)
+
+# set the configuration
+bif.cfg.csv.delimiter = ';'
+bif.cfg.csv.decimal = ','
+
+# the configuration will be applied to all these loads
+bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
+bif.fromCsv("Files/CsvFiles/dimDepartment.csv").toTable('DimDepartment').run()
+bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
+
+# (You can still apply configuration in the individual loads, as seen above, to override the general configuration.)
+```
+If you want to persist your configuration beyond the PySpark session, you can save it to a JSON file - see [Configuration](https://rjankovic.github.io/bifabrik/tutorial/configuration.html)
+
+> Consistent configuration is one of the core values of the project.
+> 
+> We like our lakehouses to be uniform in terms of loading patterns, table structures, tracking, etc. At the same time, we want to keep it [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
+> 
+> bifabrik configuration aims to cover many aspects of the lakehouse so that you can define your conventions once, use it repeatedly, and override when neccessary.
+
+See the [github page](https://rjankovic.github.io/bifabrik/tutorial/configuration.html) for more details on this.
+
+## SQL transformations
+Enough with the files! Let's make a simple SQL transformation, writing data to another SQL table - a straightforward full load:
+
+```python
+bif.fromSql('''
+
+SELECT Industry_name_NZSIOC AS Industry_Name 
+,AVG(`Value`) AS AvgValue
+FROM LakeHouse1.Survey2021
+WHERE Variable_Code = 'H35'
+GROUP BY Industry_name_NZSIOC
+
+''').toTable('SurveySummarized').run()
+
+# The resulting table will be saved to the lakehouse attached to your notebook.
+# You can refer to a different source warehouse in the query, though.
+```
