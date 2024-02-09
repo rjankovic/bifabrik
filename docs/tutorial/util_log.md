@@ -4,7 +4,28 @@ This tool uses the standard python [logging facility](https://docs.python.org/3/
 
 You can use `bifabrik.utils.log` independently of the rest of `bifabrik` for your custom logs. Also, if you configure this logging, `bifabrik` pipelines can use this to log their progress and errors, which would be nice.
 
+## Configure the logger
 
+First, we need to create a `LogConfiguration` object:
+
+```python
+from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
+from bifabrik.utils import log
+
+cfg = LogConfiguration()
+
+# default = 'Files/BifabrikLog.log'
+cfg.logPath = '/logTest/log.csv'
+
+# default = 'Files/BifabrikErrorLog.log'
+cfg.errorLogPath = '/logTest/error_log.csv'
+
+# default = 'INFO'
+cfg.loggingLevel = 'DEBUG'
+
+# set the config and get the logger
+logger = log.configureLogger(cfg)
+```
 
 
 [Back](../index.md)
