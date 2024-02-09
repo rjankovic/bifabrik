@@ -75,4 +75,32 @@ display(df)
 > 
 > If you don't want to wait, consider flushing the logger manually or using [logging.shutdown](https://docs.python.org/3/library/logging.html#logging.shutdown).
 
+## Logging function calls
+
+Once you have your logging set up, you can take advantage of one more feature - logging function calls, including the arguments passed to each call, using a special decorator
+
+```python
+from bifabrik.utils.log import logCalls
+
+# ...configure the logger as before...
+
+# each call of this function will be logged, without calling the logger directly
+@logCalls
+def loggedFunction(str):
+    print(str)
+
+loggedFunction('functionLog1')
+loggedFunction('functionLog2')
+loggedFunction('functionLog3')
+```
+
+The log file will look like this:
+
+```
+2024-02-01 23:15:00,149	INFO	Calling loggedFunction(	str = 'functionLog1')
+2024-02-01 23:15:00,149	INFO	Calling loggedFunction(	str = 'functionLog2')
+2024-02-01 23:15:00,150	INFO	Calling loggedFunction(	str = 'functionLog3')
+```
+
+
 [Back](../index.md)
