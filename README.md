@@ -13,11 +13,7 @@ For info on all the features, see the [project page](https://rjankovic.github.io
 
 First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook.
 
-Or you can add 
-```python
-%pip install bifabrik
-``` 
-at the beginning of the notebook.
+Or you can add `%pip install bifabrik` at the beginning of the notebook.
 
 ### Init the class
 To load data, `bifabrik` needs to access the spark session.
