@@ -27,5 +27,11 @@ cfg.loggingLevel = 'DEBUG'
 logger = log.configureLogger(cfg)
 ```
 
+The `configureLogger` function returns a python [Logger](https://docs.python.org/3/library/logging.html#logging.Logger). Once configured, the logger is available globlly and can be retrieved using `getLogger()`
+
+```python
+from bifabrik.utils import log
+logger = log.getLogger()
+```
 
 [Back](../index.md)
