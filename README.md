@@ -93,7 +93,7 @@ If you want to persist your configuration beyond the PySpark session, you can sa
 
 See the [github page](https://rjankovic.github.io/bifabrik/tutorial/configuration.html) for more details on this.
 
-## SQL transformations
+### SQL transformations
 Enough with the files! Let's make a simple SQL transformation, writing data to another SQL table - a straightforward full load:
 
 ```python
