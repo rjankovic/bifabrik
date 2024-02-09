@@ -7,19 +7,13 @@ This is an **early build** - if you find a problem, please report it here: https
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
 
-For more detailed info, see the [project page](https://rjankovic.github.io/bifabrik/)
+For info on all the features, see the [project page](https://rjankovic.github.io/bifabrik/)
 
 ## Quickstart
 
 First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook.
 
-![bifabrik_install](https://github.com/rjankovic/bifabrik/assets/2221666/a7127858-2768-4b91-ae2d-71804a20ddcb)
-
-or add 
-```python
-%pip install bifabrik
-``` 
-at the beginning of the notebook.
+Or you can add `%pip install bifabrik` at the beginning of the notebook.
 
 ### Init the class
 To load data, `bifabrik` needs to access the spark session.
@@ -29,7 +23,7 @@ bif = bifabrik(spark)
 # 'bif' will be used in many code samples as a reference to the bifabrik class instance
 ```
 
-Also, __make sure that your notebook is attached to a lakehouse__. This is the lakehouse to which bifabrik will save data.
+Also, __make sure that your notebook is connected to a lakehouse__. This is the lakehouse to which bifabrik will save data.
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
 
