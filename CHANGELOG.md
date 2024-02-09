@@ -1,8 +1,6 @@
 # Changelog
 
-<!--next-version-placeholder-->
-
-## v0.3.0 (2024-02-10)
+## v0.3.0 (2024-02-09)
 
 - Extended configuration system
 - Added CSV and JSON source config options
