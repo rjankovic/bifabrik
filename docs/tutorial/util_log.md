@@ -71,5 +71,8 @@ display(df)
 
 ![image](https://github.com/rjankovic/bifabrik/assets/2221666/23359ce9-5922-466d-bd86-9cd493c6e816)
 
+> Note that it can take a while for the logs to be flushed to files, maybe until the end of the PySpark session.
+> 
+> If you don't want to wait, consider flushing the logger manually or using [logging.shutdown](https://docs.python.org/3/library/logging.html#logging.shutdown).
 
 [Back](../index.md)
