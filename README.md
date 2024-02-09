@@ -7,7 +7,7 @@ This is an **early build** - if you find a problem, please report it here: https
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
 
-For more detailed info, see the [project page](https://rjankovic.github.io/bifabrik/)
+For info on all the features, see the [project page](https://rjankovic.github.io/bifabrik/)
 
 ## Quickstart
 
