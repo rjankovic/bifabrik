@@ -1,6 +1,7 @@
 from bifabrik.base.Task import Task
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 import uuid
+import bifabrik.utils.log as lg
 
 class Pipeline:
     
@@ -42,21 +43,26 @@ class Pipeline:
     
     def _executeUpToIndex(self, index: int):
         prevResult = None
+        lgr = lg.getLogger()
 
         for ix in range(0, index+1):
             tsk = self._tasks[ix]
-            if tsk.completed == True:
+            try:
+                if tsk.completed == True:
+                    if tsk.error != None:
+                        raise Exception(tsk.error)
+                    prevResult = tsk.result
+                    continue
+                
                 if tsk.error != None:
                     raise Exception(tsk.error)
+                
+                lgr.info(f'Executing {tsk}')
+                tsk.execute(prevResult)
                 prevResult = tsk.result
-                continue
-            
-            if tsk.error != None:
-                raise Exception(tsk.error)
-            
-            tsk.execute(prevResult)
-            prevResult = tsk.result
-    
+            except Exception as e:
+                lgr.exception(e)
+                raise e
     @property
     def id(self) -> str:
         return self._id

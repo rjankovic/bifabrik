@@ -3,6 +3,7 @@ from bifabrik.cfg.CsvSourceConfiguration import CsvSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
 import pandas as pd
 from bifabrik.utils import fsUtils
+from bifabrik.utils import log
 
 class CsvSource(DataSource, CsvSourceConfiguration):
     """CSV data source
@@ -20,6 +21,9 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         super().__init__(parentPipeline)
         CsvSourceConfiguration.__init__(self)
         self._path = ""
+
+    def __str__(self):
+        return f'CSV source: {self._path}'
     
     def path(self, path: str):
         """Set the path (or pattern) to the source file.

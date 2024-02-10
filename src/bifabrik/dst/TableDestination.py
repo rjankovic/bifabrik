@@ -14,6 +14,9 @@ class TableDestination(DataDestination):
     def __init__(self, pipeline: Pipeline, targetTableName: str):
         super().__init__(pipeline)
         self._targetTableName = targetTableName
+
+    def __str__(self):
+        return f'Table destination: {self._targetTableName}'
     
     def execute(self, input: DataFrame) -> None:
         input.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save("Tables/" + self._targetTableName)

@@ -2,7 +2,6 @@ from bifabrik.src.DataSource import DataSource
 from bifabrik.cfg.JsonSourceConfiguration import JsonSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import fsUtils
-import logging
 import bifabrik.utils.log as lg
 
 class JsonSource(DataSource, JsonSourceConfiguration):
@@ -20,6 +19,9 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         super().__init__(parentPipeline)
         JsonSourceConfiguration.__init__(self)
         self._path = ""
+
+    def __str__(self):
+        return f'CSV source: {self._path}'
     
     def path(self, path: str):
         """Set the path (or pattern) to the source file.
@@ -43,11 +45,11 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         # set spark options for all the configuration switches specified in the task's config
         readerBase = self._spark.read
         for key in mergedConfig.fileSource._explicitProps:
-            lgr.info(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
+            #lgr.info(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
             #print(f'Setting {key} to {mergedConfig.fileSource._explicitProps[key]}')
             readerBase.option(key, mergedConfig.fileSource._explicitProps[key])
         for key in mergedConfig.json._explicitProps:
-            lgr.info(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
+            #lgr.info(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
             #print(f'Setting {key} to {mergedConfig.json._explicitProps[key]}')
             readerBase.option(key, mergedConfig.json._explicitProps[key])
 

@@ -15,6 +15,9 @@ class SqlSource(DataSource):
         super().__init__(parentPipeline)
         self._query = ""
     
+    def __str__(self):
+        return f'SQL source: {self._query}'
+    
     def query(self, query: str):
         """The source SQL query (SparkSQL) to be executed against the current lakehouse
         """
