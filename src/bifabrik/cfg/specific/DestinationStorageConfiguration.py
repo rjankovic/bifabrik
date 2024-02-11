@@ -11,7 +11,7 @@ class DestinationStorageConfiguration(Configuration):
 
     @CfgProperty
     def destinationWorkspaceName(self) -> str:
-        """The workspace from which pipeline destinations load data
+        """The workspace to which pipeline destinations writes data
         """
         return self.__destinationWorkspaceName
     @destinationWorkspaceName.setter(key='destinationWorkspaceName')
@@ -20,7 +20,7 @@ class DestinationStorageConfiguration(Configuration):
 
     @CfgProperty
     def destinationLakehouseName(self) -> str:
-        """The lakehouse from which pipeline destinations load data
+        """The lakehouse to which pipeline destinations writes data
         """
         return self.__destinationLakehouseName
     @destinationLakehouseName.setter(key='destinationLakehouseName')

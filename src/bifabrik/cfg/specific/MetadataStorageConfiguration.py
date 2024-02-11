@@ -3,6 +3,7 @@ from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class MetadataStorageConfiguration(Configuration):
     """Defines the data metadata lakehouse. By default refers to the default lakehouse of the notebook.
+    This is used for logs and metadata tables
     """
     def __init__(self):
         self._explicitProps = {}
@@ -11,7 +12,7 @@ class MetadataStorageConfiguration(Configuration):
 
     @CfgProperty
     def metadataWorkspaceName(self) -> str:
-        """The workspace from which pipeline metadatas load data
+        """The workspace where bifabrik stores metadata
         """
         return self.__metadataWorkspaceName
     @metadataWorkspaceName.setter(key='metadataWorkspaceName')
@@ -20,7 +21,7 @@ class MetadataStorageConfiguration(Configuration):
 
     @CfgProperty
     def metadataLakehouseName(self) -> str:
-        """The lakehouse from which pipeline metadatas load data
+        """The lakehouse where bifabrik stores metadata
         """
         return self.__metadataLakehouseName
     @metadataLakehouseName.setter(key='metadataLakehouseName')
