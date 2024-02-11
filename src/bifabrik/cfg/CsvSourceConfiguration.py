@@ -1,8 +1,10 @@
 from bifabrik.cfg.engine.ConfigContainer import ConfigContainer
 from bifabrik.cfg.specific.CsvConfiguration import CsvConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
+from bifabrik.cfg.DataSourceConfigurationBase import DataSourceConfigurationBase
 
-class CsvSourceConfiguration(ConfigContainer):
+#class CsvSourceConfiguration(ConfigContainer):
+class CsvSourceConfiguration(DataSourceConfigurationBase):
 
     def __init__(self):
         self.__csv = CsvConfiguration()
