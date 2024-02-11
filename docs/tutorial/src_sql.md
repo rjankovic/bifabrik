@@ -1,6 +1,6 @@
-# SQL transformations
+# Spark SQL transformations
 
-Let's make a simple SQL transformation, writing data to another SQL table - a straightforward full load:
+Let's make a simple Spark SQL transformation, writing data to another SQL table - a straightforward full load:
 
 ```python
 bif.fromSql('''
