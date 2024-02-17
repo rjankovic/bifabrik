@@ -4,8 +4,8 @@ File system utilities - glob pattern search, Fabric path normalization and more
 
 import notebookutils.mssparkutils.fs
 import glob2
-
-__mounts = None
+import regex
+import sempy.fabric as spf
 
 def normalizeFileApiPath(path: str):
     """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
@@ -111,10 +111,135 @@ def getMounts():
 
 def getDefaultLakehouseAbfsPath() -> str:
     for mp in getMounts():
-        # print(mp.mountPoint)
-        # print(mp.source)
-        # print('-----')
         if mp.mountPoint == '/default':
             # print(f"Default Lakehouse is: {mp.source}")
             return mp.source
         return None
+    
+def isGuid(uuid):
+    UUID_PATTERN = regex.compile(r'^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$', regex.IGNORECASE)
+    #print(uuid)
+    #print(type(uuid))
+    r = bool(UUID_PATTERN.match(uuid))
+    return r
+
+def getWorkspaceAndLakehouseIdFromMountSource(mountSource):
+    m = regex.match(r"abfss://(.+)@onelake.dfs.fabric.microsoft.com/(.+)", mountSource)
+    return { 'workspaceId': m.captures(1)[0], 'lakehouseId': m.captures(2)[0] }
+
+class LakehouseMeta:
+    lakehouseName: str = None
+    lakehouseId: str = None
+    workspaceName: str = None
+    workspaceId: str = None
+    basePath: str = None
+
+class LakehouseMap():
+
+    def __init__(self, workspaceId: str, workspaceName: str):
+        self.__dictById = {}
+        self.__dictByName = {}
+        self.workspaceId = workspaceId
+        self.workspaceName = workspaceName
+    
+    def addLakehouse(self, lh: LakehouseMeta):
+        self.__dictById[lh.lakehouseId] = lh
+        self.__dictByName[lh.lakehouseName] = lh
+
+    def __getitem__(self, key) -> LakehouseMeta:
+        if isGuid(key):
+            if key in self.__dictById:
+                return self.__dictById[key]
+            return None
+        if key in self.__dictByName:
+            return self.__dictByName[key]
+        return None
+
+    def __contains__(self,key):
+        if self.__getitem__(key) is not None:
+            return True
+        return False
+    
+    def __iter__(self):
+        for k in self.__dictById:
+            yield self.__dictById[k]
+
+class WorkspaceMap:
+
+    def __init__(self):
+        self.__dictById = {}
+        self.__dictByName = {}
+    
+    def addWorkspace(self, lm: LakehouseMap):
+        self.__dictById[lm.workspaceId] = lm
+        self.__dictByName[lm.workspaceName] = lm
+
+    def __getitem__(self, key) -> LakehouseMap:
+        #print(key)
+        #print(self.__dictByName)
+        if isGuid(key):
+            if key in self.__dictById:
+                return self.__dictById[key]
+            return None
+        if key in self.__dictByName:
+            return self.__dictByName[key]
+        return None
+    
+    def __contains__(self,key):
+        if self.__getitem__(key) is not None:
+            return True
+        return False
+    
+    def __iter__(self):
+        for k in self.__dictById:
+            yield self.__dictById[k]
+
+__workspaceMap = WorkspaceMap()
+__defaultWorkspaceId = spf.get_notebook_workspace_id()
+__defaultWorkspaceRefName = 'default'
+__defaultLakehouseId = None
+__defaultLakehouseName = 'default'
+
+defaultMount = getDefaultLakehouseAbfsPath()
+if defaultMount is not None:
+    wsLh = getWorkspaceAndLakehouseIdFromMountSource(defaultMount)    
+    __defaultLakehouseId = wsLh['lakehouseId']
+
+def mapLakehouses(workspaceId: str, workspaceName: str):
+    lm = LakehouseMap(workspaceId = workspaceId, workspaceName = workspaceName)
+    #__workspaceMap.addWorkspace(lm)
+    #print(workspaceId)
+    #print(workspaceName)
+    #print('----')
+    lhs = mssparkutils.lakehouse.list(workspaceId)
+    for lh in lhs:
+        l = LakehouseMeta()
+        l.lakehouseName = lh.displayName
+        l.lakehouseId = lh.id
+        l.workspaceName = workspaceName
+        l.workspaceId = workspaceId
+        l.basePath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lh.id}"
+        lm.addLakehouse(l)
+    return lm
+
+def mapWorkspaces():
+    global __workspaceMap
+    global __defaultWorkspaceId
+    global __defaultWorkspaceRefName
+    global __defaultLakehouseId
+    global __defaultLakehouseName
+
+    wss = spf.list_workspaces()
+    #display(wss)
+    #print(type(wss[wss.Type == 'Workspace']))
+    for wix, ws in wss[wss.Type == 'Workspace'].iterrows():
+        lm = mapLakehouses(workspaceId = ws['Id'], workspaceName = ws['Name'])
+        __workspaceMap.addWorkspace(lm)
+
+    if __defaultWorkspaceId not in __workspaceMap:
+        mwslm = mapLakehouses(workspaceId = __defaultWorkspaceId, workspaceName = 'My workspace')
+        __workspaceMap.addWorkspace(mwslm)
+    
+    return __workspaceMap
+
+mapWorkspaces()
