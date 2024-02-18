@@ -6,23 +6,23 @@ class DestinationStorageConfiguration(Configuration):
     """
     def __init__(self):
         self._explicitProps = {}
-        self.__destinationWorkspaceName = None
-        self.__destinationLakehouseName = None
+        self.__destinationWorkspace = None
+        self.__destinationLakehouse = None
 
     @CfgProperty
-    def destinationWorkspaceName(self) -> str:
-        """The workspace to which pipeline destinations writes data
+    def destinationWorkspace(self) -> str:
+        """The workspace to which pipeline destinations writes data - ID or name
         """
-        return self.__destinationWorkspaceName
-    @destinationWorkspaceName.setter(key='destinationWorkspaceName')
-    def destinationWorkspaceName(self, val):
-        self.__destinationWorkspaceName = val
+        return self.__destinationWorkspace
+    @destinationWorkspace.setter(key='destinationWorkspace')
+    def destinationWorkspace(self, val):
+        self.__destinationWorkspace = val
 
     @CfgProperty
-    def destinationLakehouseName(self) -> str:
-        """The lakehouse to which pipeline destinations writes data
+    def destinationLakehouse(self) -> str:
+        """The lakehouse to which pipeline destinations writes data - ID or name
         """
-        return self.__destinationLakehouseName
-    @destinationLakehouseName.setter(key='destinationLakehouseName')
-    def destinationLakehouseName(self, val):
-        self.__destinationLakehouseName = val
+        return self.__destinationLakehouse
+    @destinationLakehouse.setter(key='destinationLakehouse')
+    def destinationLakehouse(self, val):
+        self.__destinationLakehouse = val

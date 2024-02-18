@@ -1,8 +1,10 @@
 from bifabrik.dst.DataDestination import DataDestination
 from bifabrik.base.Pipeline import Pipeline
+from bifabrik.cfg.TableDestinationConfiguration import TableDestinationConfiguration
 from pyspark.sql.dataframe import DataFrame
+from bifabrik.utils import fsUtils
 
-class TableDestination(DataDestination):
+class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
 
     Examples
@@ -19,4 +21,9 @@ class TableDestination(DataDestination):
         return f'Table destination: {self._targetTableName}'
     
     def execute(self, input: DataFrame) -> None:
-        input.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save("Tables/" + self._targetTableName)
+        mergedConfig = self._pipeline.configuration.mergeToCopy(self)
+        dstLh = mergedConfig.destinationStorage.destinationLakehouse
+        dstWs = mergedConfig.destinationStorage.destinationWorkspace
+        basePath = fsUtils.getLakehousePath(dstLh, dstWs)
+
+        input.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(basePath + "/Tables/" + self._targetTableName)

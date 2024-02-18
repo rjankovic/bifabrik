@@ -11,7 +11,7 @@ class SourceStorageConfiguration(Configuration):
 
     @CfgProperty
     def sourceWorkspace(self) -> str:
-        """The workspace from which pipeline sources load data
+        """The workspace from which pipeline sources load data - ID or name
         """
         return self.__sourceWorkspace
     @sourceWorkspace.setter(key='sourceWorkspace')
@@ -20,7 +20,7 @@ class SourceStorageConfiguration(Configuration):
 
     @CfgProperty
     def sourceLakehouse(self) -> str:
-        """The lakehouse from which pipeline sources load data
+        """The lakehouse from which pipeline sources load data - ID or name
         """
         return self.__sourceLakehouse
     @sourceLakehouse.setter(key='sourceLakehouse')
