@@ -10,4 +10,5 @@ class DataSourceConfigurationBase(ConfigContainer):
 
     @property
     def sourceStorage(self) -> SourceStorageConfiguration:
+        """The source lakehouse and warehouse reference used by pipelines"""
         return self.__sourceStorage

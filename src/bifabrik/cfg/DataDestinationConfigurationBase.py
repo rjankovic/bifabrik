@@ -10,4 +10,5 @@ class DataDestinationConfigurationBase(ConfigContainer):
 
     @property
     def destinationStorage(self) -> DestinationStorageConfiguration:
+        """The destination lakehouse and warehouse reference used by pipelines"""
         return self.__destinationStorage

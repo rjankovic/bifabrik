@@ -5,6 +5,8 @@ from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
 from bifabrik.cfg.specific.CsvConfiguration import CsvConfiguration
 from bifabrik.cfg.specific.JsonConfiguration import JsonConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
+from bifabrik.cfg.specific.SourceStorageConfiguration import SourceStorageConfiguration
+from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationStorageConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -23,6 +25,8 @@ class CompleteConfiguration(ConfigContainer):
         self.__csv = CsvConfiguration()
         self.__json = JsonConfiguration()
         self.__fileSource = FileSourceConfiguration()
+        self.__sourceStorage = SourceStorageConfiguration()
+        self.__destinationStorage = DestinationStorageConfiguration()
         super().__init__()
         
 
@@ -45,6 +49,16 @@ class CompleteConfiguration(ConfigContainer):
     def fileSource(self) -> FileSourceConfiguration:
         """General file loading settings"""
         return self.__fileSource
+    
+    @property
+    def sourceStorage(self) -> SourceStorageConfiguration:
+        """The source lakehouse and warehouse reference used by pipelines"""
+        return self.__sourceStorage
+
+    @property
+    def destinationStorage(self) -> DestinationStorageConfiguration:
+        """The destination lakehouse and warehouse reference used by pipelines"""
+        return self.__destinationStorage
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
@@ -80,3 +94,4 @@ class CompleteConfiguration(ConfigContainer):
         deser = CompleteConfiguration.deserialize(json_data)
         self.merge(deser)
         return self
+        

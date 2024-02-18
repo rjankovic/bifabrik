@@ -7,6 +7,7 @@ import glob2
 import regex
 import sempy.fabric as spf
 
+__mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
 __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
@@ -119,9 +120,9 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
 
     lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace)
     pathNorm = normalizeAbfsFilePath(path, lhPath)
-    pathNormTrim = pathNorm[len('Files/'):]
-    pathPts = pathNormTrim.split("/")
-    searchLocations = ["Files"]
+    pathNormTrimSuffix = pathNorm[len(lhPath) + len('/Files/'):] #pathNorm[len('Files/'):]
+    pathPts = pathNormTrimSuffix.split("/")
+    searchLocations = [lhPath + '/Files']
     if len(pathPts) == 0:
         return res
     
@@ -131,6 +132,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
             return res
         nextLevel = []
         for location in searchLocations:
+            #print(f'Searching location {location}')
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
@@ -258,7 +260,7 @@ def mapLakehouses(workspaceId: str, workspaceName: str):
     #print(workspaceId)
     #print(workspaceName)
     #print('----')
-    lhs = mssparkutils.lakehouse.list(workspaceId)
+    lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
     for lh in lhs:
         l = LakehouseMeta()
         l.lakehouseName = lh.displayName

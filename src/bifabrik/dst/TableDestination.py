@@ -15,6 +15,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
     """
     def __init__(self, pipeline: Pipeline, targetTableName: str):
         super().__init__(pipeline)
+        TableDestinationConfiguration.__init__(self)
         self._targetTableName = targetTableName
 
     def __str__(self):
