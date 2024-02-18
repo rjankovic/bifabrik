@@ -6,23 +6,23 @@ class SourceStorageConfiguration(Configuration):
     """
     def __init__(self):
         self._explicitProps = {}
-        self.__sourceWorkspaceName = None
-        self.__sourceLakehouseName = None
+        self.__sourceWorkspace = None
+        self.__sourceLakehouse = None
 
     @CfgProperty
-    def sourceWorkspaceName(self) -> str:
+    def sourceWorkspace(self) -> str:
         """The workspace from which pipeline sources load data
         """
-        return self.__sourceWorkspaceName
-    @sourceWorkspaceName.setter(key='sourceWorkspaceName')
-    def sourceWorkspaceName(self, val):
-        self.__sourceWorkspaceName = val
+        return self.__sourceWorkspace
+    @sourceWorkspace.setter(key='sourceWorkspace')
+    def sourceWorkspace(self, val):
+        self.__sourceWorkspace = val
 
     @CfgProperty
-    def sourceLakehouseName(self) -> str:
+    def sourceLakehouse(self) -> str:
         """The lakehouse from which pipeline sources load data
         """
-        return self.__sourceLakehouseName
-    @sourceLakehouseName.setter(key='sourceLakehouseName')
-    def sourceLakehouseName(self, val):
-        self.__sourceLakehouseName = val
+        return self.__sourceLakehouse
+    @sourceLakehouse.setter(key='sourceLakehouse')
+    def sourceLakehouse(self, val):
+        self.__sourceLakehouse = val

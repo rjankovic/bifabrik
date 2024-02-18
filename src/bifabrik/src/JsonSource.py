@@ -38,7 +38,11 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
 
         # find source files
-        source_files = fsUtils.filePatternSearch(self._path)
+
+        srcLh = mergedConfig.sourceStorage.sourceLakehouse
+        srcWs = mergedConfig.sourceStorage.sourceWorkspace
+
+        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs)
         if len(source_files) == 0:
             return None
         

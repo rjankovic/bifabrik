@@ -63,17 +63,9 @@ def normalizeRelativeSparkPath(path: str):
     return r
 
 # abfss://6dcac488-f099-451a-91f1-0945791bf22c@onelake.dfs.fabric.microsoft.com/a2939674-cc1c-4814-9094-8c16e5682502/Files/CsvFiles
-def normalizeAbfsPath(path: str, lakehouseId: str = None, workspaceId: str = None, inFiles = False, inTables = False):
+def normalizeAbfsPath(path: str, lakehouseBasePath: str, inFiles = False, inTables = False):
     """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles or .../Tables/Table1"
     """
-
-    global __defaultWorkspaceId
-    global __defaultLakehouseId
-    if lakehouseId is None:
-        lakehouseId = __defaultLakehouseId
-    if workspaceId is None:
-        workspaceId = __defaultLakehouseId
-
     r = path
 
     if not r.startswith('/'):
@@ -91,29 +83,26 @@ def normalizeAbfsPath(path: str, lakehouseId: str = None, workspaceId: str = Non
         r = '/' + r
         lp = '/' + lp
     
-    if lakehouseId is None:
-        raise Exception("No lakehouse specified.")
-    
     if inFiles and not (r.startswith('/Files')):
         r = '/Files' + r
     elif inTables and not (r.startswith('/Tables')):
         r = '/Tables' + r
     
-    wPrefix = f'abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lakehouseId}{r}'
+    wPrefix = f'{lakehouseBasePath}{r}'
     return wPrefix
 
 
-def normalizeAbfsFilePath(path: str, lakehouseId: str = None, workspaceId: str = None):
+def normalizeAbfsFilePath(path: str, lakehouseBasePath: str):
     """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles"
     """
-    return normalizeAbfsPath(path, lakehouseId, workspaceId, inFiles = True)
+    return normalizeAbfsPath(path, lakehouseBasePath=lakehouseBasePath, inFiles = True)
 
-def normalizeAbfsTablePath(path: str, lakehouseId: str = None, workspaceId: str = None):
+def normalizeAbfsTablePath(path: str, lakehouseBasePath: str):
     """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Tables/Table1"
     """
-    return normalizeAbfsPath(path, lakehouseId, workspaceId, inTables = True)
+    return normalizeAbfsPath(path, lakehouseBasePath=lakehouseBasePath, inTables = True)
 
-def filePatternSearch(path: str) -> list[str]:
+def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
     using glob to match patterns. Returns the list of files as relative Spark paths.
 
@@ -122,8 +111,14 @@ def filePatternSearch(path: str) -> list[str]:
     >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
     ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
     """
+    
+    
+    
     res = []
-    pathNorm = normalizeRelativeSparkPath(path)
+    #pathNorm = normalizeRelativeSparkPath(path)
+
+    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace)
+    pathNorm = normalizeAbfsFilePath(path, lhPath)
     pathNormTrim = pathNorm[len('Files/'):]
     pathPts = pathNormTrim.split("/")
     searchLocations = ["Files"]
