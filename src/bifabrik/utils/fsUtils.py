@@ -7,6 +7,11 @@ import glob2
 import regex
 import sempy.fabric as spf
 
+__defaultWorkspaceId = spf.get_notebook_workspace_id()
+__defaultWorkspaceRefName = 'default'
+__defaultLakehouseId = None
+__defaultLakehouseRefName = 'default'
+
 def normalizeFileApiPath(path: str):
     """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
     """
@@ -56,6 +61,57 @@ def normalizeRelativeSparkPath(path: str):
     
     r = 'Files' + r
     return r
+
+# abfss://6dcac488-f099-451a-91f1-0945791bf22c@onelake.dfs.fabric.microsoft.com/a2939674-cc1c-4814-9094-8c16e5682502/Files/CsvFiles
+def normalizeAbfsPath(path: str, lakehouseId: str = None, workspaceId: str = None, inFiles = False, inTables = False):
+    """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles or .../Tables/Table1"
+    """
+
+    global __defaultWorkspaceId
+    global __defaultLakehouseId
+    if lakehouseId is None:
+        lakehouseId = __defaultLakehouseId
+    if workspaceId is None:
+        workspaceId = __defaultLakehouseId
+
+    r = path
+
+    if not r.startswith('/'):
+        r = '/' + r
+    
+    lhpt = '/lakehouse'
+    dfpt = '/default'
+    fpt = '/files'
+    lp = r.lower()
+    
+    lp = r.lower()
+    if lp.startswith('abfss:'):
+        return r
+    if not r.startswith('/'):
+        r = '/' + r
+        lp = '/' + lp
+    
+    if lakehouseId is None:
+        raise Exception("No lakehouse specified.")
+    
+    if inFiles and not (r.startswith('/Files')):
+        r = '/Files' + r
+    elif inTables and not (r.startswith('/Tables')):
+        r = '/Tables' + r
+    
+    wPrefix = f'abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lakehouseId}{r}'
+    return wPrefix
+
+
+def normalizeAbfsFilePath(path: str, lakehouseId: str = None, workspaceId: str = None):
+    """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles"
+    """
+    return normalizeAbfsPath(path, lakehouseId, workspaceId, inFiles = True)
+
+def normalizeAbfsTablePath(path: str, lakehouseId: str = None, workspaceId: str = None):
+    """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Tables/Table1"
+    """
+    return normalizeAbfsPath(path, lakehouseId, workspaceId, inTables = True)
 
 def filePatternSearch(path: str) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
@@ -195,10 +251,6 @@ class WorkspaceMap:
             yield self.__dictById[k]
 
 __workspaceMap = WorkspaceMap()
-__defaultWorkspaceId = spf.get_notebook_workspace_id()
-__defaultWorkspaceRefName = 'default'
-__defaultLakehouseId = None
-__defaultLakehouseRefName = 'default'
 
 defaultMount = getDefaultLakehouseAbfsPath()
 if defaultMount is not None:
