@@ -35,12 +35,17 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     def execute(self, input):
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
 
-        source_files = fsUtils.filePatternSearch(self._path)
+        srcLh = mergedConfig.sourceStorage.sourceLakehouse
+        srcWs = mergedConfig.sourceStorage.sourceWorkspace
+
+        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs)
+
+        #source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
         for src_file in source_files:
-            csv_path = f'/lakehouse/default/{src_file}'
+            #csv_path = f'/lakehouse/default/{src_file}'
             pd_df = pd.read_csv(
-                filepath_or_buffer = csv_path, 
+                filepath_or_buffer = src_file, 
                 encoding = mergedConfig.fileSource.encoding,
                 delimiter = mergedConfig.csv.delimiter,
                 header = mergedConfig.csv.header,
