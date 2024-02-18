@@ -198,7 +198,7 @@ __workspaceMap = WorkspaceMap()
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
 __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
-__defaultLakehouseName = 'default'
+__defaultLakehouseRefName = 'default'
 
 defaultMount = getDefaultLakehouseAbfsPath()
 if defaultMount is not None:
@@ -227,7 +227,7 @@ def mapWorkspaces():
     global __defaultWorkspaceId
     global __defaultWorkspaceRefName
     global __defaultLakehouseId
-    global __defaultLakehouseName
+    global __defaultLakehouseRefName
 
     wss = spf.list_workspaces()
     #display(wss)
@@ -243,3 +243,45 @@ def mapWorkspaces():
     return __workspaceMap
 
 mapWorkspaces()
+
+def getLakehousePath(lakehouse: str, workspace: str = None):
+    """
+    Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
+    it can then be appended as e.g
+        abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Tables
+        abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Files
+    
+    :param lakehouse: the lakehouse name or ID (if None, the current notebook's deault lakehouse is used)
+    :param workspace: the name or ID of the workspace containg the lakehouse (if None, the workspace of the current notebook is used)
+    :return: the ABFSS path to the lakehouse or None if the lakehouse is not found
+    """
+    global __workspaceMap
+    global __defaultWorkspaceId
+    global __defaultLakehouseId
+
+    global __defaultWorkspaceRefName
+    global __defaultLakehouseRefName
+
+    # use the workspace of the notebook
+    if workspace is None:
+        workspace = __defaultWorkspaceId
+    if workspace == __defaultLakehouseRefName:
+        workspace = __defaultWorkspaceId
+
+    # use the notebook's default lakehouse
+    if lakehouse is None:
+        lakehouse = __defaultLakehouseId
+    if lakehouse == __defaultLakehouseRefName:
+        lakehouse = __defaultLakehouseId
+
+    if lakehouse is None:
+        return None
+    
+    lhMap = __workspaceMap[workspace]
+    if lhMap is None:
+        return None
+    
+    lh = lhMap[lakehouse]
+    if lh is None:
+        return None
+    return lh.basePath
