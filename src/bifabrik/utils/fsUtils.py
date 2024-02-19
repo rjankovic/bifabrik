@@ -95,6 +95,7 @@ def normalizeAbfsPath(path: str, lakehouseBasePath: str, inFiles = False, inTabl
 
 def normalizeAbfsFilePath(path: str, lakehouseBasePath: str):
     """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles"
+    You can use getLakehousePath() to get the lakehouse path as "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com"
     """
     return normalizeAbfsPath(path, lakehouseBasePath=lakehouseBasePath, inFiles = True)
 

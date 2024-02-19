@@ -36,6 +36,7 @@ class bifabrik:
     def __init__(self, spark: SparkSession):
         self._spark = spark
         self.__configuration = CompleteConfiguration()
+        #self.__configuration.log.loggingEnabled = False
     
     def _prepPipeline(self) -> Pipeline:
         log.configureLogger(self.__configuration.log)
@@ -92,5 +93,10 @@ class bifabrik:
     @property
     def cfg(self) -> CompleteConfiguration:
         return self.__configuration
+    
+    # def loadConfigFromFile(self, path: str):
+    #     self.cfg.loadFromFile(path)
+    #     if self.cfg.log.loggingEnabled:
+    #         log.configureLogger(self.cfg.log)
     
     
