@@ -22,6 +22,7 @@ class LogConfiguration(Configuration):
         self._explicitProps = {}
         self.__loggingEnabled = True
         self.__logLakehouse = None
+        self.__logWorkspace = None
         self.__loggingLevel = 'INFO'
         self.__errorLogPath = 'Files/BifabrikErrorLog.log'
         self.__logPath = 'Files/BifabrikLog.log'
@@ -89,3 +90,25 @@ class LogConfiguration(Configuration):
     @modified.setter
     def modified(self, val) -> bool:
         self.__modified = val
+
+    @CfgProperty
+    def logWorkspace(self) -> str:
+        """The workspace (id or name) to which to save logs
+        """
+        return self.__logWorkspace
+    @logWorkspace.setter(key='logWorkspace')
+    def logWorkspace(self, val):
+        if self.__logWorkspace != val:
+            self.__modified = True
+        self.__logWorkspace = val
+    
+    @CfgProperty
+    def logLakehouse(self) -> str:
+        """The lakehouse (id or name) to which to save logs
+        """
+        return self.__logLakehouse
+    @logLakehouse.setter(key='logLakehouse')
+    def logLakehouse(self, val):
+        if self.__logLakehouse != val:
+            self.__modified = True
+        self.__logLakehouse = val
