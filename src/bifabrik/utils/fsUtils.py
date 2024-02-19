@@ -107,7 +107,7 @@ def normalizeAbfsTablePath(path: str, lakehouseBasePath: str):
     """
     return normalizeAbfsPath(path, lakehouseBasePath=lakehouseBasePath, inTables = True)
 
-def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -> list[str]:
+def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, useImplicitDefaultWorkspacePath = False) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
     using glob to match patterns. Returns the list of files as relative Spark paths.
 
@@ -115,6 +115,8 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
     --------
     >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
     ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
+
+    useImplicitDefaultWorkspacePath indicates whether '/lakehouse/default' should be used to refer to the default lakehouse
     """
     
     
@@ -122,7 +124,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
     res = []
     #pathNorm = normalizeRelativeSparkPath(path)
 
-    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace)
+    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace, useImplicitDefaultWorkspacePath=useImplicitDefaultWorkspacePath)
     pathNorm = normalizeAbfsFilePath(path, lhPath)
     pathNormTrimSuffix = pathNorm[len(lhPath) + len('/Files/'):] #pathNorm[len('Files/'):]
     pathPts = pathNormTrimSuffix.split("/")
@@ -298,7 +300,7 @@ def mapWorkspaces():
 
 mapWorkspaces()
 
-def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False):
+def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultWorkspacePath = False):
     """
     Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
     it can then be appended as e.g
@@ -328,6 +330,10 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
     if lakehouse == __defaultLakehouseRefName:
         lakehouse = __defaultLakehouseId
 
+    if useImplicitDefaultWorkspacePath:
+        if workspace == __defaultWorkspaceId and lakehouse == __defaultLakehouseId:
+            return '/lakehouse/default'
+        
     errMsg = f'Could not find lakehouse {lakehouse} in workspace {workspace}'
 
     if lakehouse is None:

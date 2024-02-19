@@ -38,7 +38,7 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         srcLh = mergedConfig.sourceStorage.sourceLakehouse
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 
-        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs)
+        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs, useImplicitDefaultWorkspacePath = True)
 
         #source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
