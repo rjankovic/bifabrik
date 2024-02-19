@@ -91,24 +91,27 @@ class LogConfiguration(Configuration):
     def modified(self, val) -> bool:
         self.__modified = val
 
-    @CfgProperty
-    def logWorkspace(self) -> str:
-        """The workspace (id or name) to which to save logs
-        """
-        return self.__logWorkspace
-    @logWorkspace.setter(key='logWorkspace')
-    def logWorkspace(self, val):
-        if self.__logWorkspace != val:
-            self.__modified = True
-        self.__logWorkspace = val
+    # logging to a different lakehouse cannot be supported now, because the default logger aims at a mounted directory in the environment
+    # and other lakeouses are not in mounts
     
-    @CfgProperty
-    def logLakehouse(self) -> str:
-        """The lakehouse (id or name) to which to save logs
-        """
-        return self.__logLakehouse
-    @logLakehouse.setter(key='logLakehouse')
-    def logLakehouse(self, val):
-        if self.__logLakehouse != val:
-            self.__modified = True
-        self.__logLakehouse = val
+    # @CfgProperty
+    # def logWorkspace(self) -> str:
+    #     """The workspace (id or name) to which to save logs
+    #     """
+    #     return self.__logWorkspace
+    # @logWorkspace.setter(key='logWorkspace')
+    # def logWorkspace(self, val):
+    #     if self.__logWorkspace != val:
+    #         self.__modified = True
+    #     self.__logWorkspace = val
+    
+    # @CfgProperty
+    # def logLakehouse(self) -> str:
+    #     """The lakehouse (id or name) to which to save logs
+    #     """
+    #     return self.__logLakehouse
+    # @logLakehouse.setter(key='logLakehouse')
+    # def logLakehouse(self, val):
+    #     if self.__logLakehouse != val:
+    #         self.__modified = True
+    #     self.__logLakehouse = val

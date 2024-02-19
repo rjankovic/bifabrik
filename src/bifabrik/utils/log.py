@@ -78,12 +78,14 @@ def configureLogger(cfg: LogConfiguration) -> logging.Logger:
     level = logging.getLevelName(cfg.loggingLevel)
     __logger.setLevel(level)
     
-    lhPath = fsu.getLakehousePath(lakehouse = cfg.logLakehouse, workspace = cfg.logWorkspace)
-    logPath = fsu.normalizeAbfsFilePath(cfg.logPath, lhPath)
-    errorLogPath = fsu.normalizeAbfsFilePath(cfg.errorLogPath, lhPath)
+    # logging to a different lakehouse cannot be supported now, because the default logger aims at a mounted directory in the environment
+    # and other lakeouses are not in mounts
+    # lhPath = fsu.getLakehousePath(lakehouse = cfg.logLakehouse, workspace = cfg.logWorkspace)
+    # logPath = fsu.normalizeAbfsFilePath(cfg.logPath, lhPath)
+    # errorLogPath = fsu.normalizeAbfsFilePath(cfg.errorLogPath, lhPath)
 
-    #logPath = fsu.normalizeFileApiPath(cfg.logPath)
-    #errorLogPath = fsu.normalizeFileApiPath(cfg.errorLogPath)
+    logPath = fsu.normalizeFileApiPath(cfg.logPath)
+    errorLogPath = fsu.normalizeFileApiPath(cfg.errorLogPath)
 
     __logHandler = logging.FileHandler(logPath, mode='a')
     __errorLogHandler = logging.FileHandler(errorLogPath, mode='a')

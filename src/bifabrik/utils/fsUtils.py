@@ -6,16 +6,19 @@ import notebookutils.mssparkutils.fs
 import glob2
 import regex
 import sempy.fabric as spf
+import bifabrik.utils.log as lg
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
 __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
 __defaultLakehouseRefName = 'default'
+lgr = lg.getLogger()
 
 def normalizeFileApiPath(path: str):
     """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
     """
+    # used internally for logging to a mounted directory (int the notebook's default lakehouse)
     r = path
     if not r.startswith('/'):
         r = '/' + r
@@ -133,7 +136,8 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
             return res
         nextLevel = []
         for location in searchLocations:
-            print(f'Searching location {location}')
+            lgr.info(f'Searching location {location}')
+            #print(f'Searching location {location}')
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
