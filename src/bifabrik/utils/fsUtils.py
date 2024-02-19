@@ -132,7 +132,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None) -
             return res
         nextLevel = []
         for location in searchLocations:
-            #print(f'Searching location {location}')
+            print(f'Searching location {location}')
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
@@ -197,15 +197,15 @@ class LakehouseMap():
     
     def addLakehouse(self, lh: LakehouseMeta):
         self.__dictById[lh.lakehouseId] = lh
-        self.__dictByName[lh.lakehouseName] = lh
+        self.__dictByName[lh.lakehouseName.lower()] = lh
 
     def __getitem__(self, key) -> LakehouseMeta:
         if isGuid(key):
             if key in self.__dictById:
                 return self.__dictById[key]
             return None
-        if key in self.__dictByName:
-            return self.__dictByName[key]
+        if key.lower() in self.__dictByName:
+            return self.__dictByName[key.lower()]
         return None
 
     def __contains__(self,key):
@@ -225,7 +225,7 @@ class WorkspaceMap:
     
     def addWorkspace(self, lm: LakehouseMap):
         self.__dictById[lm.workspaceId] = lm
-        self.__dictByName[lm.workspaceName] = lm
+        self.__dictByName[lm.workspaceName.lower()] = lm
 
     def __getitem__(self, key) -> LakehouseMap:
         #print(key)
@@ -234,8 +234,8 @@ class WorkspaceMap:
             if key in self.__dictById:
                 return self.__dictById[key]
             return None
-        if key in self.__dictByName:
-            return self.__dictByName[key]
+        if key.lower() in self.__dictByName:
+            return self.__dictByName[key.lower()]
         return None
     
     def __contains__(self,key):
@@ -293,7 +293,7 @@ def mapWorkspaces():
 
 mapWorkspaces()
 
-def getLakehousePath(lakehouse: str, workspace: str = None):
+def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False):
     """
     Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
     it can then be appended as e.g
@@ -323,14 +323,22 @@ def getLakehousePath(lakehouse: str, workspace: str = None):
     if lakehouse == __defaultLakehouseRefName:
         lakehouse = __defaultLakehouseId
 
+    errMsg = f'Could not find lakehouse {lakehouse} in workspace {workspace}'
+
     if lakehouse is None:
-        return None
+        if suppressNotFound:
+            return None
+        raise Exception(errMsg)
     
     lhMap = __workspaceMap[workspace]
     if lhMap is None:
-        return None
+        if suppressNotFound:
+            return None
+        raise Exception(errMsg)
     
     lh = lhMap[lakehouse]
     if lh is None:
-        return None
+        if suppressNotFound:
+            return None
+        raise Exception(errMsg)
     return lh.basePath
