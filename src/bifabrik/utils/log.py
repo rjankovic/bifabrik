@@ -77,9 +77,13 @@ def configureLogger(cfg: LogConfiguration) -> logging.Logger:
 
     level = logging.getLevelName(cfg.loggingLevel)
     __logger.setLevel(level)
+    
+    lhPath = fsu.getLakehousePath(lakehouse = cfg.logLakehouse, workspace = cfg.logWorkspace)
+    logPath = fsu.normalizeAbfsFilePath(cfg.logPath, lhPath)
+    errorLogPath = fsu.normalizeAbfsFilePath(cfg.errorLogPath, lhPath)
 
-    logPath = fsu.normalizeFileApiPath(cfg.logPath)
-    errorLogPath = fsu.normalizeFileApiPath(cfg.errorLogPath)
+    #logPath = fsu.normalizeFileApiPath(cfg.logPath)
+    #errorLogPath = fsu.normalizeFileApiPath(cfg.errorLogPath)
 
     __logHandler = logging.FileHandler(logPath, mode='a')
     __errorLogHandler = logging.FileHandler(errorLogPath, mode='a')
