@@ -33,13 +33,18 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         return self
     
     def execute(self, input):
+        lgr = log.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
 
         srcLh = mergedConfig.sourceStorage.sourceLakehouse
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 
         source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs, useImplicitDefaultWorkspacePath = True)
-
+        if len(source_files) == 0:
+            return None
+        
+        separator = ', '
+        lgr.info(f'Loading CSV files: [{separator.join(source_files)}]')
         #source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
         for src_file in source_files:

@@ -6,14 +6,14 @@ import notebookutils.mssparkutils.fs
 import glob2
 import regex
 import sempy.fabric as spf
-import bifabrik.utils.log as lg
+#import bifabrik.utils.log as lg
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
 __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
 __defaultLakehouseRefName = 'default'
-lgr = lg.getLogger()
+#lgr = lg.getLogger()
 
 def normalizeFileApiPath(path: str):
     """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
@@ -128,7 +128,12 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     pathNorm = normalizeAbfsFilePath(path, lhPath)
     pathNormTrimSuffix = pathNorm[len(lhPath) + len('/Files/'):] #pathNorm[len('Files/'):]
     pathPts = pathNormTrimSuffix.split("/")
-    searchLocations = [lhPath + '/Files']
+    startPath = lhPath + '/Files'
+    defaultLh = '/lakehouse/default/'
+    if startPath.startsWith(defaultLh):
+        startPath = startPath[len(defaultLh):]
+    searchLocations = [startPath]
+
     if len(pathPts) == 0:
         return res
     
@@ -138,8 +143,8 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
             return res
         nextLevel = []
         for location in searchLocations:
-            lgr.info(f'Searching location {location}')
-            #print(f'Searching location {location}')
+            #lgr.info(f'Searching location {location}')
+            print(f'Searching location {location}')
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)

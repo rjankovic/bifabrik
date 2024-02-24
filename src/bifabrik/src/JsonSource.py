@@ -46,6 +46,9 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         if len(source_files) == 0:
             return None
         
+        separator = ', '
+        lgr.info(f'Loading JSON files: [{separator.join(source_files)}]')
+        
         # set spark options for all the configuration switches specified in the task's config
         readerBase = self._spark.read
         for key in mergedConfig.fileSource._explicitProps:
