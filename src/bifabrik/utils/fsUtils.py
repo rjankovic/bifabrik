@@ -107,7 +107,7 @@ def normalizeAbfsTablePath(path: str, lakehouseBasePath: str):
     """
     return normalizeAbfsPath(path, lakehouseBasePath=lakehouseBasePath, inTables = True)
 
-def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, useImplicitDefaultWorkspacePath = False) -> list[str]:
+def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, useImplicitDefaultLakehousePath = False) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
     using glob to match patterns. Returns the list of files as relative Spark paths.
 
@@ -116,7 +116,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
     ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
 
-    useImplicitDefaultWorkspacePath indicates whether '/lakehouse/default' should be used to refer to the default lakehouse
+    param useImplicitDefaultLakehousePath indicates whether '/lakehouse/default' should be used to refer to the default lakehouse
     """
     
     
@@ -124,14 +124,16 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     res = []
     #pathNorm = normalizeRelativeSparkPath(path)
 
-    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace, useImplicitDefaultWorkspacePath=useImplicitDefaultWorkspacePath)
+    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace, useImplicitDefaultLakehousePath=useImplicitDefaultLakehousePath)
     pathNorm = normalizeAbfsFilePath(path, lhPath)
     pathNormTrimSuffix = pathNorm[len(lhPath) + len('/Files/'):] #pathNorm[len('Files/'):]
     pathPts = pathNormTrimSuffix.split("/")
     startPath = lhPath + '/Files'
     defaultLh = '/lakehouse/default/'
-    if startPath.startsWith(defaultLh):
+    isInDefaultLakehouse = False
+    if startPath.startswith(defaultLh):
         startPath = startPath[len(defaultLh):]
+        isInDefaultLakehouse = True
     searchLocations = [startPath]
 
     if len(pathPts) == 0:
@@ -160,7 +162,10 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
                 slfPath = location + '/' + slf
                 if len(pathPts) == i + 1:
                     if finfo.isFile:
-                        res.append(slfPath)
+                        if isInDefaultLakehouse:
+                            res.append(f'{defaultLh}{slfPath}')
+                        else:
+                            res.append(slfPath)
                 elif (finfo.isDir):
                     nextLevel.append(slfPath)
         if len(pathPts) == i + 1:
@@ -305,7 +310,7 @@ def mapWorkspaces():
 
 mapWorkspaces()
 
-def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultWorkspacePath = False):
+def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultLakehousePath = False):
     """
     Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
     it can then be appended as e.g
@@ -314,6 +319,7 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
     
     :param lakehouse: the lakehouse name or ID (if None, the current notebook's deault lakehouse is used)
     :param workspace: the name or ID of the workspace containg the lakehouse (if None, the workspace of the current notebook is used)
+    :param useImplicitDefaultLakehousePath: if the path targets the notebook's default lakehouse, use /lakehouse/default to refer to it
     :return: the ABFSS path to the lakehouse or None if the lakehouse is not found
     """
     global __workspaceMap
@@ -335,7 +341,7 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
     if lakehouse == __defaultLakehouseRefName:
         lakehouse = __defaultLakehouseId
 
-    if useImplicitDefaultWorkspacePath:
+    if useImplicitDefaultLakehousePath:
         if workspace == __defaultWorkspaceId and lakehouse == __defaultLakehouseId:
             return '/lakehouse/default'
         

@@ -39,7 +39,8 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         srcLh = mergedConfig.sourceStorage.sourceLakehouse
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 
-        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs, useImplicitDefaultWorkspacePath = True)
+        # pandas seems to have a problem with absolute ABFS paths, so use /lakehouse/default/ if refering to the default lakehouse
+        source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs, useImplicitDefaultLakehousePath = True)
         if len(source_files) == 0:
             return None
         
