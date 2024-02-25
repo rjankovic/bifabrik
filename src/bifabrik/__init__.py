@@ -1,14 +1,33 @@
-"""
-A collection of ETL tools for Microsoft Fabric
-Includes logging, configuration management and other tools
+"""The starting point for using the library.
 
-For more info see https://rjankovic.github.io/bifabrik/
+    For more info see https://rjankovic.github.io/bifabrik/
+    
+    To create an instance, pass the :class:`SparkSession` ("spark") from your Fabric notebook.
+    You can then use various methods to load data to tables to the current lakehouse.
+    The notebook has to have a default lakehouse selected - it references files from the Files/
+    path of the lakehouse and tables from Tables/
 
-Sample usage:
-    > from bifabrik import bifabrik
-    > bif = bifabrik(spark)
-    > bif.fromCsv.path('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
+    Examples
+    --------
+    Load a CSV file from Files/Folder/orders*.csv (all files matching the pattern) to a table called OrdersTable.
+
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromCsv.path('Folder/orders*.csv').toTable('OrdersTable').save()
+    
+    Load the results of a SQL query to a table
+
+    >>> bif.fromSql.query("SELECT * FROM OrdersTable LIMIT 10").toTable('TenOrders').save()
 """
+
+from bifabrik.src.CsvSource import CsvSource
+from bifabrik.src.JsonSource import JsonSource
+from bifabrik.src.SqlSource import SqlSource
+from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
+import bifabrik.utils.log as log
+from bifabrik.base.Pipeline import Pipeline
+import pyspark.sql.session as pss
 
 # read version from installed package
 from importlib.metadata import version
@@ -20,3 +39,69 @@ from bifabrik.utils.fsUtils import getDefaultLakehouseAbfsPath
 
 if getDefaultLakehouseAbfsPath() is None:
     print('bifabrik warning: the notebook is not attached to a lakehouse - some features of bifabrik will not work correctly.')
+
+
+#from bifabrik.base.Task import Task
+
+__spark = pss.SparkSession.builder.getOrCreate()
+__configuration = CompleteConfiguration()
+        #self.__configuration.log.loggingEnabled = False
+    
+def __prepPipeline() -> Pipeline:
+    global __configuration
+    global __spark
+    log.configureLogger(__configuration.log)
+    return Pipeline(__spark, __configuration)
+
+
+def fromCsv(path: str = None) -> CsvSource:
+    """Load data from CSV
+    
+    Examples
+    --------
+    
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
+    """
+    ds = CsvSource(__prepPipeline())
+    ds.path(path)
+    return ds
+
+
+def fromJson(path: str = None) -> JsonSource:
+    """Load data from JSON
+    
+    Examples
+    --------
+    
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromJson('invoices.json').toTable('Invoices').run()
+    """
+    ds = JsonSource(__prepPipeline())
+    ds.path(path)
+    return ds
+
+
+def fromSql(query: str = None) -> SqlSource:
+    """Load the result of a SQL query to a table
+    
+    Examples
+    --------
+    
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
+    """
+    ds = SqlSource(__prepPipeline())
+    ds.query(query)
+    return ds
+
+def __getattr__(name):
+    if name == 'cfg':
+        return __configuration
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
