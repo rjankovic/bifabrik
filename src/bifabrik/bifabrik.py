@@ -1,17 +1,4 @@
-from pyspark.sql.session import SparkSession
-from pyspark.sql.dataframe import DataFrame
-from bifabrik.src.CsvSource import CsvSource
-from bifabrik.src.JsonSource import JsonSource
-from bifabrik.src.SqlSource import SqlSource
-from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
-import bifabrik.utils.log as log
-
-
-from bifabrik.base.Pipeline import Pipeline
-#from bifabrik.base.Task import Task
-
-class bifabrik:
-    """The starting point for using the library.
+"""The starting point for using the library.
 
     For more info see https://rjankovic.github.io/bifabrik/
     
@@ -32,71 +19,90 @@ class bifabrik:
     Load the results of a SQL query to a table
 
     >>> bif.fromSql.query("SELECT * FROM OrdersTable LIMIT 10").toTable('TenOrders').save()
-    """
-    def __init__(self, spark: SparkSession):
-        self._spark = spark
-        self.__configuration = CompleteConfiguration()
+"""
+
+from pyspark.sql.session import SparkSession
+from pyspark.sql.dataframe import DataFrame
+from bifabrik.src.CsvSource import CsvSource
+from bifabrik.src.JsonSource import JsonSource
+from bifabrik.src.SqlSource import SqlSource
+from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
+import bifabrik.utils.log as log
+
+
+from bifabrik.base.Pipeline import Pipeline
+#from bifabrik.base.Task import Task
+
+__spark = spark
+__configuration = CompleteConfiguration()
         #self.__configuration.log.loggingEnabled = False
     
-    def _prepPipeline(self) -> Pipeline:
-        log.configureLogger(self.__configuration.log)
-        return Pipeline(self._spark, self.__configuration)
+def __prepPipeline() -> Pipeline:
+    global __configuration
+    global __spark
+    log.configureLogger(__configuration.log)
+    return Pipeline(__spark, __configuration)
+
+
+def fromCsv(path: str = None) -> CsvSource:
+    """Load data from CSV
     
+    Examples
+    --------
     
-    def fromCsv(self, path: str = None) -> CsvSource:
-        """Load data from CSV
-        
-        Examples
-        --------
-        
-        >>> from bifabrik import bifabrik
-        >>> bif = bifabrik(spark)
-        >>>
-        >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
-        """
-        ds = CsvSource(self._prepPipeline())
-        ds.path(path)
-        return ds
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
+    """
+    ds = CsvSource(__prepPipeline())
+    ds.path(path)
+    return ds
+
+
+def fromJson(path: str = None) -> JsonSource:
+    """Load data from JSON
     
+    Examples
+    --------
     
-    def fromJson(self, path: str = None) -> JsonSource:
-        """Load data from JSON
-        
-        Examples
-        --------
-        
-        >>> from bifabrik import bifabrik
-        >>> bif = bifabrik(spark)
-        >>>
-        >>> bif.fromJson('invoices.json').toTable('Invoices').run()
-        """
-        ds = JsonSource(self._prepPipeline())
-        ds.path(path)
-        return ds
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromJson('invoices.json').toTable('Invoices').run()
+    """
+    ds = JsonSource(__prepPipeline())
+    ds.path(path)
+    return ds
+
+
+def fromSql(query: str = None) -> SqlSource:
+    """Load the result of a SQL query to a table
     
+    Examples
+    --------
     
-    def fromSql(self, query: str = None) -> SqlSource:
-        """Load the result of a SQL query to a table
-        
-        Examples
-        --------
-        
-        >>> from bifabrik import bifabrik
-        >>> bif = bifabrik(spark)
-        >>>
-        >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
-        """
-        ds = SqlSource(self._prepPipeline())
-        ds.query(query)
-        return ds
-    
-    @property
-    def cfg(self) -> CompleteConfiguration:
-        return self.__configuration
-    
-    # def loadConfigFromFile(self, path: str):
-    #     self.cfg.loadFromFile(path)
-    #     if self.cfg.log.loggingEnabled:
-    #         log.configureLogger(self.cfg.log)
-    
-    
+    >>> from bifabrik import bifabrik
+    >>> bif = bifabrik(spark)
+    >>>
+    >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
+    """
+    ds = SqlSource(__prepPipeline())
+    ds.query(query)
+    return ds
+
+def __getattr__(name):
+    if name == 'cfg':
+        return __configuration
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+# @property
+# def cfg(self) -> CompleteConfiguration:
+#     return self.__configuration
+
+# def loadConfigFromFile(self, path: str):
+#     self.cfg.loadFromFile(path)
+#     if self.cfg.log.loggingEnabled:
+#         log.configureLogger(self.cfg.log)
+
+
