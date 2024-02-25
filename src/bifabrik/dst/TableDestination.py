@@ -9,8 +9,8 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     Examples
     --------
-    > from bifabrik import bifabrik
-    > bif = bifabrik(spark)
+    > import bifabrik as bif
+    >
     > bif.fromSql.query('SELECT * FROM SomeTable').toTable('DestinationTable1').run()
     """
     def __init__(self, pipeline: Pipeline, targetTableName: str):

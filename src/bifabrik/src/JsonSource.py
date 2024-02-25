@@ -10,8 +10,8 @@ class JsonSource(DataSource, JsonSourceConfiguration):
 
     Examples
     --------
-    > from bifabrik import bifabrik
-    > bif = bifabrik(spark)
+    > import bifabrik as bif
+    >
     > bif.fromJson.path('Files/JSON/ITA_TabOrder.json').multiLine(True).toTable('TabOrder1').run()
     """
     

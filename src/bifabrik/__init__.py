@@ -11,10 +11,9 @@
     --------
     Load a CSV file from Files/Folder/orders*.csv (all files matching the pattern) to a table called OrdersTable.
 
-    >>> from bifabrik import bifabrik
-    >>> bif = bifabrik(spark)
+    >>> import bifabrik as bif
     >>>
-    >>> bif.fromCsv.path('Folder/orders*.csv').toTable('OrdersTable').save()
+    >>> bif.fromCsv.path('Folder/orders*.csv').toTable('OrdersTable').run()
     
     Load the results of a SQL query to a table
 
@@ -60,8 +59,7 @@ def fromCsv(path: str = None) -> CsvSource:
     Examples
     --------
     
-    >>> from bifabrik import bifabrik
-    >>> bif = bifabrik(spark)
+    >>> import bifabrik as bif
     >>>
     >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
     """
@@ -76,8 +74,7 @@ def fromJson(path: str = None) -> JsonSource:
     Examples
     --------
     
-    >>> from bifabrik import bifabrik
-    >>> bif = bifabrik(spark)
+    >>> import bifabrik as bif
     >>>
     >>> bif.fromJson('invoices.json').toTable('Invoices').run()
     """
@@ -92,8 +89,7 @@ def fromSql(query: str = None) -> SqlSource:
     Examples
     --------
     
-    >>> from bifabrik import bifabrik
-    >>> bif = bifabrik(spark)
+    >>> import bifabrik as bif
     >>>
     >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
     """
@@ -102,6 +98,6 @@ def fromSql(query: str = None) -> SqlSource:
     return ds
 
 def __getattr__(name):
-    if name == 'cfg':
+    if name == 'config':
         return __configuration
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

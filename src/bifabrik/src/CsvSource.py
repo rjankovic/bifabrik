@@ -12,8 +12,8 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     
     Examples
     --------
-    > from bifabrik import bifabrik
-    > bif = bifabrik(spark)
+    > import bifabrik as bif
+    >
     > bif.fromCsv.path('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
     """
     

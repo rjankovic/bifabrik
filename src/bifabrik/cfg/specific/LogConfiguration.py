@@ -6,7 +6,7 @@ class LogConfiguration(Configuration):
 
     Examples
     --------
-    > from bifabrik import bifabrik
+    > import bifabrik as bif
     > from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
     > from bifabrik.utils import log
     > 
@@ -15,7 +15,6 @@ class LogConfiguration(Configuration):
     > cfg.errorLogPath = '/error_log.csv'
     > cfg.loggingLevel = 'DEBUG'
     > 
-    > bif = bifabrik(spark)
     > log.configureLogger(cfg)
     """
     def __init__(self):

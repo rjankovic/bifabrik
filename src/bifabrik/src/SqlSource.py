@@ -6,8 +6,8 @@ class SqlSource(DataSource):
 
     Examples
     --------
-    > from bifabrik import bifabrik
-    > bif = bifabrik(spark)
+    > import bifabrik as bif
+    >
     > bif.fromSql.query('SELECT OrderId, CustomerId  FROM LH1.FactOrderLine WHERE ProductId = 791057').toTable('TransformedOrders1').run()
     """
 
