@@ -46,6 +46,11 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         
         separator = ', '
         lgr.info(f'Loading CSV files: [{separator.join(source_files)}]')
+        
+        # TODO: remove
+        print(f'Loading CSV files: [{separator.join(source_files)}]')
+        print(f'spark: {self._spark}')
+        
         #source_files = fsUtils.filePatternSearch(self._path)
         fileDfs = []
         for src_file in source_files:

@@ -34,7 +34,7 @@ import pyspark.sql.session as pss
 from bifabrik.base.Pipeline import Pipeline
 #from bifabrik.base.Task import Task
 
-__spark = session = pss.SparkSession.builder.getOrCreate()
+__spark = pss.SparkSession.builder.getOrCreate()
 __configuration = CompleteConfiguration()
         #self.__configuration.log.loggingEnabled = False
     
