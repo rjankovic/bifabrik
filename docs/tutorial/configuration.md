@@ -11,8 +11,7 @@ By local configuration, we mean settings that only apply to a specific pipeline.
 
 This code loads data from a CSV file, specifying that the field delimiter is ";" and decimals in numbers are delimited by ",".
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter(';').decimal(',').toTable('DimBranch').run()
 ```
@@ -56,19 +55,19 @@ bif.fromCsv('Files/CsvFiles/dimBranch.csv').option('delimiter', ';').option('dec
 ```
 
 ## Global preferences
-The `bifabrik` class has a configuration of its own - see
+The `bifabrik` module has a configuration of its own - see
 
 ```python
-bif = bifabrik(spark)
-help(bif.cfg)
+import bifabrik as bif
+help(bif.config)
 ```
 
 This is gathered from all the other modules - data sources, destinations, etc. - so that you can configure all sorts of behavior in one place. This then gets applied to all subsequent pipelines.
 
 ```python
 # set the configuration
-bif.cfg.csv.delimiter = ';'
-bif.cfg.csv.decimal = ','
+bif.config.csv.delimiter = ';'
+bif.config.csv.decimal = ','
 
 # the configuration will be applied to all these loads
 bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
@@ -83,14 +82,13 @@ bif.fromCsv("Files/CsvFiles/dimDivision.csv").toTable('DimDivision').run()
 If we want to keep our configuration across multiple Spark session, we'll need to save it to a file and load later. Here is how to do that with some JSON source settings:
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
-bif.cfg.json.jsonDateFormat = 'dd/MM/yyyy'
-bif.cfg.json.jsonCorruptRecordsMode = 'FAILFAST'
-bif.cfg.json.multiLine = True
+bif.config.json.jsonDateFormat = 'dd/MM/yyyy'
+bif.config.json.jsonCorruptRecordsMode = 'FAILFAST'
+bif.config.json.multiLine = True
 
-bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
+bif.config.saveToFile('Files/cfg/jsonSrcSettings.json')
 ```
 
 The saved config file looks like this:
@@ -111,7 +109,7 @@ Note that only the settings we gave an explicit value for are saved - all the de
 Later on you can load the configuration:
 
 ```python
-bif.cfg.loadFromFile('Files/cfg/jsonSrcSettings.json')
+bif.config.loadFromFile('Files/cfg/jsonSrcSettings.json')
 ```
 
 ## Default values and merging configurations
@@ -119,18 +117,17 @@ bif.cfg.loadFromFile('Files/cfg/jsonSrcSettings.json')
 All the settings have a default value - for example, for CSV it's the default behavior of [pandas.read_csv](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html). For JSON, it's the default spark JSON reader. When we start modifying the configuration, `bifabrik` keeps track of which settings were specified explicitly. When you then save the configuration to a file, only these explicit settings are saved, as we saw above. When we later load configuration from that file, only these explicitly set properties are set.
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
-bif.cfg.json.jsonDateFormat = 'yyyy-MM-dd'
-bif.cfg.json.jsonCorruptRecordsMode = 'PERMISSIVE'
-bif.cfg.json.multiLine = False
+bif.config.json.jsonDateFormat = 'yyyy-MM-dd'
+bif.config.json.jsonCorruptRecordsMode = 'PERMISSIVE'
+bif.config.json.multiLine = False
 
-bif.cfg.csv.decimal = ','
-bif.cfg.csv.delimiter = ';'
+bif.config.csv.decimal = ','
+bif.config.csv.delimiter = ';'
 
 # now, the JSON settings will be overwritten, but the CSV settings stay
-bif.cfg.saveToFile('Files/cfg/jsonSrcSettings.json')
+bif.config.saveToFile('Files/cfg/jsonSrcSettings.json')
 ```
 
 In other words, the loaded configuration is __merged__ into the current config state.
@@ -140,11 +137,10 @@ Now, assume you had different parts of your configuration saved in different fil
 This is also what happens when applying local configuration to a task in a pipeline - the local configuration is merged into the global one.
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
-bif.cfg.csv.delimiter = ';'
-bif.cfg.csv.decimal = ','
+bif.config.csv.delimiter = ';'
+bif.config.csv.decimal = ','
 
 # the delimiter will be '|', but the decimal separator will stay ','
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter('|').toTable('DimBranch').run()
