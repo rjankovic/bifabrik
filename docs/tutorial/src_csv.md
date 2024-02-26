@@ -3,8 +3,7 @@
 Simple tasks should be easy.
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
