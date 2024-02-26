@@ -21,9 +21,10 @@ import bifabrik as bif
 ```
 
 Also, __make sure that your notebook is connected to a lakehouse__. This is the lakehouse to which bifabrik will save data by default.
-You can also configure it to [target different lakehouses](https://rjankovic.github.io/bifabrik/tutorial/cfg_storage.html)
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
+
+You can also configure it to [target different lakehouses](https://rjankovic.github.io/bifabrik/tutorial/cfg_storage.html).
 
 ### Load CSV files (JSON is similar)
 Simple tasks should be easy.
