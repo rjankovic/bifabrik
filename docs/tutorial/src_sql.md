@@ -3,6 +3,8 @@
 Let's make a simple Spark SQL transformation, writing data to another SQL table - a straightforward full load:
 
 ```python
+import bifabrik as bif
+
 bif.fromSql('''
 
 SELECT Industry_name_NZSIOC AS Industry_Name 
