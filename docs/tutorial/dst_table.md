@@ -3,8 +3,7 @@
 For now, the only supported option is a full-load of a table into the default lakehouse attached to the notebook:
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
