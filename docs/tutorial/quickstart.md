@@ -11,24 +11,23 @@ or add
 ``` 
 at the beginning of the notebook.
 
-## Init the class
+## Import the library
 To load data, `bifabrik` needs to access the spark session.
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
-# 'bif' will be used in many code samples as a reference to the bifabrik class instance
+import bifabrik as bif
 ```
 
-Also, __make sure that your notebook is connected to a lakehouse__. This is the lakehouse to which bifabrik will save data.
+Also, make sure that your notebook is connected to a lakehouse. This is the lakehouse to which bifabrik will save data by default.
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
+
+You can also configure it to [target different lakehouses](cfg_storage.html).
 
 ## Load CSV files (JSON is similar)
 Simple tasks should be easy.
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
@@ -59,8 +58,7 @@ What, you have more files like that?  Well then, you probably don't want to repe
 Good news is, the bifabrik object can keep all your preferences:
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 # set the configuration
 bif.cfg.csv.delimiter = ';'
