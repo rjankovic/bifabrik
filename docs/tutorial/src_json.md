@@ -3,8 +3,7 @@
 Load JSON data to a lakehouse table:
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 bif.fromJson('Files/JSON/orders_2023.json').toTable('DimOrder').run()
 ```
