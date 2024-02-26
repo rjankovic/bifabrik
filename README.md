@@ -1,13 +1,12 @@
 # bifabrik
 Microsoft Fabric ETL toolbox
 
-This is an **early build** - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues. Thanks!
-
 ## What is the point?
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
 
 For info on all the features, see the [project page](https://rjankovic.github.io/bifabrik/)
+This is an early build - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues. Thanks!
 
 ## Quickstart
 
@@ -18,12 +17,11 @@ Or you can add `%pip install bifabrik` at the beginning of the notebook.
 ### Init the class
 To load data, `bifabrik` needs to access the spark session.
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
-# 'bif' will be used in many code samples as a reference to the bifabrik class instance
+import bifabrik as bif
 ```
 
-Also, __make sure that your notebook is connected to a lakehouse__. This is the lakehouse to which bifabrik will save data.
+Also, __make sure that your notebook is connected to a lakehouse__. This is the lakehouse to which bifabrik will save data by default.
+You can also configure it to [target different lakehouses](https://rjankovic.github.io/bifabrik/tutorial/cfg_storage.html)
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
 
@@ -31,9 +29,7 @@ Also, __make sure that your notebook is connected to a lakehouse__. This is the 
 Simple tasks should be easy.
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
-
+import bifabrik as bif
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
 ...and the table is in place
@@ -63,12 +59,11 @@ What, you have more files like that?  Well then, you probably don't want to repe
 Good news is, the bifabrik object can keep all your preferences:
 
 ```python
-from bifabrik import bifabrik
-bif = bifabrik(spark)
+import bifabrik as bif
 
 # set the configuration
-bif.cfg.csv.delimiter = ';'
-bif.cfg.csv.decimal = ','
+bif.config.csv.delimiter = ';'
+bif.config.csv.decimal = ','
 
 # the configuration will be applied to all these loads
 bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
