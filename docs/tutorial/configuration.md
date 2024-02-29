@@ -146,5 +146,6 @@ bif.config.csv.decimal = ','
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter('|').toTable('DimBranch').run()
 ```
 
+[__⇨__ Next - Cross-lakehouse pipelines](cfg_storage.md)
 
 [Back](../index.md)
