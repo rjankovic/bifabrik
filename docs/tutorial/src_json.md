@@ -15,7 +15,7 @@ display(spark.sql('SELECT * FROM DimOrders'))
 Or you can make use of pattern matching
 ```python
 # take all files matching the pattern and concat them
-bif.fromJson('Files/*/orders*.csv').toTable('OrdersAll').run()
+bif.fromJson('Files/*/orders*.json').toTable('OrdersAll').run()
 ```
 These are full loads, overwriting the target table if it exists.
 
