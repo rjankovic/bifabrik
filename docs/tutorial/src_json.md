@@ -32,7 +32,7 @@ bif.fromJson('Files/JSON/orders.json').multiLine(True).toTable('DimOrders').run(
 If you prefer the PySpark "option" syntax, you can use that too:
 
 ```python
-bif.fromJson('Files/JSON/ITA_TabZakazka.json').option('multiLine', 'true').toTable('TabZakazka1').run()
+bif.fromJson('Files/JSON/ITA_TabOrders.json').option('multiLine', 'true').toTable('TabOrders1').run()
 ```
 
 You can also chain multiple settings together to configure multiple options, and more - see [Configuration](configuration.md)
