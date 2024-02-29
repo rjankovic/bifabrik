@@ -14,7 +14,7 @@ One notable function is `filePatternSearch`, which seems to be a bit of a blind 
 from bifabrik.utils import fsUtils as fsu
 
 fsu.filePatternSearch("fld1/*/data/*.csv")
-# > ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
+# > ["abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf1/data/file11.csv", "abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
 ```
 
 This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
