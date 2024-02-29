@@ -6,7 +6,7 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
 
  - **[Quickstart](/tutorial/quickstart.md)**
  - [Configuration](/tutorial/configuration.md)
-   - [Cross-lakehouse pipelies](/tutorial/cfg_storage.md)
+   - [Cross-lakehouse pipelines](/tutorial/cfg_storage.md)
  - Data sources
    - [CSV](/tutorial/src_csv.md)
    - [JSON](/tutorial/src_json.md)
