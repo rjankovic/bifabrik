@@ -109,7 +109,7 @@ def normalizeAbfsTablePath(path: str, lakehouseBasePath: str):
 
 def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, useImplicitDefaultLakehousePath = False) -> list[str]:
     """Searches the Files/ directory of the current lakehouse
-    using glob to match patterns. Returns the list of files as relative Spark paths.
+    using glob to match patterns. Returns the list of files as ABFS paths.
 
     Examples
     --------
