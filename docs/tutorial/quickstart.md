@@ -61,8 +61,8 @@ Good news is, the bifabrik object can keep all your preferences:
 import bifabrik as bif
 
 # set the configuration
-bif.cfg.csv.delimiter = ';'
-bif.cfg.csv.decimal = ','
+bif.config.csv.delimiter = ';'
+bif.config.csv.decimal = ','
 
 # the configuration will be applied to all these loads
 bif.fromCsv("Files/CsvFiles/dimBranch.csv").toTable('DimBranch').run()
