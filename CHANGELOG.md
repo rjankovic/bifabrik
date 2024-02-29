@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.0 (2024-03-01)
+
+- Cross-lakehouse data pipelines support
+- Simplified initiation
+
 ## v0.3.0 (2024-02-09)
 
 - Extended configuration system

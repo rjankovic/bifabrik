@@ -114,7 +114,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     Examples
     --------
     >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
-    ...     ["Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
+    ...     ["abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf2/data/file22.csv"]
 
     param useImplicitDefaultLakehousePath indicates whether '/lakehouse/default' should be used to refer to the default lakehouse
     """
@@ -145,8 +145,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
             return res
         nextLevel = []
         for location in searchLocations:
-            #lgr.info(f'Searching location {location}')
-            print(f'Searching location {location}')
+            #print(f'Searching location {location}')
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
