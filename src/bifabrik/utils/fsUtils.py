@@ -6,6 +6,7 @@ import notebookutils.mssparkutils.fs
 import glob2
 import regex
 import sempy.fabric as spf
+import logging
 #import bifabrik.utils.log as lg
 
 __mounts = None
@@ -14,6 +15,7 @@ __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
 __defaultLakehouseRefName = 'default'
 #lgr = lg.getLogger()
+
 
 def normalizeFileApiPath(path: str):
     """Normalizes a file path to the form of "/lakehouse/default/Files/folder/..."
@@ -120,7 +122,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     """
     
     
-    
+    log = logging.getLogger('bifabrik')
     res = []
     #pathNorm = normalizeRelativeSparkPath(path)
 
@@ -145,7 +147,12 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
             return res
         nextLevel = []
         for location in searchLocations:
-            #print(f'Searching location {location}')
+            log.info(f'Searching location {location}')
+            if not notebookutils.mssparkutils.fs.exists(location):
+                warn = f'Location {location} does not exist'
+                print(warn)
+                log.warning(warn)
+                continue
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
             subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
