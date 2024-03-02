@@ -21,6 +21,8 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         super().__init__(parentPipeline)
         CsvSourceConfiguration.__init__(self)
         self._path = ""
+        self.__processed_abfs_paths = []
+        self.__mergedConfig = None
 
     def __str__(self):
         return f'CSV source: {self._path}'
@@ -35,12 +37,17 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     def execute(self, input):
         lgr = log.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
+        self.__mergedConfig = mergedConfig
 
         srcLh = mergedConfig.sourceStorage.sourceLakehouse
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 
         # pandas seems to have a problem with absolute ABFS paths, so use /lakehouse/default/ if refering to the default lakehouse
         source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs, useImplicitDefaultLakehousePath = True)
+        implicitLhPath = fsUtils.getLakehousePath(lakehouse = srcLh, workspace = srcWs, useImplicitDefaultLakehousePath = True)
+        abfsLhPath = fsUtils.getLakehousePath(lakehouse = srcLh, workspace = srcWs, useImplicitDefaultLakehousePath = False)
+        self.__processed_abfs_paths = [x.replace(implicitLhPath, abfsLhPath) for x in source_files]
+
         if len(source_files) == 0:
             return None
         
@@ -73,3 +80,11 @@ class CsvSource(DataSource, CsvSourceConfiguration):
         
         self._result = df
         self._completed = True
+
+    def cleanup(self):
+        if self.__mergedConfig.fileSource.moveFilesToArchive:
+            fsUtils.archiveFiles(files = self.__processed_abfs_paths, 
+                                 archiveFolder = self.__mergedConfig.fileSource.archiveFolder, 
+                                 filePattern = self.__mergedConfig.fileSource.archiveFilePattern, 
+                                 lakehouse = self.__mergedConfig.sourceStorage.sourceLakehouse, 
+                                 workspace = self.__mergedConfig.sourceStorage.sourceWorkspace)

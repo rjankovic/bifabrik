@@ -10,7 +10,7 @@ class FileSourceConfiguration(Configuration):
         self.__locale = None
         self.__moveFilesToArchive: bool = False
         self.__archiveFolder: str = None
-        self.__archiveFilePattern: str = '{filename}_{timestamp}.{suffix}'
+        self.__archiveFilePattern: str = '{filename}_{timestamp}{extension}'
 
 
     @CfgProperty
@@ -36,7 +36,7 @@ class FileSourceConfiguration(Configuration):
     @CfgProperty
     def moveFilesToArchive(self) -> bool:
         """True / False whether to move loaded source files to archive after the pipeline finishes succesfully.
-            The archiveFolder and archiveFilePattern need to be configured for this to wrok.
+            The archiveFolder and archiveFilePattern need to be configured for this to work.
             Default False
         """
         return self.__moveFilesToArchive
@@ -58,10 +58,10 @@ class FileSourceConfiguration(Configuration):
         """The file pattern for archiving processed source files. 
         Supported placeholders:
         {filename} : source file name without suffix
-        {suffix} : source file name suffix
+        {extension} : source file name extension, including the '.'
         {timestamp} : current timestamp as '%Y_%m_%d_%H_%M_%S_%f'
 
-        Default '{filename}_{timestamp}.{suffix}'
+        Default '{filename}_{timestamp}{extension}'
         """
         return self.__archiveFilePattern
     @archiveFilePattern.setter(key='archiveFilePattern')

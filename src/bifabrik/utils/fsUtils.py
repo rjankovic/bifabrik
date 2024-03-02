@@ -7,7 +7,9 @@ import glob2
 import regex
 import sempy.fabric as spf
 import logging
-#import bifabrik.utils.log as lg
+import os
+import datetime
+import time
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
@@ -116,7 +118,7 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
     Examples
     --------
     >>> bifabrik.utils.fsUtils.filePatternSearch("fld1/*/data/*.csv")
-    ...     ["abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf1/data/file11.csv", "Files/fld1/subf2/data/file21.csv", "abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf2/data/file22.csv"]
+    ...     ["abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf1/data/file11.csv", "abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf2/data/file22.csv"]
 
     param useImplicitDefaultLakehousePath indicates whether '/lakehouse/default' should be used to refer to the default lakehouse
     """
@@ -370,3 +372,31 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
             return None
         raise Exception(errMsg)
     return lh.basePath
+
+def archiveFiles(files, archiveFolder, filePattern, lakehouse = None, workspace = None):
+    if len(files) == 0:
+        return
+    if archiveFolder is None:
+        raise Exception(f'Cannot archive the file {files[0]}, as the archive folder has not been set')
+    if filePattern is None:
+        raise Exception(f'Cannot archive the file {files[0]}, as the archive file patter has not been set')
+    
+    # ABFS path to the archive folder
+    lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace)
+    folderPathNorm = normalizeAbfsFilePath(archiveFolder, lhPath) #.removesuffix('/')
+    notebookutils.mssparkutils.lakehouse.makedirs(folderPathNorm)
+
+    for file in files:
+        logging.getLogger('bifabrik')
+        
+        fname = os.path.basename(file)
+        rootName, extension = os.path.splitext(fname)
+
+        ct = datetime.datetime.now()
+        cts = ct.strftime("%Y_%m_%d_%H_%M_%S_%f")
+        
+        fullPattern = '{folder}/' + filePattern
+        fullTargetPath = fullPattern.format(folder = folderPathNorm, filename = rootName, timestamp = cts, extension = extension)
+
+        log.info(f'Archiving {file} -> {fullTargetPath}')
+        notebookutils.mssparkutils.fs.mv(file, fullTargetPath)

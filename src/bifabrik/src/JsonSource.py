@@ -19,6 +19,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         super().__init__(parentPipeline)
         JsonSourceConfiguration.__init__(self)
         self._path = ""
+        self.__processed_abfs_paths = []
 
     def __str__(self):
         return f'CSV source: {self._path}'
@@ -43,6 +44,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 
         source_files = fsUtils.filePatternSearch(self._path, srcLh, srcWs)
+        self.__processed_abfs_paths = source_files
         if len(source_files) == 0:
             return None
         
@@ -64,3 +66,11 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         
         self._result = df
         self._completed = True
+    
+    def cleanup(self):
+        if self.__mergedConfig.fileSource.moveFilesToArchive:
+            fsUtils.archiveFiles(files = self.__processed_abfs_paths, 
+                                 archiveFolder = self.__mergedConfig.fileSource.archiveFolder, 
+                                 filePattern = self.__mergedConfig.fileSource.archiveFilePattern, 
+                                 lakehouse = self.__mergedConfig.sourceStorage.sourceLakehouse, 
+                                 workspace = self.__mergedConfig.sourceStorage.sourceWorkspace)
