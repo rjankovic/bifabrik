@@ -20,6 +20,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
         JsonSourceConfiguration.__init__(self)
         self._path = ""
         self.__processed_abfs_paths = []
+        self.__mergedConfig = None
 
     def __str__(self):
         return f'CSV source: {self._path}'
@@ -37,9 +38,9 @@ class JsonSource(DataSource, JsonSourceConfiguration):
     def execute(self, input) -> DataFrame:
         lgr = lg.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
+        self.__mergedConfig = mergedConfig
 
         # find source files
-
         srcLh = mergedConfig.sourceStorage.sourceLakehouse
         srcWs = mergedConfig.sourceStorage.sourceWorkspace
 

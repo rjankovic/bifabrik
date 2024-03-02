@@ -384,11 +384,12 @@ def archiveFiles(files, archiveFolder, filePattern, lakehouse = None, workspace 
     # ABFS path to the archive folder
     lhPath = getLakehousePath(lakehouse = lakehouse, workspace = workspace)
     folderPathNorm = normalizeAbfsFilePath(archiveFolder, lhPath) #.removesuffix('/')
-    notebookutils.mssparkutils.lakehouse.makedirs(folderPathNorm)
+    if not notebookutils.mssparkutils.fs.exists(folderPathNorm):
+        notebookutils.mssparkutils.fs.mkdirs(folderPathNorm)
 
     for file in files:
-        logging.getLogger('bifabrik')
-        
+        log = logging.getLogger('bifabrik')
+
         fname = os.path.basename(file)
         rootName, extension = os.path.splitext(fname)
 
