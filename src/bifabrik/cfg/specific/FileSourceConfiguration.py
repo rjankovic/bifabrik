@@ -8,6 +8,10 @@ class FileSourceConfiguration(Configuration):
         self._explicitProps = {}
         self.__encoding = None
         self.__locale = None
+        self.__moveFilesToArchive: bool = False
+        self.__archiveFolder: str = None
+        self.__archiveFilePattern: str = '{filename}_{timestamp}.{suffix}'
+
 
     @CfgProperty
     def encoding(self) -> str:
@@ -28,3 +32,38 @@ class FileSourceConfiguration(Configuration):
     @locale.setter(key='locale')
     def jsonLocale(self, val):
         self.__locale = val
+
+    @CfgProperty
+    def moveFilesToArchive(self) -> bool:
+        """True / False whether to move loaded source files to archive after the pipeline finishes succesfully.
+            The archiveFolder and archiveFilePattern need to be configured for this to wrok.
+            Default False
+        """
+        return self.__moveFilesToArchive
+    @moveFilesToArchive.setter(key='moveFilesToArchive')
+    def moveFilesToArchive(self, val):
+        self.__moveFilesToArchive = val
+    
+    @CfgProperty
+    def archiveFolder(self) -> str:
+        """The folder where to archive processed source files (in the source lakehouse).
+        """
+        return self.__archiveFolder
+    @archiveFolder.setter(key='archiveFolder')
+    def archiveFolder(self, val):
+        self.__archiveFolder = val
+    
+    @CfgProperty
+    def archiveFilePattern(self) -> str:
+        """The file pattern for archiving processed source files. 
+        Supported placeholders:
+        {filename} : source file name without suffix
+        {suffix} : source file name suffix
+        {timestamp} : current timestamp as '%Y_%m_%d_%H_%M_%S_%f'
+
+        Default '{filename}_{timestamp}.{suffix}'
+        """
+        return self.__archiveFilePattern
+    @archiveFilePattern.setter(key='archiveFilePattern')
+    def archiveFilePattern(self, val):
+        self.__archiveFilePattern = val
