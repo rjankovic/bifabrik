@@ -23,10 +23,14 @@
 from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
+from bifabrik.src.SparkDfSource import SparkDfSource
+from bifabrik.src.PandasDfSource import PandasDfSource
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 import bifabrik.utils.log as log
 from bifabrik.base.Pipeline import Pipeline
 import pyspark.sql.session as pss
+from pyspark.sql.dataframe import DataFrame as SparkDf
+from pandas.core.frame import DataFrame as PandasDf
 
 # read version from installed package
 from importlib.metadata import version
@@ -101,3 +105,32 @@ def __getattr__(name):
     if name == 'config':
         return __configuration
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
+def fromSparkDf(df: SparkDf) -> SparkDfSource:
+    """Use spark dataframe as source
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> df = spark.read.format("csv").option("header","true").load("Files/CsvFiles/annual-enterprise-survey-2021.csv")
+    >>> bif.fromSparkDf(df).toTable('Table1').run()
+    """
+    ds = SparkDfSource(__prepPipeline(), df)
+    return ds
+
+def fromPandasDf(df: PandasDf) -> PandasDfSource:
+    """Use pandas dataframe as source
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> df = pd.read_csv(...)
+    >>> bif.fromPandasDf(df).toTable('Table1').run()
+    """
+    ds = PandasDfSource(__prepPipeline(), df)
+    return ds
