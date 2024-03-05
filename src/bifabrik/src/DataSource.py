@@ -14,10 +14,10 @@ class DataSource(Task):
         super().__init__(parentPipeline)
         
 
-    def toDf(self) -> DataFrame:
-        """Converts the data to a spark dataframe
-        """
-        pass
+    # def toDf(self) -> DataFrame:
+    #     """Converts the data to a spark dataframe
+    #     """
+    #     pass
 
     def toTable(self, targetTableName: str) -> TableDestination:
         """Sets the destination table name (table in the current lakehouse)
