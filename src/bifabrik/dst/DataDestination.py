@@ -13,11 +13,13 @@ class DataDestination(Task):
     #     self._spark = self._loader.spark
 
     def save(self) -> None:
-        """Save the data to the destination. This is the "run" method at the end of the chain.
+        """Save the data to the destination. This is the "run" method at the end of the chain. 
+        Returns the result of the last task, if any.
         """
         self._pipeline.execute()
 
-    def run(self) -> None:
-        """Save the data to the destination. This is the "run" method at the end of the chain.
+    def run(self) -> any:
+        """Save the data to the destination. This is the "run" method at the end of the chain. 
+        Returns the result of the last task, if any.
         """
-        self._pipeline.execute()
+        return self._pipeline.execute()

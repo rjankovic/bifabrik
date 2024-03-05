@@ -32,8 +32,9 @@ class Pipeline:
             return None
         
         self.clearResults()
-        self.getTaskResult(self._tasks[taskCount - 1])
+        result = self.getTaskResult(self._tasks[taskCount - 1])
         self.cleanup()
+        return result
 
     def cleanup(self):
         for ix in range(0, len(self._tasks) - 1):
