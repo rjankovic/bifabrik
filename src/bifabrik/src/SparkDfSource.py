@@ -18,12 +18,12 @@ class SparkDfSource(DataSource):
             raise Exception('The source is not a spark dataframe')
         
         super().__init__(parentPipeline)
-        self.result = df
-        self._completed = True
-        
+        self.__sparkDf = df
     
     def __str__(self):
         return f'Spark DF source: {self._result}'
     
     def execute(self, input) -> SparkDf:
+        self._result = self.__sparkDf
+        self._completed = True
         return self._result

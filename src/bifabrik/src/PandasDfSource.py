@@ -1,5 +1,6 @@
 from bifabrik.src.DataSource import DataSource
 from pandas.core.frame import DataFrame as PandasDf
+from pyspark.sql.dataframe import DataFrame as SparkDf
 
 class PandasDfSource(DataSource):
     """Use pandas dataframe as source
@@ -24,6 +25,6 @@ class PandasDfSource(DataSource):
         return f'Pandas DF source: {self.__pandasDf}'
     
     def execute(self, input) -> SparkDf:
-        self.result = self._spark.createDataFrame(self.__pandasDf)
+        self._result = self._spark.createDataFrame(self.__pandasDf)
         self._completed = True
         return self._result
