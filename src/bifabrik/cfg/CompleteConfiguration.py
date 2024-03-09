@@ -7,6 +7,7 @@ from bifabrik.cfg.specific.JsonConfiguration import JsonConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
 from bifabrik.cfg.specific.SourceStorageConfiguration import SourceStorageConfiguration
 from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationStorageConfiguration
+from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -27,6 +28,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__fileSource = FileSourceConfiguration()
         self.__sourceStorage = SourceStorageConfiguration()
         self.__destinationStorage = DestinationStorageConfiguration()
+        self.__destinationTable = TableConfiguration()
         super().__init__()
         
 
@@ -59,6 +61,11 @@ class CompleteConfiguration(ConfigContainer):
     def destinationStorage(self) -> DestinationStorageConfiguration:
         """The destination lakehouse and warehouse reference used by pipelines"""
         return self.__destinationStorage
+    
+    @property
+    def destinationTable(self) -> TableConfiguration:
+        "Destination table settings (increment method, identity column, etc.)"
+        return self.__table
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
