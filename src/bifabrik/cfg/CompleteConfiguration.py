@@ -65,7 +65,7 @@ class CompleteConfiguration(ConfigContainer):
     @property
     def destinationTable(self) -> TableConfiguration:
         "Destination table settings (increment method, identity column, etc.)"
-        return self.__table
+        return self.__destinationTable
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
