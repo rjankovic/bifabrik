@@ -8,10 +8,17 @@ class PandasDfTransformation(DataTransformation):
     Examples
     --------
     
-    >>> import bifabrik as bif
+    >>> def tf(df):
+    >>>     df.insert(0, 'NewColumn', 'NewValue')
+    >>>     return df
     >>>
-    >>> df = spark.read.format("csv").option("header","true").load("Files/CsvFiles/annual-enterprise-survey-2021.csv")
-    >>> bif.fromSparkDf(df).toTable('Table1').run()
+    >>> (
+    >>> bif
+    >>>     .fromCsv("Files/CsvFiles/annual-enterprise-survey-2021.csv")
+    >>>     .transformPandasDf(tf)
+    >>>     .toTable("Survey3")
+    >>>     .run()
+    >>> )
     """
 
     def __init__(self, parentPipeline, func):

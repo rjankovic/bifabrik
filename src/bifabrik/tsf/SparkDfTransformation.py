@@ -9,8 +9,14 @@ class SparkDfTransformation(DataTransformation):
     
     >>> import bifabrik as bif
     >>>
-    >>> df = spark.read.format("csv").option("header","true").load("Files/CsvFiles/annual-enterprise-survey-2021.csv")
-    >>> bif.fromSparkDf(df).toTable('Table1').run()
+    >>> (
+    >>> bif
+    >>>     .fromCsv("Files/CsvFiles/annual-enterprise-survey-2021.csv")
+    >>>     .transformSparkDf(lambda df: df.withColumn('NewColumn', lit('NewValue')))
+    >>>     .toTable("Survey2")
+    >>>     .run()
+    >>>)
+    >>> 
     """
 
     def __init__(self, parentPipeline, func):
