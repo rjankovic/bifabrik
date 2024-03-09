@@ -15,7 +15,7 @@ class SparkDfTransformation(DataTransformation):
     >>>     .transformSparkDf(lambda df: df.withColumn('NewColumn', lit('NewValue')))
     >>>     .toTable("Survey2")
     >>>     .run()
-    >>>)
+    >>> )
     >>> 
     """
 
