@@ -136,10 +136,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__data = r
 
     def overwriteTarget(self):
-        pass
+        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
     def appendTarget(self):
-        pass
+        self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
     def mergeTarget(self):
         pass
