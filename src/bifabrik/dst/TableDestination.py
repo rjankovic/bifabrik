@@ -53,27 +53,27 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
-        self.__tableExists = self.tableExists()
+        self.__tableExists = self.__tableExists()
 
-        self.replaceInvalidCharactersInColumnNames()
-        self.insertIdentityColumn()
-        self.insertInsertDateColumn()
+        self.__replaceInvalidCharactersInColumnNames()
+        self.__insertIdentityColumn()
+        self.__insertInsertDateColumn()
 
         incrementMethod = mergedConfig.destinationTable.increment
         
         # if the target target table does not exist yet, just handle it as an overwrite
         if not(self.__tableExists):
-            self.overwriteTarget()
+            self.__overwriteTarget()
         elif incrementMethod is None:
             incrementMethod = 'overwrite'
         elif incrementMethod == 'overwrite':
-            self.overwriteTarget()
+            self.__overwriteTarget()
         elif incrementMethod == 'append':
-            self.appendTarget()
+            self.__appendTarget()
         elif incrementMethod == 'merge':
-            self.mergeTarget()
+            self.__mergeTarget()
         elif incrementMethod == 'snapshot':
-            self.snapshotTarget()
+            self.__snapshotTarget()
 
         self._completed = True
         
@@ -81,7 +81,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         #    self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
         
-    def replaceInvalidCharactersInColumnNames(self):
+    def __replaceInvalidCharactersInColumnNames(self):
         replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
         if replacement is None:
             return
@@ -102,7 +102,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             name = name.replace(i, replacement)
         return name
 
-    def insertIdentityColumn(self):
+    def __insertIdentityColumn(self):
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         if identityColumnPattern is None:
             return
@@ -126,7 +126,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         
         self.__data = df_res
 
-    def insertInsertDateColumn(self):
+    def __insertInsertDateColumn(self):
         insertDateColumn = self.__tableConfig.insertDateColumn
         if insertDateColumn is None:
             return
@@ -135,19 +135,19 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
         self.__data = r
 
-    def overwriteTarget(self):
+    def __overwriteTarget(self):
         self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
-    def appendTarget(self):
+    def __appendTarget(self):
         self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
-    def mergeTarget(self):
+    def __mergeTarget(self):
         pass
 
-    def snapshotTarget(self):
+    def __snapshotTarget(self):
         pass
 
-    def tableExists(self):
+    def __tableExists(self):
          """Checks if a table in the lakehouse exists.
          """
          dstLh = self.__config.destinationStorage.destinationLakehouse
