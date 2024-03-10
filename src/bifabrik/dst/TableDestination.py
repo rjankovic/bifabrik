@@ -7,6 +7,8 @@ from bifabrik.utils import log
 from bifabrik.utils import fsUtils
 #from pyspark.sql.functions import col
 from pyspark.sql.functions import *
+import time
+import datetime
 
 class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -123,10 +125,15 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
         
         self.__data = df_res
-        pass
 
     def insertInsertDateColumn(self):
-        pass
+        insertDateColumn = self.__tableConfig.insertDateColumn
+        if insertDateColumn is None:
+            return
+        
+        ts = time.time()
+        r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
+        self.__data = r
 
     def overwriteTarget(self):
         pass
