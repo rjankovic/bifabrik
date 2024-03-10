@@ -5,7 +5,8 @@ from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import fsUtils
 from bifabrik.utils import log
 from bifabrik.utils import fsUtils
-from pyspark.sql.functions import col
+#from pyspark.sql.functions import col
+from pyspark.sql.functions import *
 
 class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -104,7 +105,24 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if identityColumnPattern is None:
             return
         
-        dbName = self.__lhMeta.lakehouseName
+        lhName = self.__lhMeta.lakehouseName
+        initID = 0
+        identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, lakehousename = lhName)
+        
+        if self.__tableExists:
+            query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
+            initID = self.spark.sql(query).collect()[0][0]
+            # if the table exists, but is empty
+            if initID is None:
+                initID = 0
+        
+        # place the identity column at the beginning of the table
+        schema = [obj[0]  for obj in self.__data.dtypes]
+        schema.insert(0, identityColumn)
+        df_ids  = self.__data.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+        df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
+        
+        self.__data = df_res
         pass
 
     def insertInsertDateColumn(self):
