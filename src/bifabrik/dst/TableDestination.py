@@ -49,6 +49,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
+        self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
         self.__tableExists = self.tableExists()
 
         self.replaceInvalidCharactersInColumnNames()
@@ -103,6 +104,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if identityColumnPattern is None:
             return
         
+        dbName = self.__lhMeta.lakehouseName
         pass
 
     def insertInsertDateColumn(self):

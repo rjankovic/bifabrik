@@ -324,17 +324,16 @@ def mapWorkspaces():
 
 mapWorkspaces()
 
-def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultLakehousePath = False):
+
+def getLakehouseMeta(lakehouse: str, workspace: str = None, suppressNotFound = False) -> LakehouseMeta:
     """
-    Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
-    it can then be appended as e.g
-        abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Tables
+    Finds the lakehouse amoung available workspaces and returns its metadata
         abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Files
     
     :param lakehouse: the lakehouse name or ID (if None, the current notebook's deault lakehouse is used)
     :param workspace: the name or ID of the workspace containg the lakehouse (if None, the workspace of the current notebook is used)
-    :param useImplicitDefaultLakehousePath: if the path targets the notebook's default lakehouse, use /lakehouse/default to refer to it
-    :return: the ABFSS path to the lakehouse or None if the lakehouse is not found
+    
+    :return: LakehouseMeta
     """
     global __workspaceMap
     global __defaultWorkspaceId
@@ -355,15 +354,9 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
     if lakehouse == __defaultLakehouseRefName:
         lakehouse = __defaultLakehouseId
 
-    if useImplicitDefaultLakehousePath:
-        if workspace == __defaultWorkspaceId and lakehouse == __defaultLakehouseId:
-            return '/lakehouse/default'
-        
     errMsg = f'Could not find lakehouse {lakehouse} in workspace {workspace}'
 
     if lakehouse is None:
-        if suppressNotFound:
-            return None
         raise Exception(errMsg)
     
     lhMap = __workspaceMap[workspace]
@@ -377,7 +370,29 @@ def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = F
         if suppressNotFound:
             return None
         raise Exception(errMsg)
-    return lh.basePath
+    return lh
+
+def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultLakehousePath = False):
+    """
+    Returns the lakehouse path as abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}
+    it can then be appended as e.g
+        abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Tables
+        abfss://{workspace id}@onelake.dfs.fabric.microsoft.com/{lakehouse id}/Files
+    
+    :param lakehouse: the lakehouse name or ID (if None, the current notebook's deault lakehouse is used)
+    :param workspace: the name or ID of the workspace containg the lakehouse (if None, the workspace of the current notebook is used)
+    """
+    meta = getLakehouseMeta(lakehouse, workspace, suppressNotFound)
+    if meta is None:
+        if suppressNotFound:
+            return None
+        errMsg = f'Could not find lakehouse {lakehouse} in workspace {workspace}'
+        raise Exception(errMsg)
+    
+    if meta.workspaceId == __defaultWorkspaceId and meta.lakehouseId == __defaultLakehouseId and useImplicitDefaultLakehousePath:
+        return '/lakehouse/default'
+
+    return meta.basePath
 
 def archiveFiles(files, archiveFolder, filePattern, lakehouse = None, workspace = None):
     if len(files) == 0:

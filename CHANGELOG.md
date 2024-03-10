@@ -1,5 +1,21 @@
 # Changelog
 
+
+## v0.5.0 (2024-04-TODO)
+
+- Source files archiving support
+- Spark / Pandas DF source / destination
+- Spark / Pandas DF transformation using functions
+- Destination table config options
+    - incremental load
+        - append
+        - merge
+        - snapshot
+    - identity column
+    - timestamp
+    - fixing invalid column names
+
+
 ## v0.4.0 (2024-03-01)
 
 - Cross-lakehouse data pipelines support
