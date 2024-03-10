@@ -23,13 +23,15 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__data = None
         self.__config = None
         self.__lhBasePath = None
+        self.__tableExists = False
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
     
     def execute(self, input: DataFrame) -> None:
         lgr = log.getLogger()
-
+        self._error = None
+        
         if input is None:
             msg = f'The table destination `{self.__targetTableName}` has no input; terminating'
             print(msg)
@@ -47,6 +49,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
+        self.__tableExists = self.tableExists()
 
         self.replaceInvalidCharactersInColumnNames()
         self.insertIdentityColumn()
@@ -54,9 +57,12 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         incrementMethod = mergedConfig.destinationTable.increment
         
-        if incrementMethod is None:
+        # if the target target table does not exist yet, just handle it as an overwrite
+        if not(self.__tableExists):
+            self.overwriteTarget()
+        elif incrementMethod is None:
             incrementMethod = 'overwrite'
-        if incrementMethod == 'overwrite':
+        elif incrementMethod == 'overwrite':
             self.overwriteTarget()
         elif incrementMethod == 'append':
             self.appendTarget()
@@ -64,6 +70,8 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             self.mergeTarget()
         elif incrementMethod == 'snapshot':
             self.snapshotTarget()
+
+        self._completed = True
         
         #if not self.tableExists():
         #    self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
@@ -91,6 +99,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         return name
 
     def insertIdentityColumn(self):
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is None:
+            return
+        
         pass
 
     def insertInsertDateColumn(self):

@@ -8,7 +8,7 @@ class TableConfiguration(Configuration):
         self._explicitProps = {}
         self.__watermarkColumn = None
         self.__increment = None
-        self.__identityColumn = None
+        self.__identityColumnPattern = None
         self.__insertDateColumn = None
         self.__mergeKeyColumns = []
         self.__snapshotKeyColumns = []
@@ -60,14 +60,14 @@ class TableConfiguration(Configuration):
         self.__snapshotKeyColumns = val
 
     @CfgProperty
-    def identityColumn(self) -> str:
+    def identityColumnPattern(self) -> str:
         """The name of the identity column to be added to the table. The values are 1, 2, 3..., each new record gets a new number.
         default None
         """
-        return self.__identityColumn
-    @identityColumn.setter(key='identityColumn')
-    def identityColumn(self, val):
-        self.__identityColumn = val
+        return self.__identityColumnPattern
+    @identityColumnPattern.setter(key='identityColumnPattern')
+    def identityColumnPattern(self, val):
+        self.__identityColumnPattern = val
 
     @CfgProperty
     def insertDateColumn(self) -> str:
