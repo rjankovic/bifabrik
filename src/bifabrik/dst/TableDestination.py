@@ -5,6 +5,7 @@ from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import fsUtils
 from bifabrik.utils import log
 from bifabrik.utils import fsUtils
+from pyspark.sql.functions import col
 
 class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -41,6 +42,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__config = mergedConfig
+        self.__tableConfig = mergedConfig.destinationTable
 
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
@@ -68,8 +70,25 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         
     def replaceInvalidCharactersInColumnNames(self):
-        self.__config
-        pass
+        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
+        if replacement is None:
+            return
+        
+        self.__data = (
+            self.
+            __data
+            .select(
+                [col(c).alias(
+                    self.__sanitizeColumnName(c, replacement)) 
+                    for c in self.__data.columns
+                ]))
+
+    def __sanitizeColumnName(self, colName, replacement):
+        invalids = " ,;{}()\n\t="
+        name = colName        
+        for i in invalids:
+            name = name.replace(i, replacement)
+        return name
 
     def insertIdentityColumn(self):
         pass
