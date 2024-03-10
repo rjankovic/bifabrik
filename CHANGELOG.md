@@ -12,7 +12,8 @@
         - merge
         - snapshot
     - identity column
-    - timestamp
+    - watermark
+    - timestamp column
     - fixing invalid column names
 
 

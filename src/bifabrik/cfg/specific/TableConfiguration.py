@@ -61,7 +61,12 @@ class TableConfiguration(Configuration):
 
     @CfgProperty
     def identityColumnPattern(self) -> str:
-        """The name of the identity column to be added to the table. The values are 1, 2, 3..., each new record gets a new number.
+        """The name pattern of the identity column to be added to the table. The values are 1, 2, 3..., each new record gets a new number.
+        Supported placeholders:
+        {tablename} : the delta table name
+        {lakehouse} : the lakehouse name
+
+        Default '{tablename}_ID'
         default None
         """
         return self.__identityColumnPattern
