@@ -181,6 +181,12 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
         else:
             searchLocations = nextLevel
 
+def fileExists(path: str, lakehouse: str = None, workspace: str = None) -> bool:
+    searchResults = filePatternSearch(path = path, lakehouse = lakehouse, workspace = workspace)
+    if len(searchResults) > 0:
+        return True
+    return False
+
 def getMounts():
     global __mounts
     if __mounts is None:

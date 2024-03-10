@@ -12,6 +12,7 @@ class TableConfiguration(Configuration):
         self.__insertDateColumn = None
         self.__mergeKeyColumns = []
         self.__snapshotKeyColumns = []
+        self.__invalidCharactersInColumnNamesReplacement = '_'
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -77,3 +78,13 @@ class TableConfiguration(Configuration):
     @insertDateColumn.setter(key='insertDateColumn')
     def insertDateColumn(self, val):
         self.__insertDateColumn = val
+
+    @CfgProperty
+    def invalidCharactersInColumnNamesReplacement(self) -> str:
+        """The characters ' ,;{}()\n\t=' are invalid in delta tables. This sets the replacement character. You can use '' to just remove the invalid characters.
+        default '_'
+        """
+        return self.__invalidCharactersInColumnNamesReplacement
+    @invalidCharactersInColumnNamesReplacement.setter(key='invalidCharactersInColumnNamesReplacement')
+    def invalidCharactersInColumnNamesReplacement(self, val):
+        self.__invalidCharactersInColumnNamesReplacement = val
