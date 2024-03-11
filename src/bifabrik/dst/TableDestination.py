@@ -26,13 +26,17 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__data = None
         self.__config = None
         self.__lhBasePath = None
+        self.__identityColumn = None
+        self.__insertDateColumn = None
         self.__tableExists = False
+        self.__logger = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
     
     def execute(self, input: DataFrame) -> None:
         lgr = log.getLogger()
+        self.__logger = lgr
         self._error = None
         
         if input is None:
@@ -110,7 +114,8 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         lhName = self.__lhMeta.lakehouseName
         initID = 0
         identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, lakehousename = lhName)
-        
+        self.__identityColumn = identityColumn
+
         if self.__tableExists:
             query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
             initID = self.spark.sql(query).collect()[0][0]
@@ -131,6 +136,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if insertDateColumn is None:
             return
         
+        self.__insertDateColumn = insertDateColumn
         ts = time.time()
         r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
         self.__data = r
@@ -142,7 +148,37 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
     def __mergeTarget(self):
-        pass
+        all_columns = self.__data.columns
+        key_columns = self.__tableConfig.mergeKeyColumns
+        non_key_columns = all_columns - key_columns - [self.__identityColumn, self.__insertDateColumn]
+        
+        join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
+        update_list = ", ".join([f"{item} = src.{item}" for item in non_key_columns])
+        insert_list = ", ".join([f"{item}" for item in all_columns])
+        insert_values = ", ".join([f"src.{item}" for item in all_columns])
+        
+        scd1_update = f"WHEN MATCHED THEN UPDATE SET \
+            {update_list} "
+        # table consisisting only of key columns - no need for the update clause
+        if len(non_key_columns) == 0:
+            scd1_update = ""
+
+        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        self.__data.createOrReplaceTempView(src_view_name)
+        mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
+        merge_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
+            USING {src_view_name}  AS src \
+            ON {join_condition} \
+            {scd1_update}\
+            WHEN NOT MATCHED THEN INSERT ( \
+            {insert_list} \
+            ) VALUES ( \
+            {insert_values} \
+            )\
+            "
+        self.__logger.info("----SCD1 MERGE SQL")
+        self.__logger.info(merge_sql)
+        self._spark.sql(merge_sql)
 
     def __snapshotTarget(self):
         pass
