@@ -64,8 +64,11 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertInsertDateColumn()
 
         incrementMethod = mergedConfig.destinationTable.increment
-        
+        self.__incrementMethod = incrementMethod
+        self.__filterByWatermark()
+
         # if the target target table does not exist yet, just handle it as an overwrite
+        # TODO: increment
         if not(self.__tableExists):
             self.__overwriteTarget()
         elif incrementMethod is None:
@@ -210,3 +213,25 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
          dstWs = self.__config.destinationStorage.destinationWorkspace
          fileExists = fsUtils.fileExists(dstLh, dstWs, f'Tables/{self.__targetTableName}')
          return fileExists
+    
+    def __filterByWatermark(self):
+        if not(self.__tableExists):
+            return
+        elif self.__incrementMethod is None:
+            return
+        elif self.__incrementMethod == 'overwrite':
+            return
+        
+        watermarkColumn = self.__tableConfig.watermarkColumn
+        if watermarkColumn is None:
+            return
+        
+        max_watermark = self.spark.sql(f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}') \
+            .collect()[0][0]
+        
+        if max_watermark is not None:
+            return
+        if not max_watermark:
+            return
+        
+        self.__data = self.__data.filter(f'{watermarkColumn} > {max_watermark}')
