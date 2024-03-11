@@ -181,7 +181,27 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self._spark.sql(merge_sql)
 
     def __snapshotTarget(self):
-        pass
+        # first delete the snapshot to be replaced
+        key_columns = self.__tableConfig.snapshotKeyColumns
+        
+        join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
+        
+        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        self.__data.createOrReplaceTempView(src_view_name)
+        mergeDbRef = f'{self.__lhMeta.lakehouseName}.'
+
+        merge_delete_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
+            USING {src_view_name}  AS src \
+            ON {join_condition} \
+            WHEN MATCHED THEN DELETE \
+            "
+        
+        self.__logger.info("----SNAPSHOT DELETE SQL")
+        self.__logger.info(merge_delete_sql)
+        self._spark.sql(merge_delete_sql)
+    
+        # append the new rows
+        self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
 
     def __tableExists(self):
          """Checks if a table in the lakehouse exists.
