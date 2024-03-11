@@ -201,7 +201,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self._spark.sql(merge_delete_sql)
     
         # append the new rows
-        self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
+        self.__appendTarget()
 
     def __tableExists(self):
          """Checks if a table in the lakehouse exists.
