@@ -47,8 +47,6 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         
         self.__data = input
 
-        #todo transformations
-
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
