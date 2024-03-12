@@ -3,7 +3,7 @@ from bifabrik.base.Pipeline import Pipeline
 from bifabrik.cfg.TableDestinationConfiguration import TableDestinationConfiguration
 from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import fsUtils
-from bifabrik.utils import log
+import bifabrik.utils.log as lg
 from bifabrik.utils import fsUtils
 #from pyspark.sql.functions import col
 from pyspark.sql.functions import *
@@ -35,7 +35,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         return f'Table destination: {self.__targetTableName}'
     
     def execute(self, input: DataFrame) -> None:
-        lgr = log.getLogger()
+        lgr = lg.getLogger()
         self.__logger = lgr
         self._error = None
         
@@ -55,7 +55,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
-        self.__tableExists = self.__tableExists()
+        self.__tableExists = self.__tableExistsF()
 
         self.__replaceInvalidCharactersInColumnNames()
         self.__insertIdentityColumn()
@@ -204,12 +204,12 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         # append the new rows
         self.__appendTarget()
 
-    def __tableExists(self):
+    def __tableExistsF(self):
          """Checks if a table in the lakehouse exists.
          """
          dstLh = self.__config.destinationStorage.destinationLakehouse
          dstWs = self.__config.destinationStorage.destinationWorkspace
-         fileExists = fsUtils.fileExists(dstLh, dstWs, f'Tables/{self.__targetTableName}')
+         fileExists = fsUtils.fileExists(path = f'Tables/{self.__targetTableName}', lakehouse = dstLh, workspace = dstWs)
          return fileExists
     
     def __filterByWatermark(self):
