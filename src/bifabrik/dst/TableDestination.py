@@ -165,7 +165,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     def __mergeTarget(self):
         all_columns = self.__data.columns
-        key_columns = map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns)
+        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
         
         print('key columns')
@@ -206,7 +206,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     def __snapshotTarget(self):
         # first delete the snapshot to be replaced
-        key_columns = map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.snapshotKeyColumns)
+        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.snapshotKeyColumns))
         
         if len(key_columns) == 0:
             raise Exception('No key columns set for snapshot increment. Please set the snapshotKeyColumns property in destinationTable configuration to the list of column names.')
