@@ -93,6 +93,9 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         self._completed = True
         
+    def __list_diff(self, first_list, second_list):
+        diff = [item for item in first_list if item not in second_list]
+        return diff
         
     def __replaceInvalidCharactersInColumnNames(self):
         replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
@@ -104,11 +107,15 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             __data
             .select(
                 [col(c).alias(
-                    self.__sanitizeColumnName(c, replacement)) 
+                    self.__sanitizeColumnName(c)) 
                     for c in self.__data.columns
                 ]))
 
-    def __sanitizeColumnName(self, colName, replacement):
+    def __sanitizeColumnName(self, colName):
+        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
+        if replacement is None:
+            return colName
+        
         invalids = " ,;{}()\n\t="
         name = colName        
         for i in invalids:
@@ -158,9 +165,17 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     def __mergeTarget(self):
         all_columns = self.__data.columns
-        key_columns = self.__tableConfig.mergeKeyColumns
-        non_key_columns = all_columns - key_columns - [self.__identityColumn, self.__insertDateColumn]
+        key_columns = map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns)
+        non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
         
+        print('key columns')
+        print(key_columns)
+        print('non-key columns')
+        print(non_key_columns)
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
+
         join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
         update_list = ", ".join([f"{item} = src.{item}" for item in non_key_columns])
         insert_list = ", ".join([f"{item}" for item in all_columns])
@@ -191,7 +206,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     def __snapshotTarget(self):
         # first delete the snapshot to be replaced
-        key_columns = self.__tableConfig.snapshotKeyColumns
+        key_columns = map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.snapshotKeyColumns)
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for snapshot increment. Please set the snapshotKeyColumns property in destinationTable configuration to the list of column names.')
         
         join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
         
