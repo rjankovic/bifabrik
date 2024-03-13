@@ -9,6 +9,7 @@ from bifabrik.utils import fsUtils
 from pyspark.sql.functions import *
 import time
 import datetime
+import notebookutils.mssparkutils.fs
 
 class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -30,6 +31,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertDateColumn = None
         self.__tableExists = False
         self.__logger = None
+        self.__tableLocation = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -50,11 +52,20 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
+        
+        print(f'dst tbl cfg')
+        print(f'increment {self.__tableConfig.increment}')
+        print(f'mergeKeyColumns {self.__tableConfig.mergeKeyColumns}')
+        print(f'snapshotKeyColumns {self.__tableConfig.snapshotKeyColumns}')
+        print(f'identityColumnPattern {self.__tableConfig.identityColumnPattern}')
+        print(f'insertDateColumn {self.__tableConfig.insertDateColumn}')
+        print(f'invalidCharactersInColumnNamesReplacement {self.__tableConfig.invalidCharactersInColumnNamesReplacement}')
 
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
+        self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
         self.__tableExists = self.__tableExistsF()
 
         self.__replaceInvalidCharactersInColumnNames()
@@ -82,9 +93,6 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         self._completed = True
         
-        #if not self.tableExists():
-        #    self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
-
         
     def __replaceInvalidCharactersInColumnNames(self):
         replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
@@ -143,10 +151,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__data = r
 
     def __overwriteTarget(self):
-        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
+        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
 
     def __appendTarget(self):
-        self.__data.write.mode("append").format("delta").save(self.__lhBasePath + "/Tables/" + self.__targetTableName)
+        self.__data.write.mode("append").format("delta").save(self.__tableLocation)
 
     def __mergeTarget(self):
         all_columns = self.__data.columns
@@ -207,9 +215,18 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
     def __tableExistsF(self):
          """Checks if a table in the lakehouse exists.
          """
-         dstLh = self.__config.destinationStorage.destinationLakehouse
-         dstWs = self.__config.destinationStorage.destinationWorkspace
-         fileExists = fsUtils.fileExists(path = f'Tables/{self.__targetTableName}', lakehouse = dstLh, workspace = dstWs)
+         fileExists = notebookutils.mssparkutils.fs.exists(self.__tableLocation)
+         
+        #  dstLh = self.__config.destinationStorage.destinationLakehouse
+        #  dstWs = self.__config.destinationStorage.destinationWorkspace
+        #  p = f'Tables/{self.__targetTableName}'
+        #  print(f'Looking for table {p}')
+        #  fileExists = fsUtils.fileExists(path = p, lakehouse = dstLh, workspace = dstWs)
+         
+        #  if fileExists:
+        #      print('exists')
+        #  else:
+        #      print('does not exist')
          return fileExists
     
     def __filterByWatermark(self):
