@@ -7,6 +7,7 @@ import bifabrik.utils.log as lg
 from bifabrik.utils import fsUtils
 #from pyspark.sql.functions import col
 from pyspark.sql.functions import *
+from pyspark.sql.window import Window
 import time
 import datetime
 import notebookutils.mssparkutils.fs
@@ -134,7 +135,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         if self.__tableExists:
             query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
-            initID = self.spark.sql(query).collect()[0][0]
+            initID = self._spark.sql(query).collect()[0][0]
             # if the table exists, but is empty
             if initID is None:
                 initID = 0
@@ -259,7 +260,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if watermarkColumn is None:
             return
         
-        max_watermark = self.spark.sql(f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}') \
+        max_watermark = self._spark.sql(f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}') \
             .collect()[0][0]
         
         if max_watermark is not None:
