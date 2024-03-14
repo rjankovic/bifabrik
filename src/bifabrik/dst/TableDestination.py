@@ -260,12 +260,18 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if watermarkColumn is None:
             return
         
-        max_watermark = self._spark.sql(f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}') \
-            .collect()[0][0]
-        
-        if max_watermark is not None:
+        max_watermark_sql = f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}'
+        print(max_watermark_sql)
+        max_watermark = self._spark.sql(max_watermark_sql).collect()[0][0]
+        print(f'max watermark: {max_watermark}')
+
+        # if the table is empty or watermark is 0, take all the data
+        if max_watermark is None:
             return
         if not max_watermark:
             return
         
-        self.__data = self.__data.filter(f'{watermarkColumn} > {max_watermark}')
+        filter = f'{watermarkColumn} > "{max_watermark}"'
+        self.__data = self.__data.filter(filter)
+        print(filter)
+        print(self.__data.count())
