@@ -54,13 +54,13 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
         
-        print(f'dst tbl cfg')
-        print(f'increment {self.__tableConfig.increment}')
-        print(f'mergeKeyColumns {self.__tableConfig.mergeKeyColumns}')
-        print(f'snapshotKeyColumns {self.__tableConfig.snapshotKeyColumns}')
-        print(f'identityColumnPattern {self.__tableConfig.identityColumnPattern}')
-        print(f'insertDateColumn {self.__tableConfig.insertDateColumn}')
-        print(f'invalidCharactersInColumnNamesReplacement {self.__tableConfig.invalidCharactersInColumnNamesReplacement}')
+        # print(f'dst tbl cfg')
+        # print(f'increment {self.__tableConfig.increment}')
+        # print(f'mergeKeyColumns {self.__tableConfig.mergeKeyColumns}')
+        # print(f'snapshotKeyColumns {self.__tableConfig.snapshotKeyColumns}')
+        # print(f'identityColumnPattern {self.__tableConfig.identityColumnPattern}')
+        # print(f'insertDateColumn {self.__tableConfig.insertDateColumn}')
+        # print(f'invalidCharactersInColumnNamesReplacement {self.__tableConfig.invalidCharactersInColumnNamesReplacement}')
 
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
@@ -107,7 +107,7 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             self.
             __data
             .select(
-                [col(c).alias(
+                [col(f'`{c}`').alias(
                     self.__sanitizeColumnName(c)) 
                     for c in self.__data.columns
                 ]))
@@ -169,10 +169,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
         
-        print('key columns')
-        print(key_columns)
-        print('non-key columns')
-        print(non_key_columns)
+        # print('key columns')
+        # print(key_columns)
+        # print('non-key columns')
+        # print(non_key_columns)
         
         if len(key_columns) == 0:
             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
@@ -261,9 +261,9 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             return
         
         max_watermark_sql = f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}'
-        print(max_watermark_sql)
+        # print(max_watermark_sql)
         max_watermark = self._spark.sql(max_watermark_sql).collect()[0][0]
-        print(f'max watermark: {max_watermark}')
+        # print(f'max watermark: {max_watermark}')
 
         # if the table is empty or watermark is 0, take all the data
         if max_watermark is None:
@@ -273,5 +273,5 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         
         filter = f'{watermarkColumn} > "{max_watermark}"'
         self.__data = self.__data.filter(filter)
-        print(filter)
-        print(self.__data.count())
+        # print(filter)
+        # print(self.__data.count())
