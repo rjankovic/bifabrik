@@ -1,33 +1,22 @@
 # Saving to a Spark / Pandas DataFrame
 
-TODO 
-
-If you already have your data prepared in a Spark DataFrame, you can pass it to bifabrik
+If you you only want to use `bifabrik` to load data from a source and then take care of the transformation yourself, you can get the Spark DataFrame from the source
 
 ```python
 import bifabrik as bif
 
-df = spark.read.format("csv").option("header","true").load("Files/CsvFiles/annual-enterprise-survey-2021.csv")
-bif.fromSparkDf(df).toTable('Table1').run()
+df = bif.fromCsv("Files/CsvFiles/dimBranch.csv").delimiter(';').decimal(',').toSparkDf().run()
 ```
-This can be useful when you only need the [table destination](dst_table.md) functionality - something like
+This can be useful when you only need the source functionality - whether it be [JSON](src_json.md), [CSV](src_csv.md) or something else - and want to take care of data transformations in Spark.
+
+Once you are done with transforming the dataframe, you can again use `bifabrik` to save the data from the DF to a table using a [dataframe source](src_spark_df.md)
+
+If you prefer pandas, you can similarly save data to a pandas DataFrame
 
 ```python
-bif.fromSparkDf(df) \
-  .toTable('DimensionTable') \
-  .increment('merge') \
-  .mergeKeyColumns(['Code']) \
-  .identityColumnPattern('{tablename}ID') \
-  .run()
-```
+import bifabrik as bif
 
-If you prefer pandas, you can similarly load data from a pandas DataFrame
-
-```python
-import pandas as pd
-
-df = pd.read_csv('data.csv')
-bif.fromPandasDf(df).toTable('Table1').run()
+pandas_df = bif.fromSql('SELECT * FROM SomeTable').toPandasDf().run()
 ```
 
 [Back](../index.md)
