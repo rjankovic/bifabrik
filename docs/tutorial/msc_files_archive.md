@@ -2,6 +2,17 @@
 
 When loading data from files, such as [CSV](src_csv.md) or [JSON](src_json.md), you may want to loaded files to an archive folder so that you don't reprocess them the next time you run the pipeline.
 
+```
+2024-03-02 19:26:02,437	INFO	Executing CSV source: CsvFiles/dimBranch.csv
+2024-03-02 19:26:02,437	INFO	Searching location Files
+2024-03-02 19:26:02,528	INFO	Searching location Files/CsvFiles
+2024-03-02 19:26:02,562	INFO	Loading CSV files: [/lakehouse/default/Files/CsvFiles/dimBranch.csv]
+2024-03-02 19:26:02,595	INFO	Executing Table destination: DimBranchArch
+2024-03-02 19:26:05,024	INFO	Archiving abfss://.../Files/CsvFiles/dimBranch.csv -> abfss://.../Files/CsvArchive/processed_dimBranch_2024_03_02_19_26_05_024146.csv
+```
+
+
+
 ```python
 from bifabrik.utils import fsUtils as fsu
 
