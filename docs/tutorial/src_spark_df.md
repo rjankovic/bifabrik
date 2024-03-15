@@ -1,6 +1,6 @@
-# Loading from a Spark dataframe
+# Loading from a Spark DataFrame
 
-If you already have your data prepared in a spark dataframe, you can pass it to bifabrik
+If you already have your data prepared in a Spark DataFrame, you can pass it to bifabrik
 
 ```python
 import bifabrik as bif
