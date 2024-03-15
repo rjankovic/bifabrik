@@ -1,6 +1,6 @@
 # Archiving processed source files
 
-When loading data from files, such as [CSV](../src_csv.md) or [JSON](../src_json.md), you may want to loaded files to an archive folder so that you don't reprocess them the next time you run the pipeline.
+When loading data from files, such as [CSV](src_csv.md) or [JSON](src_json.md), you may want to loaded files to an archive folder so that you don't reprocess them the next time you run the pipeline.
 
 ```python
 from bifabrik.utils import fsUtils as fsu
