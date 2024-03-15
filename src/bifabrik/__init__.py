@@ -17,7 +17,7 @@
     
     Load the results of a SQL query to a table
 
-    >>> bif.fromSql.query("SELECT * FROM OrdersTable LIMIT 10").toTable('TenOrders').save()
+    >>> bif.fromSql("SELECT * FROM OrdersTable LIMIT 10").toTable('TenOrders').save()
 """
 
 from bifabrik.src.CsvSource import CsvSource

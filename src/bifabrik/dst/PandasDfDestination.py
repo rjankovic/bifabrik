@@ -13,7 +13,7 @@ class PandasDfDestination(DataDestination):
     --------
     > import bifabrik as bif
     >
-    > pandas_df = bif.fromSql.query('SELECT * FROM SomeTable').toPandasDf().run()
+    > pandas_df = bif.fromSql('SELECT * FROM SomeTable').toPandasDf().run()
     """
     def __init__(self, pipeline: Pipeline):
         super().__init__(pipeline)

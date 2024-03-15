@@ -12,7 +12,7 @@ class SparkDfDestination(DataDestination):
     --------
     > import bifabrik as bif
     >
-    > df = bif.fromSql.query('SELECT * FROM SomeTable').toSparkDf().run()
+    > df = bif.fromSql('SELECT * FROM SomeTable').toSparkDf().run()
     """
     def __init__(self, pipeline: Pipeline):
         super().__init__(pipeline)
