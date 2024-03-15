@@ -10,9 +10,12 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
  - Data sources
    - [CSV](/tutorial/src_csv.md)
    - [JSON](/tutorial/src_json.md)
+   - [Archiving processed files](/tutorial/msc_files_archive.md)
    - [SQL](/tutorial/src_sql.md)
+   - [Spark / Pandas DataFrame](/tutorial/src_spark_df.md)
 - Data destinations
    - [Table](/tutorial/dst_table.md)
+   - [Spark / Pandas DataFrame](/tutorial/dst_spark_df.md)
 - Utilities
    - [File system](/tutorial/util_fs.md)
    - [Logging](/tutorial/util_log.md)
