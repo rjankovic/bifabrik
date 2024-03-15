@@ -1,6 +1,6 @@
 # Saving to a Spark / Pandas DataFrame
 
-If you you only want to use `bifabrik` to load data from a source and then take care of the transformation yourself, you can get the Spark DataFrame from the source
+Rather than saving data to a lakehouse table, you can get it in a dataframe
 
 ```python
 import bifabrik as bif
