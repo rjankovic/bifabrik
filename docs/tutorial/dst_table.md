@@ -48,7 +48,9 @@ bif.fromCsv('CsvFiles/orders.csv').toTable('FactOrder').increment('append').wate
 ```
 > The `watermarkColumn` configuration is a general feature of the table destination, not just for the `append` increment
 >
-> When `watermarkColumn` is specified, `bifabrik` checks the maximum value of that column in the destination table and then filters the incoming dataset to only load the rows where `{watermarkColumn} > {MAX(watermarkColumn) from target table}`
+> When `watermarkColumn` is specified, `bifabrik` checks the maximum value of that column in the destination table and then filters the incoming dataset to only load the rows where `{watermarkColumn} > {MAX(watermarkColumn) from target table}`.
+>
+> This is done before applying the increment logic.
 
 ### merge
 
@@ -64,6 +66,20 @@ bif \
 ```
 
 Internally, Spark SQL `MERGE` statement is used to insrt new rows and update rows that get matched using the merge key. The key can have multiple columns specified in the array.
+
+### snapshot
+
+For this option, you need to configure the `snapshotKeyColumns` array to the column or columnss that specify the snapshot.
+
+```python
+bif.fromCsv('CsvFiles/fact_append_pt1.csv').toTable('snapshot1') \
+.increment('snapshot').snapshotKeyColumns(['Date', 'Code']) \
+.run()
+```
+
+Here, the snapshot is "replaced". That is, all the rows from the target table that match one of the snapshot keys in the source table get deleted, before the new rows are inserted.
+
+This solves the *deleted rows* issue - if some rows get deleted in the source, you can remove them in the lakehouse by reloading the corresponding snapshot. The `merge` increment, by comparison, does not remove rows that were deleted in the source.
 
 ## Identity column
 
