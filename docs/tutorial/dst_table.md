@@ -136,9 +136,18 @@ bif.fromCsv('CsvFiles/dim_branch.csv')
 Just for clarity, yes, you can combine multiple settings for the table destination
 
 ```python
-bif.fromCsv('CsvFiles/fact_append_pt2.csv').toTable('snapshotTable1').increment('snapshot') \
-    .snapshotKeyColumns(['Date', 'Code']).identityColumnPattern('{tablename}ID') \
-    .insertDateColumn('RowStartDate').run()
+import bifabrik as bif
+
+(
+bif
+  .fromCsv('CsvFiles/fact_append_pt2.csv')
+  .toTable('snapshotTable1')
+  .increment('snapshot')
+  .snapshotKeyColumns(['Date', 'Code'])
+  .identityColumnPattern('{tablename}ID')
+  .insertDateColumn('RowStartDate')
+  .run()
+)
 ```
 
 You can also save your configuration preferences to a JSON file and then apply it to all tables loaded in one session - read more about [configuration](configuration.md)
