@@ -86,6 +86,8 @@ This solves the *deleted rows* issue - if some rows get deleted in the source, y
 You can configure the `identityColumnPattern` to add an auto-increment column to the table. The name of the column can contain the name of the table / lakehouse.
 
 ```python
+import bifabrik as bif
+
 bif \
   .fromCsv('CsvFiles/orders_pt2.csv') \
   .toTable('DimOrder') \
@@ -107,8 +109,38 @@ Supported placeholders:
 
 ## Insert timestamp
 
+You can append a column with the current timestamp to newly inserted columns - just set the `insertDateColumn` on the table destination.
+
+If configured, this will be added at the end of the table.
+
+```python
+bif.fromCsv('CsvFiles/dim_branch.csv')
+    .toTable('DimBranch') \
+    .insertDateColumn('InsertTimestamp').run()
+```
+
 ## Fixing invalid column names
 
-Read more about [configuration](configuration.md)
+The characters `(space),;{}()\n\t=` are invalid in delta tables. By default, `bifabrik` replace these with and underscore (`_`) so that these invalid characters in column names don't stop you from loading your data.
+
+You may want to just remove the invalid characters or replace them with something else. In that case, use the `invalidCharactersInColumnNamesReplacement` setting.
+
+```python
+bif.fromCsv('CsvFiles/dim_branch.csv')
+    .toTable('DimBranch') \
+    .invalidCharactersInColumnNamesReplacement('').run()
+```
+
+## Everything all at once
+
+Just for clarity, yes, you can combine multiple settings for the table destination
+
+```python
+bif.fromCsv('CsvFiles/fact_append_pt2.csv').toTable('snapshotTable1').increment('snapshot') \
+    .snapshotKeyColumns(['Date', 'Code']).identityColumnPattern('{tablename}ID') \
+    .insertDateColumn('RowStartDate').run()
+```
+
+You can also save your configuration preferences to a JSON file and then apply it to all tables loaded in one session - read more about [configuration](configuration.md)
 
 [Back](../index.md)
