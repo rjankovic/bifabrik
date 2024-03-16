@@ -142,7 +142,7 @@ The characters `(space),;{}()\n\t=` are invalid in delta tables. By default, `bi
 You may want to just remove the invalid characters or replace them with something else. In that case, use the `invalidCharactersInColumnNamesReplacement` setting.
 
 ```python
-bif.fromCsv('CsvFiles/dim_branch.csv')
+bif.fromCsv('CsvFiles/dim_branch.csv') \
     .toTable('DimBranch') \
     .invalidCharactersInColumnNamesReplacement('').run()
 ```
