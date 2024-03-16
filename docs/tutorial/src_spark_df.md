@@ -28,4 +28,6 @@ df = pd.read_csv('data.csv')
 bif.fromPandasDf(df).toTable('Table1').run()
 ```
 
+Also, have a look at [DataFrame transformations using lambda functions](tsf_spark_df.md)
+
 [Back](../index.md)

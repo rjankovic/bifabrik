@@ -18,5 +18,6 @@ import bifabrik as bif
 
 pandas_df = bif.fromSql('SELECT * FROM SomeTable').toPandasDf().run()
 ```
+Also, have a look at [DataFrame transformations using lambda functions](tsf_spark_df.md)
 
 [Back](../index.md)

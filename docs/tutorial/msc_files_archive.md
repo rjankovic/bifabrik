@@ -75,6 +75,4 @@ bif.config.loadFromFile('Files/cfg/fileSrcSettings.json')
 
 See more in [Configuration](configuration.md)
 
-I can see I'm drifting in all directions, so it's time to stop :)
-
 [Back](../index.md)
