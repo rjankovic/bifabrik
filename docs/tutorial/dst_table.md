@@ -130,7 +130,7 @@ You can append a column with the current timestamp to newly inserted columns - j
 If configured, this will be added at the end of the table.
 
 ```python
-bif.fromCsv('CsvFiles/dim_branch.csv')
+bif.fromCsv('CsvFiles/dimBranch.csv') \
     .toTable('DimBranch') \
     .insertDateColumn('InsertTimestamp').run()
 ```
