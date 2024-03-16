@@ -101,3 +101,25 @@ GROUP BY Industry_name_NZSIOC
 # The resulting table will be saved to the lakehouse attached to your notebook.
 # You can refer to a different source warehouse in the query, though.
 ```
+
+### More options
+
+`bifabrik` can help with incremental loads, identity columsn (auto-increment), dataframe transformations and more
+
+For example
+```python
+import bifabrik as bif
+from pyspark.sql.functions import col, upper
+
+(
+bif
+  .fromCsv('CsvFiles/fact_append_*.csv')
+  .transformSparkDf(lambda df: df.withColumn('CodeUppercase', upper(col('Code'))))
+  .toTable('SnapshotTable1')
+  .increment('snapshot')
+  .snapshotKeyColumns(['Date', 'Code'])
+  .identityColumnPattern('{tablename}ID')
+  .run()
+)
+```
+For more details, see the **[project page](https://rjankovic.github.io/bifabrik/)**
