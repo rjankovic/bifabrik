@@ -78,11 +78,11 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__filterByWatermark()
 
         # if the target target table does not exist yet, just handle it as an overwrite
-        # TODO: increment
         if not(self.__tableExists):
             self.__overwriteTarget()
         elif incrementMethod is None:
             incrementMethod = 'overwrite'
+            self.__overwriteTarget()
         elif incrementMethod == 'overwrite':
             self.__overwriteTarget()
         elif incrementMethod == 'append':
@@ -91,6 +91,8 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             self.__mergeTarget()
         elif incrementMethod == 'snapshot':
             self.__snapshotTarget()
+        else:
+            raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
         self._completed = True
         
