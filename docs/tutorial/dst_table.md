@@ -83,6 +83,28 @@ This solves the *deleted rows* issue - if some rows get deleted in the source, y
 
 ## Identity column
 
+You can configure the `identityColumnPattern` to add an auto-increment column to the table. The name of the column can contain the name of the table / lakehouse.
+
+```python
+bif \
+  .fromCsv('CsvFiles/orders_pt2.csv') \
+  .toTable('DimOrder') \
+  .increment('merge') \
+  .mergeKeyColumns(['Code']) \
+  .identityColumnPattern('{tablename}ID') \
+  .run()
+```
+
+The values are 1, 2, 3..., each new record gets a new number.
+
+If configured, the column will be placed at the beginning of the table.
+
+```
+Supported placeholders:
+{tablename}     : the delta table name
+{lakehousename} : the lakehouse name
+```
+
 ## Insert timestamp
 
 ## Fixing invalid column names
