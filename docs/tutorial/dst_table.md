@@ -105,6 +105,7 @@ import bifabrik as bif
 
 bif \
   .fromCsv('CsvFiles/orders_pt2.csv') \
+  .delimiter(';') \
   .toTable('DimOrder') \
   .increment('merge') \
   .mergeKeyColumns(['Code']) \
