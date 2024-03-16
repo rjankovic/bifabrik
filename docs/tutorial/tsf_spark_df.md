@@ -14,7 +14,7 @@ bif
     .run()
 )
 ```
-The transformSparkDf takes a function where a spark dataframe is both the input and output.
+The `transformSparkDf` takes a function where a spark dataframe is both the input and output.
 
 This gets applied to the result of the previous operation and then passed to the next one (in this case the table destination)
 
