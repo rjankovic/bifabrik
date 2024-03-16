@@ -1,14 +1,26 @@
 # Table destination
 
-For now, the only supported option is a full-load of a table into the default lakehouse attached to the notebook:
+If you just want to do a full load into a lakehouse table, go ahead:
 
 ```python
 import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toTable('Survey2021').run()
 ```
-This writes a parquet (delta) file into the `Tables/` directory in the lakehouse and Fabric then makes a table out of it, as it does.
 
-There is a lot to be done - support for incremental loads, slowly changing dimensions, surrogate keys and more. Will keep you posted :)
+This writes a parquet (delta) file into the `Tables/` directory in the lakehouse. Fabric then makes a table out of it.
+
+If you want to save data to a different lakehouse / workspace, check out [cross-lakehouse pipelines](cfg_storage.md)
+
+## Incremental load
+and watermarks
+
+## Identity column
+
+## Insert timestamp
+
+## Fixing invalid column names
+
+Read more about [configuration](configuration.md)
 
 [Back](../index.md)
