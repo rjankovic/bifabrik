@@ -44,7 +44,12 @@ bif.fromCsv('CsvFiles/orders_240301.csv').toTable('FactOrder').increment('append
 You may also want to use watermark to filter the data before appending.
 
 ```python
-bif.fromCsv('CsvFiles/orders.csv').toTable('FactOrder').increment('append').watermarkColumn('timestamp').run()
+bif.fromSql('''
+
+SELECT orderno, inset_timestamp, value
+FROM LH_Stage.vNewOrders
+
+''').toTable('FactOrder').increment('append').watermarkColumn('inset_timestamp').run()
 ```
 > The `watermarkColumn` configuration is a general feature of the table destination, not just for the `append` increment
 >
@@ -57,11 +62,16 @@ bif.fromCsv('CsvFiles/orders.csv').toTable('FactOrder').increment('append').wate
 This is basically the *slowly changing dimenstion type 1* option. To get this working, you need to configure the `mergeKeyColumns` array (the business key based on which to merge).
 
 ```python
-bif \
-  .fromCsv('CsvFiles/scd_pt1.csv') \
-  .toTable('SCDTest1') \
+bif.fromSql('''
+
+SELECT Variable_Code
+,AVG(`Value`) AS AvgValue
+FROM LakeHouse1.Survey2021
+GROUP BY Variable_Code
+
+''').toTable('SCDTest1') \
   .increment('merge') \
-  .mergeKeyColumns(['Code']) \
+  .mergeKeyColumns(['Variable_Code']) \
   .run()
 ```
 
