@@ -38,7 +38,10 @@ bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv') \
 Appends the incoming data to the table
 
 ```python
-bif.fromCsv('CsvFiles/orders_240301.csv').toTable('FactOrder').increment('append').run()
+bif.fromCsv('CsvFiles/orders_240301.csv') \
+  .toTable('FactOrder') \
+  .increment('append') \
+  .run()
 ```
 
 You may also want to use watermark to filter the data before appending.
@@ -49,7 +52,9 @@ bif.fromSql('''
 SELECT orderno, inset_timestamp, value
 FROM LH_Stage.vNewOrders
 
-''').toTable('FactOrder').increment('append').watermarkColumn('inset_timestamp').run()
+''').toTable('FactOrder') \
+  .increment('append').watermarkColumn('inset_timestamp') \
+  .run()
 ```
 > The `watermarkColumn` configuration is a general feature of the table destination, not just for the `append` increment
 >
