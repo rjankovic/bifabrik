@@ -5,8 +5,9 @@ description = "Microsoft Fabric ETL toolbox"
 authors = ["Radovan Jankovič"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://rjankovic.github.io/bifabrik/"
 documentation = "https://rjankovic.github.io/bifabrik/"
-repository = "https://github.com/rjankovic/bifabrik"
+repository = "https://github.com/rjankovic/bifabrik/"
 
 [tool.poetry.dependencies]
 python = "^3.10"

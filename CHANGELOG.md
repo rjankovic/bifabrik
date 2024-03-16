@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v0.5.0 (2024-04-TODO)
+## v0.5.0 (2024-03-16)
 
 - Source files archiving support
 - Spark / Pandas DF source / destination
