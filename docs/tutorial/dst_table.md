@@ -14,6 +14,14 @@ This writes a parquet (delta) file into the `Tables/` directory in the lakehouse
 If you want to save data to a different lakehouse / workspace, check out [cross-lakehouse pipelines](cfg_storage.md)
 
 ## Incremental load
+
+The `increment` setting of the destination task has 4 options
+ - overwrite
+ - append
+ - merge
+ - snapshot
+
+
 and watermarks
 
 ## Identity column
