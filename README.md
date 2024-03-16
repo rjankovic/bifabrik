@@ -5,8 +5,9 @@ Microsoft Fabric ETL toolbox
  - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
  - reduce repetitive code by setting preferences in config files
 
-For info on all the features, see the [project page](https://rjankovic.github.io/bifabrik/)
-This is an early build - if you find a problem, please report it here: https://github.com/rjankovic/bifabrik/issues. Thanks!
+See the **[project page](https://rjankovic.github.io/bifabrik/)** for info on all the features.
+
+If you find a problem or have a feature request, please submit it here: https://github.com/rjankovic/bifabrik/issues. Thanks!
 
 ## Quickstart
 
