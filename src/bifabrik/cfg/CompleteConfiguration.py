@@ -7,6 +7,7 @@ from bifabrik.cfg.specific.JsonConfiguration import JsonConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
 from bifabrik.cfg.specific.SourceStorageConfiguration import SourceStorageConfiguration
 from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationStorageConfiguration
+from bifabrik.cfg.specific.MetadataStorageConfiguration import MetadataStorageConfiguration
 from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
 
 import notebookutils.mssparkutils.fs
@@ -28,6 +29,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__fileSource = FileSourceConfiguration()
         self.__sourceStorage = SourceStorageConfiguration()
         self.__destinationStorage = DestinationStorageConfiguration()
+        self.__metadataStorage = MetadataStorageConfiguration()
         self.__destinationTable = TableConfiguration()
         super().__init__()
         
@@ -61,6 +63,11 @@ class CompleteConfiguration(ConfigContainer):
     def destinationStorage(self) -> DestinationStorageConfiguration:
         """The destination lakehouse and warehouse reference used by pipelines"""
         return self.__destinationStorage
+    
+    @property
+    def metadataStorage(self) -> MetadataStorageConfiguration:
+        """The metadata and backup storage lakehouse reference"""
+        return self.__metadataStorage
     
     @property
     def destinationTable(self) -> TableConfiguration:
