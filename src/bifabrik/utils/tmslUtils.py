@@ -7,7 +7,10 @@ import bifabrik.utils.log as lg
 import bifabrik as bif
 import datetime
 import sempy.fabric as spf
+import pyspark.sql.session as pss
 import notebookutils.mssparkutils.fs
+from pyspark.sql.functions import col
+import uuid
 
 def backupDataset(sourceDataset: str, sourceWorkspace: str, targetFilePath = None):
     """Save the dataset definition to a TMSL script. This serves as a backup of the definition. If you damage your semantic model, you can restore it from TMSL using restoreDataset().
@@ -63,3 +66,47 @@ def backupDataset(sourceDataset: str, sourceWorkspace: str, targetFilePath = Non
     
     #print(f'Writing TMSL to {targetFilePath}')
     notebookutils.mssparkutils.fs.put(targetFilePath, tmsl)
+
+def restoreDataset(sourceFilePath: str, targetDatasetName: str, targetWorkspaceName: str):
+    datasets_pandas = spf.list_datasets(workspace = targetWorkspaceName)
+    spark = pss.SparkSession.builder.getOrCreate()
+    datasets = spark.createDataFrame(datasets_pandas)
+
+    target_id = str(uuid.uuid4())
+    
+    # look for the destination dataset. If it already exists, take its ID (replace target)
+    # otherwise, we're creating a new dataset
+    
+    ds_filter = datasets.filter(col("Dataset Name") == targetDatasetName)
+    if ds_filter.count() > 0:
+        target_id = ds_filter.collect()[0]['Dataset ID']
+    
+    rdd = spark.read.text(sourceFilePath)
+    tmsl_def = ""
+    name_replaced = False
+    id_replaced = False
+    
+    for l in rdd.collect():
+        s = l[0]
+        if s.strip().startswith('"name":') and name_replaced == False:
+            print('orig ' + s)
+            s = f'"name": "{targetDatasetName}",'
+            name_replaced = True
+            print(s)
+        if s.strip().startswith('"id":') and id_replaced == False:
+            print('orig ' + s)
+            s = f'"id": "{target_id}",'
+            id_replaced = True
+            print(s)
+        tmsl_def = tmsl_def + '\n' + s
+
+    wrap_start = f"""{{
+    "createOrReplace": {{
+        "object": {{
+        "database": "{targetDatasetName}"
+        }},
+        "database":"""
+    wrap_end = " } }"
+    tmsl_cmd = wrap_start + tmsl_def + wrap_end
+
+    spf.execute_tmsl(script = tmsl_cmd, workspace = targetWorkspaceName)
