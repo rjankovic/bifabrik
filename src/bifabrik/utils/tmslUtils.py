@@ -92,10 +92,10 @@ def restoreDataset(sourceFilePath: str, targetDatasetName: str, targetWorkspaceN
     # otherwise, we're creating a new dataset
 
     ds_filter = datasets.filter(col("Dataset Name") == targetDatasetName)
-    create_new = False
+    create_new = True
     if ds_filter.count() > 0:
         target_id = ds_filter.collect()[0]['Dataset ID']
-        create_new = True
+        create_new = False
     
     rdd = spark.read.text(sourceFilePath)
     tmsl_def = ""
