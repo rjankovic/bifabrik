@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.0 (2024-04-TODO)
+
+- Power BI dataset definition backup / restore using TMSL
+- Table column utilities - add / rename / remove
+- Table destination schema merge (support for adding columns)
 
 ## v0.5.0 (2024-03-16)
 
@@ -15,7 +20,6 @@
     - watermark
     - timestamp column
     - fixing invalid column names
-
 
 ## v0.4.0 (2024-03-01)
 
