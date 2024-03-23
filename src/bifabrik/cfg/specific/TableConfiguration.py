@@ -13,6 +13,7 @@ class TableConfiguration(Configuration):
         self.__mergeKeyColumns = []
         self.__snapshotKeyColumns = []
         self.__invalidCharactersInColumnNamesReplacement = '_'
+        self.__canAddNewColumns = True
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -96,3 +97,13 @@ class TableConfiguration(Configuration):
     @invalidCharactersInColumnNamesReplacement.setter(key='invalidCharactersInColumnNamesReplacement')
     def invalidCharactersInColumnNamesReplacement(self, val):
         self.__invalidCharactersInColumnNamesReplacement = val
+    
+    @CfgProperty
+    def canAddNewColumns(self) -> str:
+        """If the table already exists and the input dataset has extra columns, add the columns to the table with empty values.
+        default True
+        """
+        return self.__canAddNewColumns
+    @canAddNewColumns.setter(key='canAddNewColumns')
+    def canAddNewColumns(self, val):
+        self.__canAddNewColumns = val
