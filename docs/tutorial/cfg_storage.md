@@ -24,7 +24,7 @@ bif.fromJson('/JsonFiles_src/file1.json').multiLine(True).toTable('TableA').run(
 bif.fromJson('/JsonFiles_src/file2.json').multiLine(True).toTable('TableB').run()
 bif.fromJson('/JsonFiles_src/file3.json').multiLine(True).toTable('TableC').run()
 ```
-> Note that while cross-lakehouse SQL queries are supported, cross-workspace queries don't. Or at least not without creating shortcuts between them.
+> Note that cross-lakehouse SQL queries are supported, but cross-workspace queries aren't. Or at least not without creating shortcuts between them.
 > 
 > See https://learn.microsoft.com/en-us/fabric/data-warehouse/tutorial-sql-cross-warehouse-query-editor#execute-a-cross-warehouse-cross-workspace-query
 >
