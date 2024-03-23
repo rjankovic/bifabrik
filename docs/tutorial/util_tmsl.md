@@ -8,7 +8,62 @@ _Now_, have you ever completely broken your semantic model because
  - the underlying delta tables changed and the model editor cannot load now
  - you had multiple tabs open editing over your own changes? No? That's only me? ok...
 
+Then you may benefit from this backup / restore feature
+
 ## Backup semantic model definition
+
+```python
+import bifabrik.utils.tmslUtils as tmsl
+tmsl.backupDataset(sourceDataset = 'DS_R1', sourceWorkspace = 'Experimental', targetFilePath = 'Files/DS_R1_backup.json')
+```
+This saves the model to a file that looks something like this:
+
+```json
+{
+  "name": "SM_DQ",
+  "id": "1d18df73-627b-440b-ad37-8143bce9d6a6",
+  "compatibilityLevel": 1604,
+  
+  "model": {
+    "collation": "Latin1_General_100_BIN2_UTF8",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    
+    "tables": [
+      {
+        "name": "DQMetric",
+        "lineageTag": "84e0a2fe-ef6b-4f59-8b27-c55afff1e837",
+        "sourceLineageTag": "[dbo].[DQMetric]",
+        
+        "columns": [
+```
+You can also omit the `targetPath`. In that case the library will use a generic path, creating the folders if needed
+
+```python
+import bifabrik.utils.tmslUtils as tmsl
+tmsl.backupDataset(sourceWorkspace = 'Experimental', sourceDataset = 'DS_LH1_2')
+
+# tmslBackupPathPattern: Files/tmsl_backup/{workspacename}/{datasetname}/{datasetname}_{timestamp}.json
+# Writing tmsl to abfss://.../Files/tmsl_backup/Experimental/DS_LH1_2/DS_LH1_2_2024_03_21_18_25_12_954153.json
+```
+If you want to configure different backup paths, use these `bifabrik` config properties:
+
+```python
+bifabrik.config.metadataStorage.metadataWorkspaceName
+bifabrik.config.metadataStorage.metadataLakehouseName 
+bifabrik.config.metadataStorage.tmslBackupPathPattern
+```
+
+[Learn more about configuration](configuration.md)
+
+```python
+import bifabrik as bif
+import bifabrik.utils.tmslUtils as tmsl
+
+bif.config.metadataStorage.metadataWorkspaceName = 'Experimental'
+bif.config.metadataStorage.metadataLakehouseName = 'Lakehouse1'
+
+tmsl.backupDataset(sourceWorkspace = 'DataWS', sourceDataset = 'SM_Test')
+```
 
 ## Restore model from backup
 
