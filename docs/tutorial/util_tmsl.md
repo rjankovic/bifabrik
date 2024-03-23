@@ -75,7 +75,9 @@ tmsl.restoreDataset(sourceFilePath = 'Files/DS_R1_2024_03_22_22_05_57_580830.jso
    targetDatasetName = 'SM_R1', targetWorkspaceName = 'Experimental')
 ```
 
-This function issues a [CreateOrReplace command](https://learn.microsoft.com/en-us/analysis-services/tmsl/createorreplace-command-tmsl?view=asallproducts-allversions) containing the definition from a backup (see above). If the target dataset already exists, it is overwritten. If it doesn't a new dataset is created.
+This function issues a [CreateOrReplace command](https://learn.microsoft.com/en-us/analysis-services/tmsl/createorreplace-command-tmsl?view=asallproducts-allversions) containing the definition from a backup (see above).
+
+If the target dataset already exists, it is overwritten. If it doesn't exist, a new dataset is created.
 
 
 After restoring the model, you may see a warning sign next to your tables like this:
