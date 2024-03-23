@@ -8,7 +8,9 @@ _Now_, have you ever completely broken your semantic model because
  - the underlying delta tables changed and the model editor cannot load now
  - you had multiple tabs open editing over your own changes? No? That's only me? ok...
 
-Then you may benefit from this backup / restore feature
+Then you may benefit from this backup / restore feature.
+
+Internally, this uses functions from the [sempy.fabric](https://learn.microsoft.com/en-us/python/api/semantic-link-sempy/sempy.fabric?view=semantic-link-python) library.
 
 ## Backup semantic model definition
 
@@ -68,22 +70,20 @@ tmsl.backupDataset(sourceWorkspace = 'DataWS', sourceDataset = 'SM_Test')
 ## Restore model from backup
 
 ```python
-from bifabrik.utils import fsUtils as fsu
-
-help(fsu)
+import bifabrik.utils.tmslUtils as tmsl
+tmsl.restoreDataset(sourceFilePath = 'Files/DS_R1_2024_03_22_22_05_57_580830.json',
+   targetDatasetName = 'SM_R1', targetWorkspaceName = 'Experimental')
 ```
 
-One notable function is `filePatternSearch`, which seems to be a bit of a blind spot in the standard `mssparkutils.fs` in Fabric
+This function issues a [CreateOrReplace command](https://learn.microsoft.com/en-us/analysis-services/tmsl/createorreplace-command-tmsl?view=asallproducts-allversions) containing the definition from a backup (see above). If the target dataset already exists, it is overwritten. If it doesn't a new dataset is created.
 
-```python
-from bifabrik.utils import fsUtils as fsu
 
-fsu.filePatternSearch("fld1/*/data/*.csv")
-# > ["abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf1/data/file11.csv", "abfss://...@onelake.dfs.fabric.microsoft.com/.../Files/fld1/subf2/data/file21.csv", "Files/fld1/subf2/data/file22.csv"]
-```
+After restoring the model, you may see a warning sign next to your tables like this:
 
-This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
+![image](https://github.com/rjankovic/bifabrik/assets/2221666/9fb90a60-eee8-497a-85be-2c27927d6343)
 
-This utility is independent of the core `bifabrik` class - you don't need to initialize that one or pass the spark session here.
+Usually, this disappears after you refresh the dataset.
+
+
 
 [Back](../index.md)
