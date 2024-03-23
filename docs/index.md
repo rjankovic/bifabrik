@@ -19,6 +19,7 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
    - [Table](/tutorial/dst_table.md)
    - [Spark / Pandas DataFrame](/tutorial/dst_spark_df.md)
 - Utilities
+   - [Semantic models](/tutorial/util_tmsl.md)
    - [File system](/tutorial/util_fs.md)
    - [Logging](/tutorial/util_log.md)
 
