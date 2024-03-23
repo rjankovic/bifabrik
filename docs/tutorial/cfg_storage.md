@@ -26,7 +26,7 @@ bif.fromJson('/JsonFiles_src/file3.json').multiLine(True).toTable('TableC').run(
 ```
 > Note that cross-lakehouse SQL queries are supported, but cross-workspace queries aren't. Or at least not without creating shortcuts between them.
 > 
-> See https://learn.microsoft.com/en-us/fabric/data-warehouse/tutorial-sql-cross-warehouse-query-editor#execute-a-cross-warehouse-cross-workspace-query
+> See [https://learn.microsoft.com/en-us/fabric/data-warehouse/tutorial-sql-cross-warehouse-query-editor#execute-a-cross-warehouse-cross-workspace-query](https://learn.microsoft.com/en-us/fabric/data-warehouse/tutorial-sql-cross-warehouse-query-editor#execute-a-cross-warehouse-cross-workspace-query)
 >
 > You can pull data from different workspaces, but you'll need to keep the SQL transformations and delta table destinations within one workspace, at least for now.
 
