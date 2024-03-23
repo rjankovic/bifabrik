@@ -1,4 +1,4 @@
-# Power BI dataset utilities
+# Semantic model utilities
 
 As a side-effect of the library, a few filesystem tools have been created to make Fabric filesystem navigation easier. See the fsUtils module:
 
