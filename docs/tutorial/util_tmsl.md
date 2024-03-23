@@ -2,7 +2,7 @@
 
 Semantic models in Fabric are defined [TMSL](https://learn.microsoft.com/en-us/analysis-services/tmsl/tabular-model-scripting-language-tmsl-reference?view=asallproducts-allversions) - basically JSON with commands to create / modify the models.
 
-_Now_...have you ever completely broken your semantic model because
+_Now_, have you ever completely broken your semantic model because
  - the refresh started failing with unspecified errors
  - multiple people were making changes at the same time
  - the underlying delta tables changed and the model editor cannot load now
