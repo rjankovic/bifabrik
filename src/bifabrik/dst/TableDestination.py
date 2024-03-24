@@ -11,6 +11,7 @@ from pyspark.sql.window import Window
 import time
 import datetime
 import notebookutils.mssparkutils.fs
+from bifabrik.utils import tableUtils as tu
 
 class TableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -72,6 +73,8 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__replaceInvalidCharactersInColumnNames()
         self.__insertIdentityColumn()
         self.__insertInsertDateColumn()
+
+        self.__resolveSchemaDifferences()
 
         incrementMethod = mergedConfig.destinationTable.increment
         self.__incrementMethod = incrementMethod
@@ -165,6 +168,40 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
     def __appendTarget(self):
         self.__data.write.mode("append").format("delta").save(self.__tableLocation)
+
+    def __resolveSchemaDifferences(self):
+        lgr = lg.getLogger()
+
+        target_table = f'{self.__lhMeta.lakehouseName}.{self.__targetTableName}'
+        df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
+        cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
+        cols_old = self._spark.createDataFrame(df_old.dtypes, ["old_name", "old_type"])
+        compare = (
+            cols_new.join(cols_old, cols_new.new_name == cols_old.old_name, how="outer")
+            .fillna("")
+        )
+        difference = compare.filter(compare.new_type != compare.old_type)
+
+        canAddColumns = self.__tableConfig.canAddNewColumns
+
+        if canAddColumns:
+            solvable = difference.where(difference.old_name == '')
+            insolvable = difference.where(difference.old_name != '')
+        else:
+            solvable = difference.where(difference.old_type == '____none____')
+            insolvable = difference
+
+        if insolvable.count() > 0:
+            err = f'Schema change detected in table {target_table} (details below)'
+            lgr.error(err)
+            for r in insolvable.collect():
+                lgr.error(f'> old_name: {r.old_name}, old_type: {r.old_type}, new_name: {r.new_name}, new_type: {r.new_type}')
+            insolvable.show()
+            raise Exception(err)
+
+        for r in solvable.collect():
+            tu.addTableColumnFromType(self.__lhMeta.lakehouseName, self.__targetTableName, r.new_name, r.new_type)
+
 
     def __mergeTarget(self):
         all_columns = self.__data.columns
