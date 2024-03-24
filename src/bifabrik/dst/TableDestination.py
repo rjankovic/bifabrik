@@ -172,6 +172,9 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
     def __resolveSchemaDifferences(self):
         lgr = lg.getLogger()
 
+        if not(self.__tableExists):
+            return
+
         target_table = f'{self.__lhMeta.lakehouseName}.{self.__targetTableName}'
         df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
         cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
@@ -192,10 +195,11 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
             insolvable = difference
 
         if insolvable.count() > 0:
-            err = f'Schema change detected in table {target_table} (details below)'
-            lgr.error(err)
+            err = f'Schema difference detected in table {target_table} that cannot be merged:'
             for r in insolvable.collect():
-                lgr.error(f'> old_name: {r.old_name}, old_type: {r.old_type}, new_name: {r.new_name}, new_type: {r.new_type}')
+                err = err + f'\n> old_name: {"N/A" if r.old_name == '' else r.old_name}, old_type: {"N/A" if r.old_type == '' else r.old_type}'
+                err = err + f', new_name: {"N/A" if r.new_name == '' else r.new_name}, new_type: {"N/A" if r.new_type == '' else r.new_type}'
+            lgr.error(err)
             insolvable.show()
             raise Exception(err)
 

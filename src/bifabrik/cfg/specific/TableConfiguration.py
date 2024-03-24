@@ -100,7 +100,7 @@ class TableConfiguration(Configuration):
     
     @CfgProperty
     def canAddNewColumns(self) -> str:
-        """If the table already exists and the input dataset has extra columns, add the columns to the table with empty values.
+        """If the table already exists and the input dataset has extra columns, add the columns to the table with empty values before loading the new input.
         default True
         """
         return self.__canAddNewColumns
