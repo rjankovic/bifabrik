@@ -74,17 +74,18 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertIdentityColumn()
         self.__insertInsertDateColumn()
 
-        self.__resolveSchemaDifferences()
 
         incrementMethod = mergedConfig.destinationTable.increment
+        if incrementMethod is None:
+            incrementMethod = 'overwrite'
         self.__incrementMethod = incrementMethod
+
+        self.__resolveSchemaDifferences()
+        
         self.__filterByWatermark()
 
         # if the target target table does not exist yet, just handle it as an overwrite
         if not(self.__tableExists):
-            self.__overwriteTarget()
-        elif incrementMethod is None:
-            incrementMethod = 'overwrite'
             self.__overwriteTarget()
         elif incrementMethod == 'overwrite':
             self.__overwriteTarget()
@@ -174,7 +175,9 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
 
         if not(self.__tableExists):
             return
-
+        if self.__incrementMethod == 'overwrite':
+            return
+        
         target_table = f'{self.__lhMeta.lakehouseName}.{self.__targetTableName}'
         df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
         cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
@@ -197,8 +200,12 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if insolvable.count() > 0:
             err = f'Schema difference detected in table {target_table} that cannot be merged:'
             for r in insolvable.collect():
-                err = err + f'\n> old_name: {"N/A" if r.old_name == '' else r.old_name}, old_type: {"N/A" if r.old_type == '' else r.old_type}'
-                err = err + f', new_name: {"N/A" if r.new_name == '' else r.new_name}, new_type: {"N/A" if r.new_type == '' else r.new_type}'
+                ons = "N/A" if r.old_name == '' else r.old_name
+                ots = "N/A" if r.old_type == '' else r.old_type
+                nns = "N/A" if r.new_name == '' else r.new_name
+                nts = "N/A" if r.new_type == '' else r.new_type
+                err = err + f'\n> old_name: {ons}, old_type: {ots}'
+                err = err + f', new_name: {nns}, new_type: {nts}'
             lgr.error(err)
             insolvable.show()
             raise Exception(err)

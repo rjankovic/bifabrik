@@ -99,7 +99,7 @@ class TableConfiguration(Configuration):
         self.__invalidCharactersInColumnNamesReplacement = val
     
     @CfgProperty
-    def canAddNewColumns(self) -> str:
+    def canAddNewColumns(self) -> bool:
         """If the table already exists and the input dataset has extra columns, add the columns to the table with empty values before loading the new input.
         default True
         """
