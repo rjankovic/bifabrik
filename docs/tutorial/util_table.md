@@ -1,4 +1,4 @@
-# Delta table utilities
+# Lakehouse table utilities
 
 A few tools created as a side-effect of the `bifabrik` library for manipulating delta tables.
 
