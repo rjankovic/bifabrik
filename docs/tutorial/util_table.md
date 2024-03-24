@@ -6,7 +6,7 @@ A few tools created as a side-effect of the `bifabrik` library for manipulating 
 from bifabrik.utils import tableUtils as tu
 help(tu)
 ```
-## Adding new columns
+## Add new column
 
 There are two options when adding new columns to a table
 
