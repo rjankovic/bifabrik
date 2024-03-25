@@ -5,27 +5,51 @@ You can also log function calls including the arguments using the @logCalls deco
 
     Examples
     --------
-    > from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
-    > from bifabrik.utils import log
-    > from bifabrik.utils.log import logCalls
-    >
-    > cfg = LogConfiguration()
-    > cfg.logPath = '/logFolder/log.csv'
-    > cfg.errorLogPath = '/logFolder/error_log.csv'
-    > cfg.loggingLevel = 'DEBUG'
-    > log.configureLogger(cfg)
-    >
-    > logger.info('test info log 1')
-    > logger.info('test info log 2')
-    > logger.error('error 1')
-    > logger.error('error 2')
-    > 
-    > @logCalls
-    > def loggedFunction(str):
-    >   print(str)
-    > 
-    > loggedFunction('functionLog1')
-    > loggedFunction('functionLog2')
+    
+    a) Configure logging for use with bifabrik pipelines
+
+    >>> import bifabrik as bif
+    >>> 
+    >>> # default = 'Files/BifabrikLog.log'
+    >>> bif.config.log.logPath = '/log/log.csv'
+    >>> 
+    >>> # default = 'Files/BifabrikErrorLog.log'
+    >>> bif.config.log.errorLogPath = '/log/error_log.csv'
+    >>> 
+    >>> # default = 'INFO'
+    >>> bif.config.log.loggingLevel = 'DEBUG'
+    >>> 
+    >>> bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv') \
+    >>>     .toTable('Survey2021').run()
+    >>> 
+    >>> bif.fromSql('''
+    >>> SELECT CountryCode, FullName
+    >>> FROM DimBranchZ LIMIT 3
+    >>> ''').toTable('DimBranch2').run()
+
+    b) Configure logging independently of the rest of the library and using the logger
+
+    >>> from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
+    >>> from bifabrik.utils import log
+    >>> from bifabrik.utils.log import logCalls
+    >>>
+    >>> cfg = LogConfiguration()
+    >>> cfg.logPath = '/logFolder/log.csv'
+    >>> cfg.errorLogPath = '/logFolder/error_log.csv'
+    >>> cfg.loggingLevel = 'DEBUG'
+    >>> logger = log.configureLogger(cfg)
+    >>>
+    >>> logger.info('test info log 1')
+    >>> logger.info('test info log 2')
+    >>> logger.error('error 1')
+    >>> logger.error('error 2')
+    >>> 
+    >>> @logCalls
+    >>> def loggedFunction(str):
+    >>>   print(str)
+    >>> 
+    >>> loggedFunction('functionLog1')
+    >>> loggedFunction('functionLog2')
 
 """
 
