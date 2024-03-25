@@ -147,6 +147,38 @@ bif.fromCsv('CsvFiles/dim_branch.csv') \
     .invalidCharactersInColumnNamesReplacement('').run()
 ```
 
+## Adding new columns
+
+Sometimes, we need to add new columns to an existing table. If the table is a full-load (overwrite), this is no problem - the table gets overwritten including the schema.
+
+If there is a different increment menthod and the target table already exists, `bifabrik` will compare the structure of the target table against the incoming dataset. After this
+  - if there are new columns in the input data, these columns will be added to the target table (for the old records, these columns will be empty)
+  - if there are any other differences between the table schemas, `bifabrik` throws an error - deleting / renaming / changing data type of columns cannot be resolved automatically for now
+
+This column adding feature is __enabled by default__. If you want, you can disable it like this:
+
+```python
+import bifabrik as bif
+
+# disable adding columns for the whole session
+bif.config.destinationTable.canAddNewColumns = False
+
+# disable adding columns for a specific pipeline
+bif.fromSql('''
+  SELECT ShipmentId
+  ,CountryCode
+  ,FullName
+  ,SalesType
+  ,SalesTypeShortcut
+  ,WarehouseId, 'ABC' AS NewColumn1 
+  FROM DimBranchZ LIMIT 3
+''').toTable('SchemaMerge1').increment('append') \
+    .canAddNewColumns(False).run()
+```
+[Learn more about configuration](configuration.md)
+
+Also, some of these [table utilities](util_table.md) can come in handy.
+
 ## Everything all at once
 
 Just for clarity, yes, you can combine multiple settings for the table destination
