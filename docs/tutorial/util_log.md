@@ -4,7 +4,7 @@ This tool uses the standard python [logging facility](https://docs.python.org/3/
 
 You can use `bifabrik.utils.log` independently of the rest of `bifabrik` for your custom logs. Also, if you configure this logging, `bifabrik` pipelines can use this to log their progress and errors, which would be nice.
 
-## Log `bifabrik` pipelines
+## Log bifabrik pipelines
 
 ### Default setup
 
