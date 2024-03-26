@@ -4,6 +4,7 @@ from bifabrik.cfg.engine.ConfigContainer import ConfigContainer
 from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
 from bifabrik.cfg.specific.CsvConfiguration import CsvConfiguration
 from bifabrik.cfg.specific.JsonConfiguration import JsonConfiguration
+from bifabrik.cfg.specific.ExcelConfiguration import ExcelConfiguration
 from bifabrik.cfg.specific.FileSourceConfiguration import FileSourceConfiguration
 from bifabrik.cfg.specific.SourceStorageConfiguration import SourceStorageConfiguration
 from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationStorageConfiguration
@@ -26,6 +27,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__log = LogConfiguration()
         self.__csv = CsvConfiguration()
         self.__json = JsonConfiguration()
+        self.__excel = ExcelConfiguration()
         self.__fileSource = FileSourceConfiguration()
         self.__sourceStorage = SourceStorageConfiguration()
         self.__destinationStorage = DestinationStorageConfiguration()
@@ -43,6 +45,11 @@ class CompleteConfiguration(ConfigContainer):
     def json(self) -> JsonConfiguration:
         """JSON files settings"""
         return self.__json
+    
+    @property
+    def excel(self) -> ExcelConfiguration:
+        """Excel source files settings"""
+        return self.__excel
     
     @property
     def log(self) -> LogConfiguration:
