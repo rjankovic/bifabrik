@@ -21,6 +21,7 @@
 """
 
 from bifabrik.src.CsvSource import CsvSource
+from bifabrik.src.ExcelSource import ExcelSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
 from bifabrik.src.SparkDfSource import SparkDfSource
@@ -83,6 +84,20 @@ def fromJson(path: str = None) -> JsonSource:
     >>> bif.fromJson('invoices.json').toTable('Invoices').run()
     """
     ds = JsonSource(__prepPipeline())
+    ds.path(path)
+    return ds
+
+def fromExcel(path: str = None) -> ExcelSource:
+    """Load data from Excel
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> bif.fromExcel.path('ExcelData/factOrderLine.xlsx').sheetName('Sheet1')decimal(',').toTable('FactOrderLine').run()
+    """
+    ds = ExcelSource(__prepPipeline())
     ds.path(path)
     return ds
 
