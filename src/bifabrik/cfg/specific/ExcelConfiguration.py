@@ -6,164 +6,118 @@ class ExcelConfiguration(Configuration):
     """
     def __init__(self):
         self._explicitProps = {}
-        self.__primitivesAsString = None
-        self.__prefersDecimal = None
-        self.__allowComments = None
-        self.__allowUnquotedFieldNames = None
-        self.__allowSingleQuotes = None
-        self.__allowNumericLeadingZero = None
-        self.__allowBackslashEscapingAnyCharacter = None
-        self.__jsonCorruptRecordsMode = None
-        self.__jsonDateFormat = None
-        self.__timestampFormat = None
-        self.__multiLine = None
-        self.__allowUnquotedControlChars = None
-        self.__lineSep = None
-        self.__samplingRatio = None
+        self.__sheetName = 0
+        self.__header = 0
+        self.__names = None
+        self.__usecols = None
+        self.__skiprows = None
+        self.__nrows = None
+        self.__thousands = None
+        self.__decimal = '.'
 
     @CfgProperty
-    def primitivesAsString(self) -> str:
-        """From spark:
-        infers all primitive values as a string type. If None is set, it uses the default value, false.
+    def sheetName(self):
+        """From pandas:
+        Strings are used for sheet names. Integers are used in zero-indexed sheet positions (chart sheets do not count as a sheet position). Lists of strings/integers are used to request multiple sheets. Specify None to get all worksheets.
+        Available cases:
+        Defaults to 0: 1st sheet as a DataFrame
+        1: 2nd sheet as a DataFrame
+        "Sheet1": Load sheet with name “Sheet1”
+        [0, 1, "Sheet5"]: Load first, second and sheet named “Sheet5” as a dict of DataFrame
+        None: All worksheets
+
+        default: 0
         """
-        return self.__primitivesAsString
-    @primitivesAsString.setter(key='primitivesAsString')
-    def primitivesAsString(self, val):
-        self.__primitivesAsString = val
+        return self.__sheetName
+    @sheetName.setter(key='sheetName')
+    def sheetName(self, val):
+        self.__sheetName = val
 
     @CfgProperty
-    def prefersDecimal(self) -> str:
-        """From spark:
-        infers all floating-point values as a decimal type. If the values do not fit in decimal, then it infers them as doubles. If None is set, it uses the default value, false.
+    def header(self):
+        """From pandas:
+        Row (0-indexed) to use for the column labels of the parsed DataFrame. If a list of integers is passed those row positions will be combined into a MultiIndex. Use None if there is no header.
+        
+        default: 0
         """
-        return self.__prefersDecimal
-    @prefersDecimal.setter(key='prefersDecimal')
-    def prefersDecimal(self, val):
-        self.__prefersDecimal = val
+        return self.__header
+    @header.setter(key='header')
+    def header(self, val):
+        self.__header = val
 
     @CfgProperty
-    def allowComments(self) -> str:
-        """From spark:
-        ignores Java/C++ style comment in JSON records. If None is set, it uses the default value, false.
+    def names(self):
+        """From pandas:
+        List of column names to use. If file contains no header row, then you should explicitly pass header=None.
+        
+        default: None
         """
-        return self.__allowComments
-    @allowComments.setter(key='allowComments')
-    def allowComments(self, val):
-        self.__allowComments = val
+        return self.__names
+    @names.setter(key='names')
+    def names(self, val):
+        self.__names = val
 
     @CfgProperty
-    def allowUnquotedFieldNames(self) -> str:
-        """From spark:
-        allows unquoted JSON field names. If None is set, it uses the default value, false.
+    def usecols(self):
+        """From pandas:
+        If None, then parse all columns.
+        If str, then indicates comma separated list of Excel column letters and column ranges (e.g. “A:E” or “A,C,E:F”). Ranges are inclusive of both sides.
+        If list of int, then indicates list of column numbers to be parsed (0-indexed).
+        If list of string, then indicates list of column names to be parsed.
+        If callable, then evaluate each column name against it and parse the column if the callable returns True.
+        Returns a subset of the columns according to behavior above.
+
+        default: None
         """
-        return self.__allowUnquotedFieldNames
-    @allowUnquotedFieldNames.setter(key='allowUnquotedFieldNames')
-    def allowUnquotedFieldNames(self, val):
-        self.__allowUnquotedFieldNames = val
+        return self.__usecols
+    @usecols.setter(key='usecols')
+    def usecols(self, val):
+        self.__usecols = val
 
     @CfgProperty
-    def allowSingleQuotes(self) -> str:
-        """From spark:
-        allows single quotes in addition to double quotes. If None is set, it uses the default value, true.
+    def skiprows(self):
+        """From pandas:
+        Line numbers to skip (0-indexed) or number of lines to skip (int) at the start of the file. If callable, the callable function will be evaluated against the row indices, returning True if the row should be skipped and False otherwise. An example of a valid callable argument would be lambda x: x in [0, 2].
+        
+        default: None
         """
-        return self.__allowSingleQuotes
-    @allowSingleQuotes.setter(key='allowSingleQuotes')
-    def allowSingleQuotes(self, val):
-        self.__allowSingleQuotes = val
+        return self.__skiprows
+    @skiprows.setter(key='skiprows')
+    def skiprows(self, val):
+        self.__skiprows = val
 
     @CfgProperty
-    def allowNumericLeadingZero(self) -> str:
-        """From spark:
-        allows leading zeros in numbers (e.g. 00012). If None is set, it uses the default value, false.
+    def nrows(self):
+        """From pandas:
+        Number of rows to parse.
+        
+        default: None
         """
-        return self.__allowNumericLeadingZero
-    @allowNumericLeadingZero.setter(key='allowNumericLeadingZero')
-    def allowNumericLeadingZero(self, val):
-        self.__allowNumericLeadingZero = val
+        return self.__nrows
+    @nrows.setter(key='nrows')
+    def nrows(self, val):
+        self.__nrows = val
 
     @CfgProperty
-    def allowBackslashEscapingAnyCharacter(self) -> str:
-        """From spark:
-        allows accepting quoting of all character using backslash quoting mechanism. If None is set, it uses the default value, false.
+    def thousands(self):
+        """From pandas:
+        Thousands separator for parsing string columns to numeric. Note that this parameter is only necessary for columns stored as TEXT in Excel, any numeric columns will automatically be parsed, regardless of display format.
+        
+        default: None
         """
-        return self.__allowBackslashEscapingAnyCharacter
-    @allowBackslashEscapingAnyCharacter.setter(key='allowBackslashEscapingAnyCharacter')
-    def allowBackslashEscapingAnyCharacter(self, val):
-        self.__allowBackslashEscapingAnyCharacter = val
+        return self.__thousands
+    @thousands.setter(key='thousands')
+    def thousands(self, val):
+        self.__thousands = val
 
     @CfgProperty
-    def jsonCorruptRecordsMode(self) -> str:
-        """From spark:
-        allows a mode for dealing with corrupt records during parsing. If None is
-set, it uses the default value, PERMISSIVE.
-
-PERMISSIVE: when it meets a corrupted record, puts the malformed string into a field configured by columnNameOfCorruptRecord, and sets malformed fields to null. To keep corrupt records, an user can set a string type field named columnNameOfCorruptRecord in an user-defined schema. If a schema does not have the field, it drops corrupt records during parsing. When inferring a schema, it implicitly adds a columnNameOfCorruptRecord field in an output schema.
-
-DROPMALFORMED: ignores the whole corrupted records.
-
-FAILFAST: throws an exception when it meets corrupted records.
+    def decimal(self):
+        """From pandas:
+        Character to recognize as decimal point for parsing string columns to numeric. Note that this parameter is only necessary for columns stored as TEXT in Excel, any numeric columns will automatically be parsed, regardless of display format.(e.g. use ‘,’ for European data).
+        
+        default: '.'
         """
-        return self.__jsonCorruptRecordsMode
-    @jsonCorruptRecordsMode.setter(key='jsonCorruptRecordsMode')
-    def jsonCorruptRecordsMode(self, val):
-        self.__jsonCorruptRecordsMode = val
-
-    @CfgProperty
-    def jsonDateFormat(self) -> str:
-        """From spark:
-        sets the string that indicates a date format. Custom date formats follow the formats at datetime pattern. # noqa This applies to date type. If None is set, it uses the default value, yyyy-MM-dd.
-        """
-        return self.__jsonDateFormat
-    @jsonDateFormat.setter(key='jsonDateFormat')
-    def jsonDateFormat(self, val):
-        self.__jsonDateFormat = val
-
-    @CfgProperty
-    def timestampFormat(self) -> str:
-        """From spark:
-        sets the string that indicates a timestamp format. Custom date formats follow the formats at datetime pattern. # noqa This applies to timestamp type. If None is set, it uses the default value, yyyy-MM-dd'T'HH:mm:ss[.SSS][XXX].
-        """
-        return self.__timestampFormat
-    @timestampFormat.setter(key='timestampFormat')
-    def timestampFormat(self, val):
-        self.__timestampFormat = val
-
-    @CfgProperty
-    def multiLine(self) -> str:
-        """From spark:
-        parse one record, which may span multiple lines, per file. If None is set, it uses the default value, false.
-        """
-        return self.__multiLine
-    @multiLine.setter(key='multiLine')
-    def multiLine(self, val):
-        self.__multiLine = val
-
-    @CfgProperty
-    def allowUnquotedControlChars(self) -> str:
-        """From spark:
-        allows JSON Strings to contain unquoted control characters (ASCII characters with value less than 32, including tab and line feed characters) or not.
-        """
-        return self.__allowUnquotedControlChars
-    @allowUnquotedControlChars.setter(key='allowUnquotedControlChars')
-    def allowUnquotedControlChars(self, val):
-        self.__allowUnquotedControlChars = val
-
-    @CfgProperty
-    def lineSep(self) -> str:
-        """From spark:
-        defines the line separator that should be used for parsing. If None is set, it covers all \r, \r\n and \n.
-        """
-        return self.__lineSep
-    @lineSep.setter(key='lineSep')
-    def lineSep(self, val):
-        self.__lineSep = val
-
-    @CfgProperty
-    def samplingRatio(self) -> str:
-        """From spark:
-        defines fraction of input JSON objects used for schema inferring. If None is set, it uses the default value, 1.0.
-        """
-        return self.__samplingRatio
-    @samplingRatio.setter(key='samplingRatio')
-    def samplingRatio(self, val):
-        self.__samplingRatio = val
+        return self.__decimal
+    @decimal.setter(key='decimal')
+    def decimal(self, val):
+        self.__decimal = val
