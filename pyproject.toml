@@ -14,6 +14,7 @@ python = "^3.10"
 glob2 = ">=0.7"
 pandas = ">=2.0"
 semantic-link = ">=0.5.1"
+SharePlum = ">=0.5.1"
 
 [tool.poetry.dev-dependencies]
 

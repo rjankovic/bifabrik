@@ -1,9 +1,11 @@
 from bifabrik.src.DataSource import DataSource
 from bifabrik.cfg.SharePointListSourceConfiguration import SharePointListSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
-import pandas as pd
-from bifabrik.utils import fsUtils
 from bifabrik.utils import log
+from shareplum import Site, folder
+from shareplum import Office365
+from shareplum.site import Version
+import notebookutils.mssparkutils.credentials
 
 class SharePointListSource(DataSource, SharePointListSourceConfiguration):
     """Excel data source
@@ -17,24 +19,38 @@ class SharePointListSource(DataSource, SharePointListSourceConfiguration):
     > bif.fromExcel.path('ExcelData/factOrderLine.xlsx').sheetName('Sheet1').toTable('FactOrderLine').run()
     """
     
-    def __init__(self, parentPipeline):
+    def __init__(self, parentPipeline, siteUrl, listName):
         super().__init__(parentPipeline)
-        ExcelSourceConfiguration.__init__(self)
-        self._path = ""
-        self.__processed_abfs_paths = []
+        SharePointListSourceConfiguration.__init__(self)
+        self.__siteUrl = siteUrl
+        self.__listName = listName
         self.__mergedConfig = None
 
     def __str__(self):
-        return f'CSV source: {self._path}'
-    
-    def path(self, path: str):
-        """Set the path (or pattern) to the source file.
-        It searches the Files/ folder in the current lakehouse
-        """
-        self._path = path
-        return self
+        return f'SharePointListSource source: {self.__siteUrl}/Lists/{self.__listName}'
     
     def execute(self, input):
+
+        # kvLogin = mssparkutils.credentials.getSecret(self._keyVaultUrl, loginKvSecretName)
+        # kvPwd = mssparkutils.credentials.getSecret(self._keyVaultUrl, passwordKvSecretName)
+
+        # authcookie = Office365(self._sharePointServerUrl, username=kvLogin, password=kvPwd).GetCookies()
+        # siteUrl = self._sharePointServerUrl + '/sites/' + siteName
+        # site = Site(siteUrl, version=Version.v365, authcookie=authcookie)
+
+        # lastSlash = filePath.rfind('/')
+        # folderPath = filePath[0:lastSlash]
+        # fileName = filePath[lastSlash + 1:]
+
+        # folder = site.Folder(folderPath)
+        # xlsx_content = folder.get_file(fileName)
+
+        # pd_df = pd.read_excel(BytesIO(xlsx_content), sheet_name=sheetName)
+        # df = self.spark.createDataFrame(pd_df)
+        # dfts = self.df_add_timestamp(df)
+        # dfts.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self._tablesPrefix + targetTableName)
+
+
         lgr = log.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__mergedConfig = mergedConfig

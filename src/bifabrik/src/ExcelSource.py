@@ -25,7 +25,7 @@ class ExcelSource(DataSource, ExcelSourceConfiguration):
         self.__mergedConfig = None
 
     def __str__(self):
-        return f'CSV source: {self._path}'
+        return f'Excel source: {self._path}'
     
     def path(self, path: str):
         """Set the path (or pattern) to the source file.
