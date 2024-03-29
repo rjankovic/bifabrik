@@ -13,6 +13,7 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
    - [Archiving processed files](/tutorial/msc_files_archive.md)
    - [SQL](/tutorial/src_sql.md)
    - [Spark / Pandas DataFrame](/tutorial/src_spark_df.md)
+   - [Other sources](/tutorial/src_other.md)
 - Data transformations
    - [Spark / Pandas DataFrame](/tutorial/tsf_spark_df.md)
 - Data destinations
