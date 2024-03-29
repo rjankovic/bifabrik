@@ -59,7 +59,7 @@ class ExcelSource(DataSource, ExcelSourceConfiguration):
         for src_file in source_files:
             #csv_path = f'/lakehouse/default/{src_file}'
             pd_df = pd.read_excel(
-                filepath_or_buffer = src_file, 
+                io = src_file, 
                 sheet_name = mergedConfig.excel.sheetName,
                 header = mergedConfig.excel.header,
                 names = mergedConfig.excel.names,

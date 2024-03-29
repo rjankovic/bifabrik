@@ -80,11 +80,15 @@ class ConfigContainer:
     def merge(self, other):
         """Meges another configuration into this one; the 'other' config container takes priority"""
         for key in other.propDict:
-            # that have an explicit value set in the source
-            if key in other.propDict[key]._explicitProps:
-                # and are among target attributes
-                if key in self.__propDict:
-                    setattr(self.__propDict[key], key, getattr(other.propDict[key], key))
+            for configPart in other.propDict[key]:
+                # that have an explicit value set in the source
+                if key in configPart._explicitProps:
+                    # and are among target attributes
+                    if key in self.__propDict:
+                        for localProp in self.__propDict[key]:
+                            if(str(type(localProp)) == str(type(configPart))):
+                                setattr(localProp, key, getattr(configPart, key))
+                                #print(f'setting {key} of {str(type(localProp))} to {getattr(configPart, key)} based on {str(type(configPart))}')
         return self
     
     def copy(self):
