@@ -3,7 +3,7 @@
 ## v0.6.0 (2024-04-TODO)
 
 - Power BI dataset definition backup / restore using TMSL
-- Table column utilities - add / rename / remove
+- Lakehouse table utilities - add / rename / remove columns
 - Table destination schema merge (support for adding columns)
 - Excel data source
 
