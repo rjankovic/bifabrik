@@ -95,7 +95,7 @@ def fromExcel(path: str = None) -> ExcelSource:
     
     >>> import bifabrik as bif
     >>>
-    >>> bif.fromExcel.path('ExcelData/factOrderLine.xlsx').sheetName('Sheet1')decimal(',').toTable('FactOrderLine').run()
+    >>> bif.fromExcel.path('ExcelData/factOrderLine.xlsx').sheetName('Sheet1').toTable('FactOrderLine').run()
     """
     ds = ExcelSource(__prepPipeline())
     ds.path(path)
