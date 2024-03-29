@@ -14,7 +14,7 @@ class ExcelSource(DataSource, ExcelSourceConfiguration):
     --------
     > import bifabrik as bif
     >
-    > bif.fromExcel.path('ExcelData/factOrderLine.xlsx').sheetName('Sheet1').toTable('FactOrderLine').run()
+    > bif.fromExcel('ExcelData/factOrderLine.xlsx').sheetName('Sheet1').toTable('FactOrderLine').run()
     """
     
     def __init__(self, parentPipeline):

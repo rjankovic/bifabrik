@@ -22,6 +22,7 @@
 
 from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.ExcelSource import ExcelSource
+from bifabrik.src.SharePointListSource import SharePointListSource
 from bifabrik.src.JsonSource import JsonSource
 from bifabrik.src.SqlSource import SqlSource
 from bifabrik.src.SparkDfSource import SparkDfSource
@@ -116,12 +117,6 @@ def fromSql(query: str = None) -> SqlSource:
     ds.query(query)
     return ds
 
-def __getattr__(name):
-    if name == 'config':
-        return __configuration
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
-
-
 def fromSparkDf(df: SparkDf) -> SparkDfSource:
     """Use spark dataframe as source
     
@@ -149,3 +144,21 @@ def fromPandasDf(df: PandasDf) -> PandasDfSource:
     """
     ds = PandasDfSource(__prepPipeline(), df)
     return ds
+
+def fromSharePointList(siteUrl: str, listName: str) -> SharePointListSource:
+    """Load data from a SharePoint list
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> bif.fromSharePointList('https://fabrikam.sharepoint.com/sites/BusinessIntelligence', 'CustomerList').toTable('Customers').run()
+    """
+    ds = SharePointListSource(__prepPipeline(), siteUrl, listName)
+    return ds
+
+def __getattr__(name):
+    if name == 'config':
+        return __configuration
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

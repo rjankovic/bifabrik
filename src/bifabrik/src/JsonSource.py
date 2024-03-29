@@ -12,7 +12,7 @@ class JsonSource(DataSource, JsonSourceConfiguration):
     --------
     > import bifabrik as bif
     >
-    > bif.fromJson.path('Files/JSON/ITA_TabOrder.json').multiLine(True).toTable('TabOrder1').run()
+    > bif.fromJson('Files/JSON/ITA_TabOrder.json').multiLine(True).toTable('TabOrder1').run()
     """
     
     def __init__(self, parentPipeline):

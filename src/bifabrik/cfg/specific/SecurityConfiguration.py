@@ -21,13 +21,13 @@ class SecurityConfiguration(Configuration):
         self.__keyVaultUrl = val
 
     @CfgProperty
-    def usernameKVSecretName(self) -> str:
+    def loginKVSecretName(self) -> str:
         """Secret in the Key Vault that contains the username
         """
-        return self.__usernameKVSecretName
-    @usernameKVSecretName.setter(key='usernameKVSecretName')
-    def usernameKVSecretName(self, val):
-        self.__usernameKVSecretName = val
+        return self.__loginKVSecretName
+    @loginKVSecretName.setter(key='loginKVSecretName')
+    def loginKVSecretName(self, val):
+        self.__loginKVSecretName = val
     
     @CfgProperty
     def passwordKVSecretName(self) -> str:

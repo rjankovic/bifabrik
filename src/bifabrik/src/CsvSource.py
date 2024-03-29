@@ -14,7 +14,7 @@ class CsvSource(DataSource, CsvSourceConfiguration):
     --------
     > import bifabrik as bif
     >
-    > bif.fromCsv.path('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
+    > bif.fromCsv('DATA/factOrderLine*.csv').delimiter(';').decimal(',').toTable('FactOrderLine').run()
     """
     
     def __init__(self, parentPipeline):
