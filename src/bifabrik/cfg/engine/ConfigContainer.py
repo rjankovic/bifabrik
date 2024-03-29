@@ -34,9 +34,13 @@ class ConfigContainer:
                     cfgAttribute = getattr(attrType, cfgpName)
                     if isinstance(cfgAttribute, CfgProperty):
                         if cfgpName in self.__propDict:
-                            if str(type(self.__propDict[cfgpName])) != str(type(rootAttr)):
-                                raise Exception(f'bifabrik configuration conflict: {cfgpName} is defined both in {self.__propDict[cfgpName]} ({type(self.__propDict[cfgpName])}) and {rootAttr} ({type(rootAttr)})')
-                        self.__propDict[cfgpName] = rootAttr
+                            matchingAttrTypes = list(filter(lambda x: str(type(x)) == str(type(rootAttr)), self.__propDict[cfgpName]))
+                            if len(matchingAttrTypes) == 0:
+                                self.__propDict[cfgpName].append(rootAttr)
+                            #if str(type(self.__propDict[cfgpName])) != str(type(rootAttr)):
+                            #    raise Exception(f'bifabrik configuration conflict: {cfgpName} is defined both in {self.__propDict[cfgpName]} ({type(self.__propDict[cfgpName])}) and {rootAttr} ({type(rootAttr)})')
+                        else:
+                            self.__propDict[cfgpName] = [rootAttr]
 
                         # create a direct setter property for overriding the value in a fluent API
                         # so that we don't need to use .option()
@@ -59,9 +63,11 @@ class ConfigContainer:
         if not (name in self.__propDict):
             raise Exception(f'Configuration key not found: {name}.')
         if value is None:
-            val = getattr(self.__propDict[name], name)
+            val = getattr(self.__propDict[name][0], name)
             return val
-        setattr(self.__propDict[name], name, value)
+        #setattr(self.__propDict[name], name, value)
+        for prop in self.__propDict[name]:
+            setattr(prop, name, value)
         return self
 
     def mergeToCopy(self, other):
