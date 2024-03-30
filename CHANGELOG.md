@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.0 (2024-04-01)
+## v0.6.0 (2024-04-TODO)
 
 - Power BI dataset definition backup / restore using TMSL
 - Lakehouse table utilities - add / rename / remove columns
