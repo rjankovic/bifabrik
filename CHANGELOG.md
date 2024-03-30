@@ -6,6 +6,7 @@
 - Lakehouse table utilities - add / rename / remove columns
 - Table destination schema merge (support for adding columns)
 - Excel data source
+- SharePoint list data source
 
 ## v0.5.0 (2024-03-16)
 
