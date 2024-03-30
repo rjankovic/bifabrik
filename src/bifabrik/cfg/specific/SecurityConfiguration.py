@@ -8,7 +8,7 @@ class SecurityConfiguration(Configuration):
     def __init__(self):
         self._explicitProps = {}
         self.__keyVaultUrl = None
-        self.__usernameKVSecretName = None
+        self.__loginKVSecretName = None
         self.__passwordKVSecretName = None
 
     @CfgProperty

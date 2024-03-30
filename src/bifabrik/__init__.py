@@ -146,14 +146,19 @@ def fromPandasDf(df: PandasDf) -> PandasDfSource:
     return ds
 
 def fromSharePointList(siteUrl: str, listName: str) -> SharePointListSource:
-    """Load data from a SharePoint list
+    """Loads data from an Office365 SharePoint list. You will need to configure the credentials for SharePoint.
     
     Examples
     --------
     
     >>> import bifabrik as bif
-    >>>
-    >>> bif.fromSharePointList('https://fabrikam.sharepoint.com/sites/BusinessIntelligence', 'CustomerList').toTable('Customers').run()
+    >>> 
+    >>> bif.config.security.keyVaultUrl = 'https://kv-fabrik.vault.azure.net/'
+    >>> bif.config.security.loginKVSecretName = 'SharePointLogin'
+    >>> bif.config.security.passwordKVSecretName = 'SharePointPwd'
+    >>> 
+    >>> bif.fromSharePointList('https://fabrik.sharepoint.com/sites/BusinessIntelligence', 'CustomerList') \
+    >>>     .toTable('Customers').run()
     """
     ds = SharePointListSource(__prepPipeline(), siteUrl, listName)
     return ds

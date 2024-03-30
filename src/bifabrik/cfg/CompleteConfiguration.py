@@ -10,6 +10,7 @@ from bifabrik.cfg.specific.SourceStorageConfiguration import SourceStorageConfig
 from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationStorageConfiguration
 from bifabrik.cfg.specific.MetadataStorageConfiguration import MetadataStorageConfiguration
 from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
+from bifabrik.cfg.specific.SecurityConfiguration import SecurityConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -33,6 +34,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__destinationStorage = DestinationStorageConfiguration()
         self.__metadataStorage = MetadataStorageConfiguration()
         self.__destinationTable = TableConfiguration()
+        self.__security = SecurityConfiguration()
         super().__init__()
         
 
@@ -80,6 +82,10 @@ class CompleteConfiguration(ConfigContainer):
     def destinationTable(self) -> TableConfiguration:
         "Destination table settings (increment method, identity column, etc.)"
         return self.__destinationTable
+    
+    @property
+    def security(self) -> SecurityConfiguration:
+        return self.__security
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
