@@ -146,6 +146,65 @@ bif.config.csv.decimal = ','
 bif.fromCsv('Files/CsvFiles/dimBranch.csv').delimiter('|').toTable('DimBranch').run()
 ```
 
+## A real-world example
+
+Here we set general configuration ahead of time and save it to a file, before using it in another notebook for a number of loads.
+
+### Notebook 1 (config)
+```python
+import bifabrik as bif
+
+bif.config.log.logPath = '/Log/log.csv'
+bif.config.log.errorLogPath = '/Log/error_log.csv'
+bif.config.log.loggingLevel = 'DEBUG'
+
+bif.config.csv.delimiter = ';'
+bif.config.csv.decimal = ','
+
+bif.config.fileSource.moveFilesToArchive = True
+bif.config.fileSource.archiveFolder = 'Files/CsvSources/Archive'
+bif.config.fileSource.archiveFilePattern = 'processed_{filename}_{timestamp}{extension}'
+
+bif.config.security.keyVaultUrl = 'https://kv-givetbi.vault.azure.net/'
+bif.config.security.loginKVSecretName = 'SharePointLogin'
+bif.config.security.passwordKVSecretName = 'SharePointPwd'
+
+bif.config.destinationTable.identityColumnPattern = '{tablename}ID'
+
+bif.config.saveToFile('Files/cfg/bif_silver_settings.json')
+```
+
+### Notebook 2
+```python
+import bifabrik as bif
+
+bif.config.loadFromFile('Files/cfg/bif_silver_settings.json')
+
+bif.fromCsv("CsvSources/Supplier1/dimDistributionCenter*.csv").toTable("dimDistributionCenter").run()
+bif.fromCsv("CsvSources/Supplier1/dimPointOfSales*.csv").toTable("dimPointOfSales").run()
+bif.fromCsv("CsvSources/Supplier1/dimProduct*.csv").toTable("dimProduct").run()
+bif.fromCsv("CsvSources/Supplier1/dimShipment*.csv").toTable("dimShipment").run()
+bif.fromCsv("CsvSources/Supplier1/dimWarehouse*.csv").toTable("dimWarehouse").run()
+
+
+# temporary for a few tables
+bif.config.destinationTable.increment = 'snapshot'
+
+bif.fromCsv("CsvSources/Supplier1/factOrderLine*.csv").toTable("factOrderLine").snapshotKeyColumns(['factOrderLineBk']).run()
+bif.fromCsv("CsvSources/Supplier1/factAppProductMetrics*.csv").toTable("factAppProductMetrics").snapshotKeyColumns(['DateKey']).run()
+bif.fromCsv("CsvSources/Supplier1/factStockAvailability*.csv").toTable("factStockAvailability").snapshotKeyColumns(['DateKey']).run()
+bif.fromCsv("CsvSources/Supplier1/factWebProductMetrics*.csv").toTable("factWebProductMetrics").snapshotKeyColumns(['DateKey']).run()
+
+# revert to default
+bif.config.destinationTable.increment = 'overwrite'
+
+
+bif.fromSharePointList('https://fabrik.sharepoint.com/sites/BiData', 'Sales_Total2024').toTable('SP_Sales_Total_2024').run()
+bif.fromSharePointList('https://fabrik.sharepoint.com/sites/BiData', 'Sales_Account').toTable('SP_Sales_Account').run()
+bif.fromSharePointList('https://fabrik.sharepoint.com/sites/BiData', 'Sales_Channel').toTable('SP_Sales_Channel').run()
+bif.fromSharePointList('https://fabrik.sharepoint.com/sites/BiData', 'Sales_Brand').toTable('SP_Sales_Brand').run()
+```
+
 [__⇨__ Next - Cross-lakehouse pipelines](cfg_storage.md)
 
 [Back](../index.md)
