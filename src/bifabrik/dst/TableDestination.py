@@ -229,10 +229,10 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         
 
         # todo: instead of SQL, use pyspark for cross-workspace ETL
-        join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
-        update_list = ", ".join([f"{item} = src.{item}" for item in non_key_columns])
-        insert_list = ", ".join([f"{item}" for item in all_columns])
-        insert_values = ", ".join([f"src.{item}" for item in all_columns])
+        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
+        update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
+        insert_list = ", ".join([f"`{item}`" for item in all_columns])
+        insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
         
         scd1_update = f"WHEN MATCHED THEN UPDATE SET \
             {update_list} "
@@ -264,20 +264,23 @@ class TableDestination(DataDestination, TableDestinationConfiguration):
         if len(key_columns) == 0:
             raise Exception('No key columns set for snapshot increment. Please set the snapshotKeyColumns property in destinationTable configuration to the list of column names.')
         
-        join_condition = " AND ".join([f"src.{item} = tgt.{item}" for item in key_columns])
+        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
+
+        join_column_list = ", ".join([f"`{item}`" for item in key_columns])
         
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         self.__data.createOrReplaceTempView(src_view_name)
         mergeDbRef = f'{self.__lhMeta.lakehouseName}.'
 
         merge_delete_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
-            USING {src_view_name}  AS src \
+            USING (SELECT DISTINCT {join_column_list} FROM {src_view_name})  AS src \
             ON {join_condition} \
             WHEN MATCHED THEN DELETE \
             "
         
         self.__logger.info("----SNAPSHOT DELETE SQL")
         self.__logger.info(merge_delete_sql)
+        #print(merge_delete_sql)
         self._spark.sql(merge_delete_sql)
     
         # append the new rows
