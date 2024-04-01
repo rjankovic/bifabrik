@@ -1,6 +1,6 @@
 # Logging utility
 
-This tool uses the standard python [logging facility](https://docs.python.org/3/library/logging.html) to simplify writing logs in fabric to a CSV-like file. Additionaly, errors are written to a separate error log file. 
+This tool uses the standard python [logging facility](https://docs.python.org/3/library/logging.html) and simplifies writing logs in Fabric to a CSV-like file. Additionaly, errors are written to a separate error log file. 
 
 `bifabrik` pipelines log their progress and errors by default (see below).
 
