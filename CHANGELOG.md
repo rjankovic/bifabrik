@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.6.1 (2024-04-11)
+ - Fixed breaking bug in Configuration.py file name
+
 ## v0.6.0 (2024-04-01)
 
 - Power BI dataset definition backup / restore using TMSL
