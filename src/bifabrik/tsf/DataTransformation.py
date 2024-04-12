@@ -1,6 +1,6 @@
 #from pyspark.sql.session import SparkSession
 from pyspark.sql.dataframe import DataFrame
-from bifabrik.dst.TableDestination import TableDestination
+from bifabrik.src.bifabrik.dst.LakehouseTableDestination import TableDestination
 from bifabrik.dst.SparkDfDestination import SparkDfDestination
 from bifabrik.dst.PandasDfDestination import PandasDfDestination
 from bifabrik.base.Task import Task

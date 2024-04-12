@@ -13,7 +13,7 @@ import datetime
 import notebookutils.mssparkutils.fs
 from bifabrik.utils import tableUtils as tu
 
-class TableDestination(DataDestination, TableDestinationConfiguration):
+class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
 
     Examples
