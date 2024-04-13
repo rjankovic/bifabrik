@@ -2,8 +2,8 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class SecurityConfiguration(Configuration):
-    """Credentials configuration, currently used in the SharePointListSource.
-    (Credentials aren't actually stored here, this configuration only refers to KeyVault secrets.)
+    """Credentials configuration, currently used for connecting to Fabric warehouses and the SharePointListSource.
+    (Passwords aren't actually stored here, this configuration only refers to KeyVault secrets.)
     """
     def __init__(self):
         self._explicitProps = {}
@@ -37,5 +37,23 @@ class SecurityConfiguration(Configuration):
     @passwordKVSecretName.setter(key='passwordKVSecretName')
     def passwordKVSecretName(self, val):
         self.__passwordKVSecretName = val
+
+    @CfgProperty
+    def servicePrincipalClientId(self) -> str:
+        """Service principal used for connecting to Fabric warehouses
+        """
+        return self.__servicePrincipalClientId
+    @servicePrincipalClientId.setter(key='servicePrincipalClientId')
+    def servicePrincipalClientId(self, val):
+        self.__servicePrincipalClientId = val
+    
+    @CfgProperty
+    def servicePrincipalClientSecretKVSecretName(self) -> str:
+        """Secret in the Key Vault that contains the service principal's client secret
+        """
+        return self.__servicePrincipalClientSecretKVSecretName
+    @servicePrincipalClientSecretKVSecretName.setter(key='servicePrincipalClientSecretKVSecretName')
+    def servicePrincipalClientSecretKVSecretName(self, val):
+        self.__servicePrincipalClientSecretKVSecretName = val
 
     

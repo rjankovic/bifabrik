@@ -8,6 +8,7 @@ class DestinationStorageConfiguration(Configuration):
         self._explicitProps = {}
         self.__destinationWorkspace = None
         self.__destinationLakehouse = None
+        self.__destinationWarehouse = None
 
     @CfgProperty
     def destinationWorkspace(self) -> str:
@@ -26,3 +27,21 @@ class DestinationStorageConfiguration(Configuration):
     @destinationLakehouse.setter(key='destinationLakehouse')
     def destinationLakehouse(self, val):
         self.__destinationLakehouse = val
+
+    @CfgProperty
+    def destinationWarehouseConnectionString(self) -> str:
+        """Connection string to the Fabric warehouse (like dxt....datawarehouse.fabric.microsoft.com)
+        """
+        return self.__destinationWarehouseConnectionString
+    @destinationWarehouseConnectionString.setter(key='destinationWarehouseConnectionString')
+    def destinationWarehouseConnectionString(self, val):
+        self.__destinationWarehouseConnectionString = val
+
+    @CfgProperty
+    def destinationWarehouse(self) -> str:
+        """Name of the warehouse to which pipeline destinations writes data
+        """
+        return self.__destinationWarehouse
+    @destinationWarehouse.setter(key='destinationWarehouse')
+    def destinationWarehouse(self, val):
+        self.__destinationWarehouse = val
