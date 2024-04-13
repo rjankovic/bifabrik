@@ -1,6 +1,5 @@
 #from pyspark.sql.session import SparkSession
-from pyspark.sql.dataframe import DataFrame
-from bifabrik.src.bifabrik.dst.LakehouseTableDestination import TableDestination
+from bifabrik.dst.LakehouseTableDestination import LakehouseTableDestination
 from bifabrik.dst.SparkDfDestination import SparkDfDestination
 from bifabrik.dst.PandasDfDestination import PandasDfDestination
 from bifabrik.base.Task import Task
@@ -14,16 +13,10 @@ class DataTransformation(Task):
     def __init__(self, parentPipeline):
         super().__init__(parentPipeline)
         
-
-    # def toDf(self) -> DataFrame:
-    #     """Converts the data to a spark dataframe
-    #     """
-    #     pass
-
-    def toTable(self, targetTableName: str) -> TableDestination:
+    def toTable(self, targetTableName: str) -> LakehouseTableDestination:
         """Sets the destination table name (table in the current lakehouse)
         """
-        dst = TableDestination(self._pipeline, targetTableName)
+        dst = LakehouseTableDestination(self._pipeline, targetTableName)
         return dst
     
     def toSparkDf(self) -> SparkDfDestination:
