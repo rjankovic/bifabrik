@@ -41,6 +41,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tempTableName = None
         self.__tempTableLocation = None
         self.__odbcConnection = None
+        self.__identityColumnName = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -84,9 +85,53 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__odbcConnection = pyodbc.connect(constr)
 
         # create schema if not exists
+        findSchemaQuery = f"SELECT COUNT(*) FROM sys.schemas WHERE [name] = {self.__targetSchemaName}"
+        findSchemaDf = self.__execute_select(findSchemaQuery)
+        schemaCount = findSchemaDf[0][0]
+        if schemaCount == 0:
+            self.__execute_dml(f"CREATE SCHEMA [{self.__targetSchemaName}]")
+
+        # determine column types
+        destinationTableColumns = []
+
+        # add identity column to table structure if specified
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is not None:
+            self.__identityColumnName = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName)
+            destinationTableColumns.append(self.__identityColumnName, 'BIGINT')
+        
+        # ordinary columns...
+
+        # add insert date column
+        insertDateColumn = self.__tableConfig.insertDateColumn
+        if insertDateColumn is not None:
+            destinationTableColumns.append(insertDateColumn, 'DATETIME2')
+        
+#         CREATE TABLE [dbo].[bing_covid-19_data]
+# (
+#     [id] [int] NULL,
+#     [updated] [date] NULL,
+#     [confirmed] [int] NULL,
+#     [confirmed_change] [int] NULL,
+#     [deaths] [int] NULL,
+#     [deaths_change] [int] NULL,
+#     [recovered] [int] NULL,
+#     [recovered_change] [int] NULL,
+#     [latitude] [float] NULL,
+#     [longitude] [float] NULL,
+#     [iso2] [varchar](8000) NULL,
+#     [iso3] [varchar](8000) NULL,
+#     [country_region] [varchar](8000) NULL,
+#     [admin_region_1] [varchar](8000) NULL,
+#     [iso_subdivision] [varchar](8000) NULL,
+#     [admin_region_2] [varchar](8000) NULL,
+#     [load_time] [datetime2](6) NULL
+# )
 
 
         # create warehouse table if not exists
+
+
         # sync schema if table exists
         # handle increments as in a lakehouse
 
@@ -134,8 +179,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
     def __execute_dml(self, query: str):
         self.__odbcConnection.execute(query)
         self.__odbcConnection.commit()
-
-        
     
     
     def __list_diff(self, first_list, second_list):
