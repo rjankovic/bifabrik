@@ -83,12 +83,16 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         constr = f"driver=ODBC Driver 18 for SQL Server;server={odbcServer};database={odbcDatabase};UID={principalClientId};PWD={principalClientSecret};Authentication=ActiveDirectoryServicePrincipal;Encrypt=yes;Timeout={odbcTimeout};"
         self.__odbcConnection = pyodbc.connect(constr)
 
-        
         # create schema if not exists
+
+
         # create warehouse table if not exists
         # sync schema if table exists
         # handle increments as in a lakehouse
 
+        self.__odbcConnection.close()
+
+        #####################
 
         self.__tableExists = self.__tableExistsF()
 
@@ -121,7 +125,19 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
         self._completed = True
+
+    def __execute_select(self, query: str):
+        pd_df = pd.read_sql(query, self.__odbcConnection)
+        df = self._spark.createDataFrame(pd_df)
+        return df
+    
+    def __execute_dml(self, query: str):
+        self.__odbcConnection.execute(query)
+        self.__odbcConnection.commit()
+
         
+    
+    
     def __list_diff(self, first_list, second_list):
         diff = [item for item in first_list if item not in second_list]
         return diff
