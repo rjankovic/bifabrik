@@ -12,6 +12,9 @@ import time
 import datetime
 import notebookutils.mssparkutils.fs
 from bifabrik.utils import tableUtils as tu
+import uuid
+import pyodbc
+import pandas as pd
 
 # reuse the table destination configuration
 class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
@@ -35,7 +38,9 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertDateColumn = None
         self.__tableExists = False
         self.__logger = None
-        self.__tableLocation = None
+        self.__tempTableName = None
+        self.__tempTableLocation = None
+        self.__odbcConnection = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -57,19 +62,34 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
         
-        # print(f'dst tbl cfg')
-        # print(f'increment {self.__tableConfig.increment}')
-        # print(f'mergeKeyColumns {self.__tableConfig.mergeKeyColumns}')
-        # print(f'snapshotKeyColumns {self.__tableConfig.snapshotKeyColumns}')
-        # print(f'identityColumnPattern {self.__tableConfig.identityColumnPattern}')
-        # print(f'insertDateColumn {self.__tableConfig.insertDateColumn}')
-        # print(f'invalidCharactersInColumnNamesReplacement {self.__tableConfig.invalidCharactersInColumnNamesReplacement}')
-
+        # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
+        if self.__lhBasePath is None:
+            raise Exception(f'''The warehouse destination needs to use a warehouse for temporary data storage. 
+                            Either connect the notebook to a lakehouse or configure the destinationLakehouse and destinationWorkspace properties in bifabrik.config.destinationStorage.''')
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
-        self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
+        self.__tempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
+        self.__tempTableLocation = self.__lhBasePath + "/Tables/" + self.__tempTableName
+        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tempTableLocation)
+        
+        # connect ODBC
+        odbcServer = mergedConfig.destinationStorage.destinationWarehouseConnectionString
+        odbcDatabase = mergedConfig.destinationStorage.destinationWarehouseName
+        odbcTimeout = mergedConfig.destinationStorage.destinationWarehouseConnectionTimeout
+        principalClientId = mergedConfig.security.servicePrincipalClientId
+        principalClientSecret = notebookutils.mssparkutils.credentials.getSecret(mergedConfig.security.keyVaultUrl, mergedConfig.security.servicePrincipalClientSecretKVSecretName)
+        constr = f"driver=ODBC Driver 18 for SQL Server;server={odbcServer};database={odbcDatabase};UID={principalClientId};PWD={principalClientSecret};Authentication=ActiveDirectoryServicePrincipal;Encrypt=yes;Timeout={odbcTimeout};"
+        self.__odbcConnection = pyodbc.connect(constr)
+
+        
+        # create schema if not exists
+        # create warehouse table if not exists
+        # sync schema if table exists
+        # handle increments as in a lakehouse
+
+
         self.__tableExists = self.__tableExistsF()
 
         self.__replaceInvalidCharactersInColumnNames()

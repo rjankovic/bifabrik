@@ -8,7 +8,9 @@ class DestinationStorageConfiguration(Configuration):
         self._explicitProps = {}
         self.__destinationWorkspace = None
         self.__destinationLakehouse = None
-        self.__destinationWarehouse = None
+        self.__destinationWarehouseConnectionString = None
+        self.__destinationWarehouseConnectionTimeout = 600
+        self.__destinationWarehouseName = None
 
     @CfgProperty
     def destinationWorkspace(self) -> str:
@@ -30,7 +32,7 @@ class DestinationStorageConfiguration(Configuration):
 
     @CfgProperty
     def destinationWarehouseConnectionString(self) -> str:
-        """Connection string to the Fabric warehouse (like dxt....datawarehouse.fabric.microsoft.com)
+        """Connection string to the Fabric warehouse (server name like dxt....datawarehouse.fabric.microsoft.com)
         """
         return self.__destinationWarehouseConnectionString
     @destinationWarehouseConnectionString.setter(key='destinationWarehouseConnectionString')
@@ -38,10 +40,20 @@ class DestinationStorageConfiguration(Configuration):
         self.__destinationWarehouseConnectionString = val
 
     @CfgProperty
-    def destinationWarehouse(self) -> str:
+    def destinationWarehouseConnectionTimeout(self) -> str:
+        """Warehouse ODBC connection timetout in seconds
+        default 600
+        """
+        return self.__destinationWarehouseConnectionTimeout
+    @destinationWarehouseConnectionTimeout.setter(key='destinationWarehouseConnectionTimeout')
+    def destinationWarehouseConnectionTimeout(self, val):
+        self.__destinationWarehouseConnectionTimeout = val
+
+    @CfgProperty
+    def destinationWarehouseName(self) -> str:
         """Name of the warehouse to which pipeline destinations writes data
         """
-        return self.__destinationWarehouse
-    @destinationWarehouse.setter(key='destinationWarehouse')
-    def destinationWarehouse(self, val):
-        self.__destinationWarehouse = val
+        return self.__destinationWarehouseName
+    @destinationWarehouseName.setter(key='destinationWarehouseName')
+    def destinationWarehouseName(self, val):
+        self.__destinationWarehouseName = val
