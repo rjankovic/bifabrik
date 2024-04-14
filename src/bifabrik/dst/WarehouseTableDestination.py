@@ -98,15 +98,50 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         if identityColumnPattern is not None:
             self.__identityColumnName = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName)
-            destinationTableColumns.append(self.__identityColumnName, 'BIGINT')
+            destinationTableColumns.append([self.__identityColumnName, 'BIGINT'])
         
         # ordinary columns...
+        dts = self.__data.dtypes
+        for sc in dts:
+            col_type = 'VARCHAR(8000)'
+            s_name = sc[0]
+            s_type = sc[1]
+            if s_type == 'string' or s_type.startswith('char') or s_type.startswith('varchar'):
+                col_type = 'VARCHAR(8000)'
+            elif s_type == 'long' or s_type == 'bigint':
+                col_type = 'BIGINT'
+            elif s_type.startswith('bool'):
+                col_type = 'BIT'
+            elif s_type.startswith('int'):
+                col_type = 'INT'
+            elif s_type == 'tinyint' or s_type == 'byte' or s_type == 'smallint' or s_type == 'short':
+                col_type = 'SMALLINT'
+            elif s_type == 'double':
+                col_type = 'DOUBLE'
+            elif s_type == 'float' or s_type == 'real':
+                col_type = 'REAL'
+            elif s_type == 'date' or s_type == 'timestamp':
+                col_type = 'DATETIME2'
+            elif s_type.startswith('binary') or s_type.startswith('byte'):
+                col_type = 'VARBINARY(8000)'
+            elif s_type.startswith('decimal('):
+                col_type = s_type.replace('decimal', 'DECIMAL')
+            
+            destinationTableColumns.append([s_name, col_type])
 
         # add insert date column
         insertDateColumn = self.__tableConfig.insertDateColumn
         if insertDateColumn is not None:
-            destinationTableColumns.append(insertDateColumn, 'DATETIME2')
+            destinationTableColumns.append([insertDateColumn, 'DATETIME2'])
         
+# CREATE TABLE Test8
+# (
+#  ID INT NULL,
+#  CreatedDateTime VARBINARY(8000),
+#  D DECIMAL(38,38),
+#  VC VARCHAR(8000)
+# )
+
 #         CREATE TABLE [dbo].[bing_covid-19_data]
 # (
 #     [id] [int] NULL,
@@ -128,6 +163,13 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
 #     [load_time] [datetime2](6) NULL
 # )
 
+
+# bigint
+# timestamp
+# int
+# double
+# string
+# decimal(10,0)
 
         # create warehouse table if not exists
 
