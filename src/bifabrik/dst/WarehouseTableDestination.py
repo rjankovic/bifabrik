@@ -121,7 +121,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             elif s_type == 'float' or s_type == 'real':
                 col_type = 'REAL'
             elif s_type == 'date' or s_type == 'timestamp':
-                col_type = 'DATETIME2'
+                col_type = 'DATETIME2(6)'
             elif s_type.startswith('binary') or s_type.startswith('byte'):
                 col_type = 'VARBINARY(8000)'
             elif s_type.startswith('decimal('):
@@ -171,7 +171,48 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
 # string
 # decimal(10,0)
 
+# CREATE TABLE [dbo].[Dim_Customer]
+# (
+# 	[CustomerID] [varchar](255)  NOT NULL,
+# 	[CustomerName] [varchar](255)  NOT NULL,
+# 	[EmailAddress] [varchar](255)  NOT NULL
+# )
+
         # create warehouse table if not exists
+        findTableDf = self.__execute_select(f'''
+        SELECT COUNT(*)
+        FROM sys.tables t 
+        INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
+        ''')
+
+        tableCount = findTableDf[0][0]
+        if tableCount == 0:
+            self.__tableExists = False
+        else:
+            self.__tableExists = True
+        
+        columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', destinationTableColumns)
+        createTableSql = f'''
+CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
+{',\n'.join(columnDefs)}
+)
+'''
+        if not self.__tableExists:
+            self.__execute_dml(createTableSql)
+            # TODO: full load
+            return
+        
+        # TODO: handle schema changes
+        columnTypesDf = self.__execute_select(f'''
+        SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
+        FROM sys.schemas s
+        INNER JOIN sys.tables t ON s.schema_id = t.schema_id
+        INNER JOIN sys.columns c ON c.object_id = t.object_id
+        INNER JOIN sys.types tt ON tt.system_type_id = c.system_type_id
+        WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
+        ''')
+
 
 
         # sync schema if table exists
