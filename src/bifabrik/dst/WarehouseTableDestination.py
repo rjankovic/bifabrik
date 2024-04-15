@@ -213,6 +213,21 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
         ''')
 
+        consistent_changes = True
+        schema_change = False
+        for orig_col in columnTypesDf:
+            orig_col_name = orig_col.column_name
+            orig_col_type = orig_col.type_name.upper()
+            for input_col in destinationTableColumns:
+                match_found = False
+                if input_col[0] == orig_col_type:
+                    match_found = True
+                    break
+            if not match_found:
+                schema_change = True
+                consistent_changes = False
+            
+
 
 
         # sync schema if table exists
