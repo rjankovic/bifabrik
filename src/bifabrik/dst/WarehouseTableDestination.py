@@ -204,7 +204,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             return
         
         # TODO: handle schema changes
-        origColumnTypesDf = self.__execute_select(f'''
+        origColumnsTypesDf = self.__execute_select(f'''
         SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
         FROM sys.schemas s
         INNER JOIN sys.tables t ON s.schema_id = t.schema_id
@@ -216,14 +216,14 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         consistent_changes = True
         schema_change = False
 
-        if len(origColumnTypesDf) < len(inputTableColumns):
+        if len(origColumnsTypesDf) < len(inputTableColumns):
             schema_change = True
 
         broken_column_name = None
         broken_column_type = None
 
         # find orig columns in new columns (added columns are ok)
-        for orig_col in origColumnTypesDf:
+        for orig_col in origColumnsTypesDf:
             orig_col_name = orig_col.column_name
             orig_col_type = orig_col.type_type.upper()
             for input_col in inputTableColumns:
@@ -272,10 +272,32 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 
             # create temp_old copy of the old table in the WH
             # copy data to the temp_old table
+            # SELECT * INTO Dim_Customer_temp FROM Dim_Customer
+            whTempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
+            selectIntoQuery = f"SELECT * FROM [{self.__targetSchemaName}].[{self.__targetTableName}] INTO [{self.__targetSchemaName}].[{whTempTableName}]"
+            self.__execute_dml(selectIntoQuery)
+            
+            
             # DROP old table
+            dropQuery = f"DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]"
+            self.__execute_dml(dropQuery)
+
             # create table with new schema
+            self.__execute_dml(createTableSql)
+
             # copy data from temp_old table to new table
+            insert_columns = list(map(lambda x: x.column_name, origColumnsTypesDf))
+            insert_columns_join = ", \n".join(insert_columns)
+            insertBackQuery = f'''INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}]
+            ({insert_columns_join})
+            SELECT ({insert_columns_join})
+            FROM [{self.__targetSchemaName}].[{whTempTableName}]
+            '''
+            self.__execute_dml(insertBackQuery)
+
             # DROP temp_old table
+            dropQuery = f'DROP TABLE [{self.__targetSchemaName}].[{whTempTableName}]'
+            self.__execute_dml(dropQuery)
             pass
         
             
