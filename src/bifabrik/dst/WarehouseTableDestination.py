@@ -203,7 +203,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             # TODO: full load
             return
         
-        # TODO: handle schema changes
+        # sync schema if table exists
         origColumnsTypesDf = self.__execute_select(f'''
         SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
         FROM sys.schemas s
@@ -301,7 +301,6 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             pass
         
             
-        # sync schema if table exists
         # handle increments as in a lakehouse
 
         self.__odbcConnection.close()
