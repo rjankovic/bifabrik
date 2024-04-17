@@ -92,13 +92,13 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__execute_dml(f"CREATE SCHEMA [{self.__targetSchemaName}]")
 
         # determine column types
-        destinationTableColumns = []
+        inputTableColumns = []
 
         # add identity column to table structure if specified
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         if identityColumnPattern is not None:
             self.__identityColumnName = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName)
-            destinationTableColumns.append([self.__identityColumnName, 'BIGINT'])
+            inputTableColumns.append([self.__identityColumnName, 'BIGINT'])
         
         # ordinary columns...
         dts = self.__data.dtypes
@@ -127,12 +127,12 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             elif s_type.startswith('decimal('):
                 col_type = s_type.replace('decimal', 'DECIMAL')
             
-            destinationTableColumns.append([s_name, col_type])
+            inputTableColumns.append([s_name, col_type])
 
         # add insert date column
         insertDateColumn = self.__tableConfig.insertDateColumn
         if insertDateColumn is not None:
-            destinationTableColumns.append([insertDateColumn, 'DATETIME2'])
+            inputTableColumns.append([insertDateColumn, 'DATETIME2'])
         
 # CREATE TABLE Test8
 # (
@@ -192,7 +192,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             self.__tableExists = True
         
-        columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', destinationTableColumns)
+        columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', inputTableColumns)
         createTableSql = f'''
 CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 {',\n'.join(columnDefs)}
@@ -204,7 +204,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             return
         
         # TODO: handle schema changes
-        columnTypesDf = self.__execute_select(f'''
+        origColumnTypesDf = self.__execute_select(f'''
         SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
         FROM sys.schemas s
         INNER JOIN sys.tables t ON s.schema_id = t.schema_id
@@ -215,21 +215,70 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 
         consistent_changes = True
         schema_change = False
-        for orig_col in columnTypesDf:
+
+        if len(origColumnTypesDf) < len(inputTableColumns):
+            schema_change = True
+
+        broken_column_name = None
+        broken_column_type = None
+
+        # find orig columns in new columns (added columns are ok)
+        for orig_col in origColumnTypesDf:
             orig_col_name = orig_col.column_name
-            orig_col_type = orig_col.type_name.upper()
-            for input_col in destinationTableColumns:
+            orig_col_type = orig_col.type_type.upper()
+            for input_col in inputTableColumns:
                 match_found = False
-                if input_col[0] == orig_col_type:
+                if input_col[0] == orig_col_name:
                     match_found = True
+                    input_type = input_col[1]
+                    # type change - nogo
+                    if input_type != orig_col_type:
+                        consistent_changes = False
+                        schema_change = True
+                        broken_column_name = orig_col_name
+                        broken_column_type = orig_col_type
+                        break
+                    # decimal - check the precision and scale
+                    if orig_col_type == 'DECIMAL':
+                        orig_precision = orig_col.precision
+                        orig_scale = orig_col.scale
+                        input_decimal_mid = input_type.replace('DECIMAL(', '').replace(')', '').split(',')
+                        input_decimal_precision = int(input_decimal_mid[0])
+                        input_decimal_scale = int(input_decimal_mid[1])
+                        if orig_precision != input_decimal_precision or orig_scale != input_decimal_scale:
+                            consistent_changes = False
+                            schema_change = True
+                            broken_column_name = orig_col_name
+                            broken_column_type = orig_col_type
+                            break
+                    # no type difference found - go to next orig table column
                     break
             if not match_found:
                 schema_change = True
                 consistent_changes = False
+                # deleted or renamed column - nogo
+                break
+            if consistent_changes == False:
+                break
+
+        if consistent_changes == False:
+            raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type})')
             
+        if schema_change:
+            # TODO: rebuild the table
+            msg = f'Rebuilding table [{self.__targetSchemaName}].[{self.__targetTableName}], to add new columns...'
+            self.__logger.info(msg)
+            print(msg)
 
-
-
+            # create temp_old copy of the old table in the WH
+            # copy data to the temp_old table
+            # DROP old table
+            # create table with new schema
+            # copy data from temp_old table to new table
+            # DROP temp_old table
+            pass
+        
+            
         # sync schema if table exists
         # handle increments as in a lakehouse
 
