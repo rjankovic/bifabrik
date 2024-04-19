@@ -91,7 +91,12 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__data = self.__data.withColumn(self.__identityColumn, lit(0).cast('bigint')).select(schema)
         
         # add timestamp column if name specified
-        # TODO
+        insertDateColumn = self.__tableConfig.insertDateColumn
+        if insertDateColumn is not None:
+            self.__insertDateColumn = insertDateColumn
+            ts = time.time()
+            r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
+            self.__data = r
 
         # place the identity column at the beginning of the table
         schema = [obj[0]  for obj in self.__data.dtypes]
