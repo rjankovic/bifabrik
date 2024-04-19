@@ -62,7 +62,45 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
+        self.__databaseName = mergedConfig.destinationStorage.destinationWarehouseName
+
+        # add empty identity column if name pattern specified (will be filled in destination table)
+        # this way, for increments, only the rows that end up inserted will get a new ID
+        # on generating IDs
+# https://learn.microsoft.com/en-us/fabric/data-warehouse/generate-unique-identifiers
+#         -- CREATE TABLE IDTestTemp(
+# --     ID BIGINT NULL
+# -- )
+
+# -- DECLARE @MaxID AS BIGINT;
+# -- SET @MaxID = (SELECT MAX([ID]) FROM [dbo].[IDTest]);
+
+# -- INSERT INTO IDTestTemp
+# -- (
+# -- ID
+# -- )
+# -- SELECT 
+# -- @MaxID + ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) AS [ID]
+# -- FROM IDTest WHERE ID = 0
+
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is not None:
+            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
+            schema = [obj[0]  for obj in self.__data.dtypes]
+            schema.insert(0, self.__identityColumn)
+            self.__data = self.__data.withColumn(self.__identityColumn, lit(0).cast('bigint')).select(schema)
         
+        # add timestamp column if name specified
+        # TODO
+
+        # place the identity column at the beginning of the table
+        schema = [obj[0]  for obj in self.__data.dtypes]
+        schema.insert(0, identityColumn)
+        df_ids  = self.__data.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+        df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
+        
+        self.__data = df_res
+
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
@@ -198,6 +236,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 {',\n'.join(columnDefs)}
 )
 '''
+        
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
             # TODO: full load
