@@ -41,7 +41,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tempTableName = None
         self.__tempTableLocation = None
         self.__odbcConnection = None
-        self.__identityColumnName = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -63,60 +62,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
         self.__databaseName = mergedConfig.destinationStorage.destinationWarehouseName
-
-        # add empty identity column if name pattern specified (will be filled in destination table)
-        # this way, for increments, only the rows that end up inserted will get a new ID
-        # on generating IDs
-# https://learn.microsoft.com/en-us/fabric/data-warehouse/generate-unique-identifiers
-#         -- CREATE TABLE IDTestTemp(
-# --     ID BIGINT NULL
-# -- )
-
-# -- DECLARE @MaxID AS BIGINT;
-# -- SET @MaxID = (SELECT MAX([ID]) FROM [dbo].[IDTest]);
-
-# -- INSERT INTO IDTestTemp
-# -- (
-# -- ID
-# -- )
-# -- SELECT 
-# -- @MaxID + ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) AS [ID]
-# -- FROM IDTest WHERE ID = 0
-
-        identityColumnPattern = self.__tableConfig.identityColumnPattern
-        if identityColumnPattern is not None:
-            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
-            schema = [obj[0]  for obj in self.__data.dtypes]
-            schema.insert(0, self.__identityColumn)
-            self.__data = self.__data.withColumn(self.__identityColumn, lit(0).cast('bigint')).select(schema)
-        
-        # add timestamp column if name specified
-        insertDateColumn = self.__tableConfig.insertDateColumn
-        if insertDateColumn is not None:
-            self.__insertDateColumn = insertDateColumn
-            ts = time.time()
-            r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
-            self.__data = r
-
-        # place the identity column at the beginning of the table
-        schema = [obj[0]  for obj in self.__data.dtypes]
-        schema.insert(0, identityColumn)
-        df_ids  = self.__data.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
-        df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
-        
-        self.__data = df_res
-
-        # save to temp table in the lakehouse
-        dstLh = mergedConfig.destinationStorage.destinationLakehouse
-        dstWs = mergedConfig.destinationStorage.destinationWorkspace
-        self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
-        if self.__lhBasePath is None:
-            raise Exception(f'''The warehouse destination needs to use a warehouse for temporary data storage. 
-                            Either connect the notebook to a lakehouse or configure the destinationLakehouse and destinationWorkspace properties in bifabrik.config.destinationStorage.''')
-        self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
-        self.__tempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
-        self.__tempTableLocation = self.__lhBasePath + "/Tables/" + self.__tempTableName
-        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tempTableLocation)
         
         # connect ODBC
         odbcServer = mergedConfig.destinationStorage.destinationWarehouseConnectionString
@@ -134,14 +79,66 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if schemaCount == 0:
             self.__execute_dml(f"CREATE SCHEMA [{self.__targetSchemaName}]")
 
+        # check if table exists
+        findTableDf = self.__execute_select(f'''
+        SELECT COUNT(*)
+        FROM sys.tables t 
+        INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
+        ''')
+
+        tableCount = findTableDf[0][0]
+        if tableCount == 0:
+            self.__tableExists = False
+        else:
+            self.__tableExists = True
+
+        # add identity column if specified
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is not None:
+            initID = 0
+            if self.__tableExists:
+                maxIdDf = self.__execute_select(f'''
+                SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
+                FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
+                ''')
+                initID = maxIdDf[0][0]
+                print(f'init ID: {initID}')
+                
+            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
+            schema = [obj[0]  for obj in self.__data.dtypes]
+            schema.insert(0, self.__identityColumn)
+            df_ids  = self.__data.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+            df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
+            self.__data = df_ids2
+        
+        # add timestamp column if name specified
+        insertDateColumn = self.__tableConfig.insertDateColumn
+        if insertDateColumn is not None:
+            self.__insertDateColumn = insertDateColumn
+            ts = time.time()
+            r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
+            self.__data = r
+
+        # save to temp table in the lakehouse
+        dstLh = mergedConfig.destinationStorage.destinationLakehouse
+        dstWs = mergedConfig.destinationStorage.destinationWorkspace
+        self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
+        if self.__lhBasePath is None:
+            raise Exception(f'''The warehouse destination needs to use a warehouse for temporary data storage. 
+                            Either connect the notebook to a lakehouse or configure the destinationLakehouse and destinationWorkspace properties in bifabrik.config.destinationStorage.''')
+        self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
+        self.__tempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
+        self.__tempTableLocation = self.__lhBasePath + "/Tables/" + self.__tempTableName
+        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tempTableLocation)
+
         # determine column types
         inputTableColumns = []
 
-        # add identity column to table structure if specified
-        identityColumnPattern = self.__tableConfig.identityColumnPattern
-        if identityColumnPattern is not None:
-            self.__identityColumnName = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName)
-            inputTableColumns.append([self.__identityColumnName, 'BIGINT'])
+        # # add identity column to table structure if specified
+        # identityColumnPattern = self.__tableConfig.identityColumnPattern
+        # if self.__identityColumn is not None:
+        #     inputTableColumns.append([self.__identityColumnName, 'BIGINT'])
         
         # ordinary columns...
         dts = self.__data.dtypes
@@ -172,10 +169,10 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             
             inputTableColumns.append([s_name, col_type])
 
-        # add insert date column
-        insertDateColumn = self.__tableConfig.insertDateColumn
-        if insertDateColumn is not None:
-            inputTableColumns.append([insertDateColumn, 'DATETIME2'])
+        # # add insert date column
+        # insertDateColumn = self.__tableConfig.insertDateColumn
+        # if insertDateColumn is not None:
+        #     inputTableColumns.append([insertDateColumn, 'DATETIME2'])
         
 # CREATE TABLE Test8
 # (
@@ -221,27 +218,13 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
 # 	[EmailAddress] [varchar](255)  NOT NULL
 # )
 
-        # create warehouse table if not exists
-        findTableDf = self.__execute_select(f'''
-        SELECT COUNT(*)
-        FROM sys.tables t 
-        INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
-        WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
-        ''')
-
-        tableCount = findTableDf[0][0]
-        if tableCount == 0:
-            self.__tableExists = False
-        else:
-            self.__tableExists = True
-        
+        # create warehouse table if not exists        
         columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', inputTableColumns)
         createTableSql = f'''
 CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 {',\n'.join(columnDefs)}
 )
 '''
-        
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
             # TODO: full load
@@ -309,7 +292,6 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type})')
             
         if schema_change:
-            # TODO: rebuild the table
             msg = f'Rebuilding table [{self.__targetSchemaName}].[{self.__targetTableName}], to add new columns...'
             self.__logger.info(msg)
             print(msg)
@@ -346,10 +328,13 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         
             
         # handle increments as in a lakehouse
+        # TODO
 
         self.__odbcConnection.close()
 
-        #####################
+        ###########################################################################################################################################
+        ###########################################################################################################################################
+        ###########################################################################################################################################
 
         self.__tableExists = self.__tableExistsF()
 
@@ -421,42 +406,8 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         for i in invalids:
             name = name.replace(i, replacement)
         return name
-
-    def __insertIdentityColumn(self):
-        identityColumnPattern = self.__tableConfig.identityColumnPattern
-        if identityColumnPattern is None:
-            return
-        
-        lhName = self.__lhMeta.lakehouseName
-        initID = 0
-        identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, lakehousename = lhName)
-        self.__identityColumn = identityColumn
-
-        if self.__tableExists:
-            query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
-            initID = self._spark.sql(query).collect()[0][0]
-            # if the table exists, but is empty
-            if initID is None:
-                initID = 0
-        
-        # place the identity column at the beginning of the table
-        schema = [obj[0]  for obj in self.__data.dtypes]
-        schema.insert(0, identityColumn)
-        df_ids  = self.__data.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
-        df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
-        
-        self.__data = df_res
-
-    def __insertInsertDateColumn(self):
-        insertDateColumn = self.__tableConfig.insertDateColumn
-        if insertDateColumn is None:
-            return
-        
-        self.__insertDateColumn = insertDateColumn
-        ts = time.time()
-        r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
-        self.__data = r
-
+    
+    # AKA full load
     def __overwriteTarget(self):
         self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
 
