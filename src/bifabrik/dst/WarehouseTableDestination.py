@@ -78,7 +78,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__odbcConnection = pyodbc.connect(constr)
 
         # create schema if not exists
-        findSchemaQuery = f"SELECT COUNT(*) FROM sys.schemas WHERE [name] = {self.__targetSchemaName}"
+        findSchemaQuery = f"SELECT COUNT(*) FROM sys.schemas WHERE [name] = '{self.__targetSchemaName}'"
         findSchemaDf = self.__execute_select(findSchemaQuery)
         schemaCount = findSchemaDf[0][0]
         if schemaCount == 0:
@@ -98,6 +98,8 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             self.__tableExists = True
 
+        # watermark filter filters self.__data DF - this has to be done before thedata is written to the lakehouse temp table
+        self.__filterByWatermark()
 
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
@@ -161,13 +163,12 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # create warehouse table if not exists        
         columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', inputTableColumns)
+        column_defs_join = ',\n'.join(columnDefs)
         createTableSql = f'''
 CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
-{',\n'.join(columnDefs)}
+{column_defs_join}
 )
 '''
-        
-        self.__filterByWatermark()
 
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
@@ -290,7 +291,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
     def __execute_select(self, query: str):
         pd_df = pd.read_sql(query, self.__odbcConnection)
         df = self._spark.createDataFrame(pd_df)
-        return df
+        return df.collect()
     
     def __execute_dml(self, query: str):
         self.__odbcConnection.execute(query)
@@ -333,7 +334,7 @@ FROM src
 '''
         return complete_sql
     
-    def __append_target(self, src_query):
+    def __append_target_query(self, src_query):
         insert_query = self.__create_insert_query()
         append_sql = f'''WITH
 src AS ({src_query}
@@ -344,7 +345,7 @@ src AS ({src_query}
 
     def __append_target(self):
         src_query = f'SELECT * FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}]'
-        self.__append_target(src_query)
+        self.__append_target_query(src_query)
     
     def __overwrite_target(self):
         delte_sql = f'DELETE FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
@@ -380,7 +381,7 @@ FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
 LEFT JOIN [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt ON {join_condition}
 WHERE tgt.{key_columns[0]} IS NULL
 '''
-        self.__append_target(insert_src_query)
+        self.__append_target_query(insert_src_query)
 
     def __snapshot_target(self):
         # first delete the snapshot to be replaced
