@@ -98,32 +98,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             self.__tableExists = True
 
-        # # add identity column if specified
-        # identityColumnPattern = self.__tableConfig.identityColumnPattern
-        # if identityColumnPattern is not None:
-        #     initID = 0
-        #     if self.__tableExists:
-        #         maxIdDf = self.__execute_select(f'''
-        #         SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
-        #         FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
-        #         ''')
-        #         initID = maxIdDf[0][0]
-        #         print(f'init ID: {initID}')
-                
-        #     self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
-        #     schema = [obj[0]  for obj in self.__data.dtypes]
-        #     schema.insert(0, self.__identityColumn)
-        #     df_ids  = self.__data.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
-        #     df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
-        #     self.__data = df_ids2
-        
-        # # add timestamp column if name specified
-        # insertDateColumn = self.__tableConfig.insertDateColumn
-        # if insertDateColumn is not None:
-        #     self.__insertDateColumn = insertDateColumn
-        #     ts = time.time()
-        #     r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
-        #     self.__data = r
 
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
@@ -184,49 +158,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         
         self.__tableColumns = inputTableColumns
         
-# CREATE TABLE Test8
-# (
-#  ID INT NULL,
-#  CreatedDateTime VARBINARY(8000),
-#  D DECIMAL(38,38),
-#  VC VARCHAR(8000)
-# )
-
-#         CREATE TABLE [dbo].[bing_covid-19_data]
-# (
-#     [id] [int] NULL,
-#     [updated] [date] NULL,
-#     [confirmed] [int] NULL,
-#     [confirmed_change] [int] NULL,
-#     [deaths] [int] NULL,
-#     [deaths_change] [int] NULL,
-#     [recovered] [int] NULL,
-#     [recovered_change] [int] NULL,
-#     [latitude] [float] NULL,
-#     [longitude] [float] NULL,
-#     [iso2] [varchar](8000) NULL,
-#     [iso3] [varchar](8000) NULL,
-#     [country_region] [varchar](8000) NULL,
-#     [admin_region_1] [varchar](8000) NULL,
-#     [iso_subdivision] [varchar](8000) NULL,
-#     [admin_region_2] [varchar](8000) NULL,
-#     [load_time] [datetime2](6) NULL
-# )
-
-
-# bigint
-# timestamp
-# int
-# double
-# string
-# decimal(10,0)
-
-# CREATE TABLE [dbo].[Dim_Customer]
-# (
-# 	[CustomerID] [varchar](255)  NOT NULL,
-# 	[CustomerName] [varchar](255)  NOT NULL,
-# 	[EmailAddress] [varchar](255)  NOT NULL
-# )
 
         # create warehouse table if not exists        
         columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', inputTableColumns)
@@ -235,11 +166,14 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 {',\n'.join(columnDefs)}
 )
 '''
+        
+        self.__filterByWatermark()
+
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
-            # TODO: full load
+            self.__append_target()
             return
-        
+
         # sync schema if table exists
         origColumnsTypesDf = self.__execute_select(f'''
 SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
@@ -338,9 +272,19 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
         
             
         # handle increments as in a lakehouse
-        # TODO
+        if incrementMethod == 'overwrite':
+            self.__overwrite_target()
+        elif incrementMethod == 'append':
+            self.__append_target()
+        elif incrementMethod == 'merge':
+            self.__merge_taget()
+        elif incrementMethod == 'snapshot':
+            self.__snapshot_target()
+        else:
+            raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
         self.__odbcConnection.close()
+        self._completed = True
 
 
     def __execute_select(self, query: str):
@@ -453,234 +397,7 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
         self.__execute_dml(delete_query)
         self.__append_target()
 
-    
-
-        ###########################################################################################################################################
-        ###########################################################################################################################################
-        ###########################################################################################################################################
-
-        self.__tableExists = self.__tableExistsF()
-
-        self.__replaceInvalidCharactersInColumnNames()
-        self.__insertIdentityColumn()
-        self.__insertInsertDateColumn()
-
-
-
-        self.__resolveSchemaDifferences()
         
-        self.__filterByWatermark()
-
-        # if the target target table does not exist yet, just handle it as an overwrite
-        if not(self.__tableExists):
-            self.__overwriteTarget()
-        elif incrementMethod == 'overwrite':
-            self.__overwriteTarget()
-        elif incrementMethod == 'append':
-            self.__appendTarget()
-        elif incrementMethod == 'merge':
-            self.__mergeTarget()
-        elif incrementMethod == 'snapshot':
-            self.__snapshotTarget()
-        else:
-            raise Exception(f'Unrecognized increment type: {incrementMethod}')
-
-        self._completed = True
-
-    
-    def __insert_identity_column(self, new_rows_df, reset_sequence = False):
-        identityColumnPattern = self.__tableConfig.identityColumnPattern
-        if identityColumnPattern is None:
-            return
-        initID = 0
-        if self.__tableExists and (not reset_sequence):
-            maxIdDf = self.__execute_select(f'''
-            SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
-            FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
-            ''')
-            initID = maxIdDf[0][0]
-            print(f'init ID: {initID}')
-                
-        self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
-        schema = [obj[0]  for obj in self.__data.dtypes]
-        schema.insert(0, self.__identityColumn)
-        df_ids  = new_rows_df.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
-        df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
-        new_rows_df = df_ids2
-        return new_rows_df
-        
-    def insert_destination_table(self, new_rows_df):
-
-
-    def __list_diff(self, first_list, second_list):
-        diff = [item for item in first_list if item not in second_list]
-        return diff
-        
-    def __replaceInvalidCharactersInColumnNames(self):
-        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
-        if replacement is None:
-            return
-        
-        self.__data = (
-            self.
-            __data
-            .select(
-                [col(f'`{c}`').alias(
-                    self.__sanitizeColumnName(c)) 
-                    for c in self.__data.columns
-                ]))
-
-    def __sanitizeColumnName(self, colName):
-        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
-        if replacement is None:
-            return colName
-        
-        invalids = " ,;{}()\n\t="
-        name = colName        
-        for i in invalids:
-            name = name.replace(i, replacement)
-        return name
-    
-    # AKA full load
-    def __overwriteTarget(self):
-        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
-
-    def __appendTarget(self):
-        self.__data.write.mode("append").format("delta").save(self.__tableLocation)
-
-    def __resolveSchemaDifferences(self):
-        lgr = lg.getLogger()
-
-        if not(self.__tableExists):
-            return
-        if self.__incrementMethod == 'overwrite':
-            return
-        
-        target_table = f'{self.__lhMeta.lakehouseName}.{self.__targetTableName}'
-        df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
-        cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
-        cols_old = self._spark.createDataFrame(df_old.dtypes, ["old_name", "old_type"])
-        compare = (
-            cols_new.join(cols_old, cols_new.new_name == cols_old.old_name, how="outer")
-            .fillna("")
-        )
-        difference = compare.filter(compare.new_type != compare.old_type)
-
-        canAddColumns = self.__tableConfig.canAddNewColumns
-
-        if canAddColumns:
-            solvable = difference.where(difference.old_name == '')
-            insolvable = difference.where(difference.old_name != '')
-        else:
-            solvable = difference.where(difference.old_type == '____none____')
-            insolvable = difference
-
-        if insolvable.count() > 0:
-            err = f'Schema difference detected in table {target_table} that cannot be merged:'
-            for r in insolvable.collect():
-                ons = "N/A" if r.old_name == '' else r.old_name
-                ots = "N/A" if r.old_type == '' else r.old_type
-                nns = "N/A" if r.new_name == '' else r.new_name
-                nts = "N/A" if r.new_type == '' else r.new_type
-                err = err + f'\n> old_name: {ons}, old_type: {ots}'
-                err = err + f', new_name: {nns}, new_type: {nts}'
-            lgr.error(err)
-            insolvable.show()
-            raise Exception(err)
-
-        for r in solvable.collect():
-            tu.addTableColumnFromType(self.__lhMeta.lakehouseName, self.__targetTableName, r.new_name, r.new_type)
-
-
-    def __mergeTarget(self):
-        all_columns = self.__data.columns
-        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
-        non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
-        
-        # print('key columns')
-        # print(key_columns)
-        # print('non-key columns')
-        # print(non_key_columns)
-        
-        if len(key_columns) == 0:
-            raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
-        
-
-        # todo: instead of SQL, use pyspark for cross-workspace ETL
-        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
-        update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
-        insert_list = ", ".join([f"`{item}`" for item in all_columns])
-        insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
-        
-        scd1_update = f"WHEN MATCHED THEN UPDATE SET \
-            {update_list} "
-        # table consisisting only of key columns - no need for the update clause
-        if len(non_key_columns) == 0:
-            scd1_update = ""
-
-        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
-        self.__data.createOrReplaceTempView(src_view_name)
-        mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
-        merge_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
-            USING {src_view_name}  AS src \
-            ON {join_condition} \
-            {scd1_update}\
-            WHEN NOT MATCHED THEN INSERT ( \
-            {insert_list} \
-            ) VALUES ( \
-            {insert_values} \
-            )\
-            "
-        self.__logger.info("----SCD1 MERGE SQL")
-        self.__logger.info(merge_sql)
-        self._spark.sql(merge_sql)
-
-    def __snapshotTarget(self):
-        # first delete the snapshot to be replaced
-        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.snapshotKeyColumns))
-        
-        if len(key_columns) == 0:
-            raise Exception('No key columns set for snapshot increment. Please set the snapshotKeyColumns property in destinationTable configuration to the list of column names.')
-        
-        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
-
-        join_column_list = ", ".join([f"`{item}`" for item in key_columns])
-        
-        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
-        self.__data.createOrReplaceTempView(src_view_name)
-        mergeDbRef = f'{self.__lhMeta.lakehouseName}.'
-
-        merge_delete_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
-            USING (SELECT DISTINCT {join_column_list} FROM {src_view_name})  AS src \
-            ON {join_condition} \
-            WHEN MATCHED THEN DELETE \
-            "
-        
-        self.__logger.info("----SNAPSHOT DELETE SQL")
-        self.__logger.info(merge_delete_sql)
-        #print(merge_delete_sql)
-        self._spark.sql(merge_delete_sql)
-    
-        # append the new rows
-        self.__appendTarget()
-
-    def __tableExistsF(self):
-         """Checks if a table in the lakehouse exists.
-         """
-         fileExists = notebookutils.mssparkutils.fs.exists(self.__tableLocation)
-         
-        #  dstLh = self.__config.destinationStorage.destinationLakehouse
-        #  dstWs = self.__config.destinationStorage.destinationWorkspace
-        #  p = f'Tables/{self.__targetTableName}'
-        #  print(f'Looking for table {p}')
-        #  fileExists = fsUtils.fileExists(path = p, lakehouse = dstLh, workspace = dstWs)
-         
-        #  if fileExists:
-        #      print('exists')
-        #  else:
-        #      print('does not exist')
-         return fileExists
-    
     def __filterByWatermark(self):
         if not(self.__tableExists):
             return
@@ -693,9 +410,9 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
         if watermarkColumn is None:
             return
         
-        max_watermark_sql = f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}'
+        max_watermark_sql = f'SELECT MAX([{watermarkColumn}]) FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
         # print(max_watermark_sql)
-        max_watermark = self._spark.sql(max_watermark_sql).collect()[0][0]
+        max_watermark = self.__execute_select(max_watermark_sql)[0][0]
         # print(f'max watermark: {max_watermark}')
 
         # if the table is empty or watermark is 0, take all the data
