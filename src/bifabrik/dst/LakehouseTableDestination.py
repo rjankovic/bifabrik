@@ -228,7 +228,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
         
 
-        # todo: instead of SQL, use pyspark for cross-workspace ETL
+        # TODO: instead of SQL, use pyspark for cross-workspace ETL
         join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
         update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
         insert_list = ", ".join([f"`{item}`" for item in all_columns])

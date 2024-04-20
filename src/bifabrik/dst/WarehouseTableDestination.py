@@ -62,6 +62,11 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__config = mergedConfig
         self.__tableConfig = mergedConfig.destinationTable
         self.__databaseName = mergedConfig.destinationStorage.destinationWarehouseName
+
+        incrementMethod = mergedConfig.destinationTable.increment
+        if incrementMethod is None:
+            incrementMethod = 'overwrite'
+        self.__incrementMethod = incrementMethod
         
         # connect ODBC
         odbcServer = mergedConfig.destinationStorage.destinationWarehouseConnectionString
@@ -93,36 +98,37 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             self.__tableExists = True
 
-        # add identity column if specified
-        identityColumnPattern = self.__tableConfig.identityColumnPattern
-        if identityColumnPattern is not None:
-            initID = 0
-            if self.__tableExists:
-                maxIdDf = self.__execute_select(f'''
-                SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
-                FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
-                ''')
-                initID = maxIdDf[0][0]
-                print(f'init ID: {initID}')
+        # # add identity column if specified
+        # identityColumnPattern = self.__tableConfig.identityColumnPattern
+        # if identityColumnPattern is not None:
+        #     initID = 0
+        #     if self.__tableExists:
+        #         maxIdDf = self.__execute_select(f'''
+        #         SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
+        #         FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
+        #         ''')
+        #         initID = maxIdDf[0][0]
+        #         print(f'init ID: {initID}')
                 
-            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
-            schema = [obj[0]  for obj in self.__data.dtypes]
-            schema.insert(0, self.__identityColumn)
-            df_ids  = self.__data.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
-            df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
-            self.__data = df_ids2
+        #     self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
+        #     schema = [obj[0]  for obj in self.__data.dtypes]
+        #     schema.insert(0, self.__identityColumn)
+        #     df_ids  = self.__data.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+        #     df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
+        #     self.__data = df_ids2
         
-        # add timestamp column if name specified
-        insertDateColumn = self.__tableConfig.insertDateColumn
-        if insertDateColumn is not None:
-            self.__insertDateColumn = insertDateColumn
-            ts = time.time()
-            r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
-            self.__data = r
+        # # add timestamp column if name specified
+        # insertDateColumn = self.__tableConfig.insertDateColumn
+        # if insertDateColumn is not None:
+        #     self.__insertDateColumn = insertDateColumn
+        #     ts = time.time()
+        #     r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
+        #     self.__data = r
 
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
+        self.__destinationLakehouse = dstLh
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         if self.__lhBasePath is None:
             raise Exception(f'''The warehouse destination needs to use a warehouse for temporary data storage. 
@@ -135,10 +141,11 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # determine column types
         inputTableColumns = []
 
-        # # add identity column to table structure if specified
-        # identityColumnPattern = self.__tableConfig.identityColumnPattern
-        # if self.__identityColumn is not None:
-        #     inputTableColumns.append([self.__identityColumnName, 'BIGINT'])
+        # add identity column to table structure if specified
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is not None:
+            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
+            inputTableColumns.insert(0, [self.__identityColumnName, 'BIGINT'])
         
         # ordinary columns...
         dts = self.__data.dtypes
@@ -169,10 +176,13 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             
             inputTableColumns.append([s_name, col_type])
 
-        # # add insert date column
-        # insertDateColumn = self.__tableConfig.insertDateColumn
-        # if insertDateColumn is not None:
-        #     inputTableColumns.append([insertDateColumn, 'DATETIME2'])
+        # add insert date column
+        insertDateColumn = self.__tableConfig.insertDateColumn
+        if insertDateColumn is not None:
+            self.__insertDateColumn = insertDateColumn
+            inputTableColumns.append([self.__insertDateColumn, 'DATETIME2'])
+        
+        self.__tableColumns = inputTableColumns
         
 # CREATE TABLE Test8
 # (
@@ -232,12 +242,12 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         
         # sync schema if table exists
         origColumnsTypesDf = self.__execute_select(f'''
-        SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
-        FROM sys.schemas s
-        INNER JOIN sys.tables t ON s.schema_id = t.schema_id
-        INNER JOIN sys.columns c ON c.object_id = t.object_id
-        INNER JOIN sys.types tt ON tt.system_type_id = c.system_type_id
-        WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
+SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
+FROM sys.schemas s
+INNER JOIN sys.tables t ON s.schema_id = t.schema_id
+INNER JOIN sys.columns c ON c.object_id = t.object_id
+INNER JOIN sys.types tt ON tt.system_type_id = c.system_type_id
+WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
         ''')
 
         consistent_changes = True
@@ -332,6 +342,119 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 
         self.__odbcConnection.close()
 
+
+    def __execute_select(self, query: str):
+        pd_df = pd.read_sql(query, self.__odbcConnection)
+        df = self._spark.createDataFrame(pd_df)
+        return df
+    
+    def __execute_dml(self, query: str):
+        self.__odbcConnection.execute(query)
+        self.__odbcConnection.commit()
+    
+    def __list_diff(self, first_list, second_list):
+        diff = [item for item in first_list if item not in second_list]
+        return diff
+    
+    # INSERT INTO destination_table(destination_columns) SELECT {destination_columns, including TS and ID} FROM src
+    # [src] to be defined later
+    def __create_insert_query(self):
+        col_list = list(map(lambda x: x[0], self.__tableColumns))
+        insert_sql = ''
+        select_sql = ''
+        for i in range(len(col_list)):
+            if i > 0:
+                insert_sql = insert_sql + ',\n'
+                select_sql = select_sql + ',\n'
+            col_name = col_list[i]
+            insert_sql = insert_sql + f'[{col_name}]'
+            
+            if col_name == self.__identityColumn:
+                init_id = 0
+                if self.__incrementMethod != 'overwrite' and self.__tableExists:
+                    maxIdDf = self.__execute_select(f'SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID FROM [{self.__targetSchemaName}].[{self.__targetTableName}] ')
+                    init_id = maxIdDf[0][0]
+                select_sql = select_sql + f'ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) + {init_id} [{col_name}]'
+            elif col_name == self.__insertDateColumn:
+                select_sql = select_sql + f'GETDATE() [{col_name}]'
+            else:
+                select_sql = select_sql + f'src.[{col_name}]'
+            
+        complete_sql = f'''INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}](
+{insert_sql}        
+)
+SELECT
+{select_sql}
+FROM src
+'''
+        return complete_sql
+    
+    def __append_target(self, src_query):
+        insert_query = self.__create_insert_query()
+        append_sql = f'''WITH
+src AS ({src_query}
+)
+{insert_query}
+'''
+        self.__execute_dml(append_sql)
+
+    def __append_target(self):
+        src_query = f'SELECT * FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}]'
+        self.__append_target(src_query)
+    
+    def __overwrite_target(self):
+        delte_sql = f'DELETE FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
+        self.__execute_dml(delte_sql)
+        self.__append_target()
+    
+    def __merge_taget(self):
+        all_columns = list(map(lambda x: x[0], self.__tableColumns))
+        key_columns = self.__tableConfig.mergeKeyColumns
+        non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
+        
+        # print('key columns')
+        # print(key_columns)
+        # print('non-key columns')
+        # print(non_key_columns)
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
+        
+        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
+        update_list = ",\n".join([f"tgt.[{item}]` = src.[{item}]`" for item in non_key_columns])
+        update_query = f'''
+UPDATE tgt SET
+{update_list}
+FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
+INNER JOIN [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt ON {join_condition}
+'''
+        self.__execute_dml(update_query)
+
+        insert_src_query = f'''
+SELECT src.*
+FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
+LEFT JOIN [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt ON {join_condition}
+WHERE tgt.{key_columns[0]} IS NULL
+'''
+        self.__append_target(insert_src_query)
+
+    def __snapshot_target(self):
+        # first delete the snapshot to be replaced
+        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.snapshotKeyColumns))
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for snapshot increment. Please set the snapshotKeyColumns property in destinationTable configuration to the list of column names.')
+        
+        join_condition = " AND ".join([f"src.[{item}] = tgt.[{item}]" for item in key_columns])
+        delete_query = f'''
+DELETE tgt FROM [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt
+INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON {join_condition}
+'''
+        self.__execute_dml(delete_query)
+        self.__append_target()
+
+    
+
         ###########################################################################################################################################
         ###########################################################################################################################################
         ###########################################################################################################################################
@@ -343,10 +466,6 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         self.__insertInsertDateColumn()
 
 
-        incrementMethod = mergedConfig.destinationTable.increment
-        if incrementMethod is None:
-            incrementMethod = 'overwrite'
-        self.__incrementMethod = incrementMethod
 
         self.__resolveSchemaDifferences()
         
@@ -368,16 +487,31 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 
         self._completed = True
 
-    def __execute_select(self, query: str):
-        pd_df = pd.read_sql(query, self.__odbcConnection)
-        df = self._spark.createDataFrame(pd_df)
-        return df
     
-    def __execute_dml(self, query: str):
-        self.__odbcConnection.execute(query)
-        self.__odbcConnection.commit()
-    
-    
+    def __insert_identity_column(self, new_rows_df, reset_sequence = False):
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is None:
+            return
+        initID = 0
+        if self.__tableExists and (not reset_sequence):
+            maxIdDf = self.__execute_select(f'''
+            SELECT ISNULL(MAX([{self.__identityColumn}]), 0) AS MaxID
+            FROM [{self.__targetSchemaName}].[{self.__targetTableName}] 
+            ''')
+            initID = maxIdDf[0][0]
+            print(f'init ID: {initID}')
+                
+        self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
+        schema = [obj[0]  for obj in self.__data.dtypes]
+        schema.insert(0, self.__identityColumn)
+        df_ids  = new_rows_df.withColumn(self.__identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+        df_ids2 = df_ids.withColumn(self.__identityColumn,col(self.__identityColumn) + initID)
+        new_rows_df = df_ids2
+        return new_rows_df
+        
+    def insert_destination_table(self, new_rows_df):
+
+
     def __list_diff(self, first_list, second_list):
         diff = [item for item in first_list if item not in second_list]
         return diff
