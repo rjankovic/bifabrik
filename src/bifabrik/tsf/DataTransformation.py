@@ -1,5 +1,6 @@
 #from pyspark.sql.session import SparkSession
 from bifabrik.dst.LakehouseTableDestination import LakehouseTableDestination
+from bifabrik.dst.WarehouseTableDestination import WarehouseTableDestination
 from bifabrik.dst.SparkDfDestination import SparkDfDestination
 from bifabrik.dst.PandasDfDestination import PandasDfDestination
 from bifabrik.base.Task import Task
@@ -14,9 +15,20 @@ class DataTransformation(Task):
         super().__init__(parentPipeline)
         
     def toTable(self, targetTableName: str) -> LakehouseTableDestination:
-        """Sets the destination table name (table in the current lakehouse)
+        """Sets the lakehouse destination table name
+        """
+        return self.toLakehouseTable(targetTableName)
+    
+    def toLakehouseTable(self, targetTableName: str) -> LakehouseTableDestination:
+        """Sets the lakehouse destination table name
         """
         dst = LakehouseTableDestination(self._pipeline, targetTableName)
+        return dst
+    
+    def toWarehouseTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> WarehouseTableDestination:
+        """Sets the warehouse destination table name
+        """
+        dst = WarehouseTableDestination(self._pipeline, targetTableName, targetSchemaName)
         return dst
     
     def toSparkDf(self) -> SparkDfDestination:
