@@ -295,7 +295,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
         self.__odbcConnection.close()
-        drop_temp_sql = f'DROP TABLE {self.__destinationLakehouse}.{self.__tempTableName}'
+        drop_temp_sql = f'DROP TABLE IF EXISTS `{self.__destinationLakehouse}`.`{self.__tempTableName}`'
         self._spark.sql(drop_temp_sql)
 
         self._completed = True
