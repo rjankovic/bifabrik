@@ -125,8 +125,8 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # add identity column to table structure if specified
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         if identityColumnPattern is not None:
-            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databaseName = self.__databaseName)
-            inputTableColumns.insert(0, [self.__identityColumnName, 'BIGINT'])
+            self.__identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, databasename = self.__databaseName)
+            inputTableColumns.insert(0, [self.__identityColumn, 'BIGINT'])
         
         # ordinary columns...
         dts = self.__data.dtypes
@@ -254,7 +254,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             # copy data to the temp_old table
             # SELECT * INTO Dim_Customer_temp FROM Dim_Customer
             whTempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
-            selectIntoQuery = f"SELECT * FROM [{self.__targetSchemaName}].[{self.__targetTableName}] INTO [{self.__targetSchemaName}].[{whTempTableName}]"
+            selectIntoQuery = f"SELECT * INTO [{self.__targetSchemaName}].[{whTempTableName}] FROM [{self.__targetSchemaName}].[{self.__targetTableName}]"
             self.__execute_dml(selectIntoQuery)
             
             
@@ -266,13 +266,14 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             self.__execute_dml(createTableSql)
 
             # copy data from temp_old table to new table
-            insert_columns = list(map(lambda x: x.column_name, origColumnsTypesDf))
+            insert_columns = list(map(lambda x: f'[{x.column_name}]', origColumnsTypesDf))
             insert_columns_join = ", \n".join(insert_columns)
             insertBackQuery = f'''INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}]
             ({insert_columns_join})
-            SELECT ({insert_columns_join})
+            SELECT {insert_columns_join}
             FROM [{self.__targetSchemaName}].[{whTempTableName}]
             '''
+            print(insertBackQuery)
             self.__execute_dml(insertBackQuery)
 
             # DROP temp_old table
