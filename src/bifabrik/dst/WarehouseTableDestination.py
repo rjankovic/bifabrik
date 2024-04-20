@@ -104,15 +104,20 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
-        self.__destinationLakehouse = dstLh
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         if self.__lhBasePath is None:
             raise Exception(f'''The warehouse destination needs to use a warehouse for temporary data storage. 
                             Either connect the notebook to a lakehouse or configure the destinationLakehouse and destinationWorkspace properties in bifabrik.config.destinationStorage.''')
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
+        self.__destinationLakehouse = self.__lhMeta.lakehouseName
         self.__tempTableName = f"temp_{self.__targetTableName}_{str(uuid.uuid4())}".replace('-', '_')
         self.__tempTableLocation = self.__lhBasePath + "/Tables/" + self.__tempTableName
+        if dstLh is None:
+            self.__tempTableLocation = "Tables/" + self.__tempTableName
         self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tempTableLocation)
+        # sleep for 3 s until the lakehouse table comes online
+        # LESS THAN IDEAL
+        time.sleep(3)
 
         # determine column types
         inputTableColumns = []
@@ -193,22 +198,25 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
 
         broken_column_name = None
         broken_column_type = None
+        type_error = None
 
         # find orig columns in new columns (added columns are ok)
         for orig_col in origColumnsTypesDf:
             orig_col_name = orig_col.column_name
-            orig_col_type = orig_col.type_type.upper()
+            orig_col_type = orig_col.type_name.upper()
             for input_col in inputTableColumns:
                 match_found = False
                 if input_col[0] == orig_col_name:
                     match_found = True
                     input_type = input_col[1]
                     # type change - nogo
-                    if input_type != orig_col_type:
+                    input_type_base = input_type.replace('(6)', '').replace('(8000)', '')
+                    if input_type_base != orig_col_type:
                         consistent_changes = False
                         schema_change = True
                         broken_column_name = orig_col_name
                         broken_column_type = orig_col_type
+                        type_error = f'type does not match source type {input_type}'
                         break
                     # decimal - check the precision and scale
                     if orig_col_type == 'DECIMAL':
@@ -222,6 +230,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
                             schema_change = True
                             broken_column_name = orig_col_name
                             broken_column_type = orig_col_type
+                            type_error = f'precision or scale ({orig_precision},{orig_scale}) does not match source type {input_type}'
                             break
                     # no type difference found - go to next orig table column
                     break
@@ -234,7 +243,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
                 break
 
         if consistent_changes == False:
-            raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type})')
+            raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type}) - {type_error}')
             
         if schema_change:
             msg = f'Rebuilding table [{self.__targetSchemaName}].[{self.__targetTableName}], to add new columns...'
@@ -285,6 +294,9 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
         self.__odbcConnection.close()
+        drop_temp_sql = f'DROP TABLE {self.__destinationLakehouse}.{self.__tempTableName}'
+        self._spark.sql(drop_temp_sql)
+
         self._completed = True
 
 
