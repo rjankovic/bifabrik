@@ -311,9 +311,20 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
     def __execute_dml(self, query: str):
         queryOneLine = query.replace('\n', ' ')
         self.__logger.info(queryOneLine)
-
-        self.__odbcConnection.execute(query)
-        self.__odbcConnection.commit()
+        try:
+            self.__odbcConnection.execute(query)
+            self.__odbcConnection.commit()
+        except pyodbc.ProgrammingError as e:
+            print('Programming error DML')
+            for i in range(len(e.args)): 
+                print(i)
+                print(str(e.args[i]))
+            raise e
+        # except Exception as e:
+        #         print('DML exception')
+        #         print(f'type: {str(type(e))}')
+        #         print(f'str: {str(e)}')
+        #         raise e
     
     def __list_diff(self, first_list, second_list):
         diff = [item for item in first_list if item not in second_list]
