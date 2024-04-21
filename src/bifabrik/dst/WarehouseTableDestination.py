@@ -161,7 +161,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         insertDateColumn = self.__tableConfig.insertDateColumn
         if insertDateColumn is not None:
             self.__insertDateColumn = insertDateColumn
-            inputTableColumns.append([self.__insertDateColumn, 'DATETIME2'])
+            inputTableColumns.append([self.__insertDateColumn, 'DATETIME2(6)'])
         
         self.__tableColumns = inputTableColumns
         
@@ -273,7 +273,6 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             SELECT {insert_columns_join}
             FROM [{self.__targetSchemaName}].[{whTempTableName}]
             '''
-            print(insertBackQuery)
             self.__execute_dml(insertBackQuery)
 
             # DROP temp_old table
@@ -307,6 +306,9 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
         return df.collect()
     
     def __execute_dml(self, query: str):
+        queryOneLine = query.replace('\n', ' ')
+        self.__logger.info(queryOneLine)
+        
         self.__odbcConnection.execute(query)
         self.__odbcConnection.commit()
     
