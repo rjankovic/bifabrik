@@ -2,7 +2,7 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class TableConfiguration(Configuration):
-    """Configuration related to saving data to delta tables
+    """Configuration related to saving data to delta tables in a Fabric lakehouse or warehouse
     """
     def __init__(self):
         self._explicitProps = {}

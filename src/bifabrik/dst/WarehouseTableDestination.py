@@ -100,7 +100,9 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # watermark filter filters self.__data DF - this has to be done before thedata is written to the lakehouse temp table
         self.__filterByWatermark()
-
+        # the same replacement as in a lakehouse needs to be applied to the column in order to save the temp table to the lakehouse
+        self.__replaceInvalidCharactersInColumnNames()
+        
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
@@ -308,7 +310,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
     def __execute_dml(self, query: str):
         queryOneLine = query.replace('\n', ' ')
         self.__logger.info(queryOneLine)
-        
+
         self.__odbcConnection.execute(query)
         self.__odbcConnection.commit()
     
@@ -441,3 +443,28 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
         self.__data = self.__data.filter(filter)
         # print(filter)
         # print(self.__data.count())
+    
+    def __sanitizeColumnName(self, colName):
+        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
+        if replacement is None:
+            return colName
+        
+        invalids = " ,;{}()\n\t="
+        name = colName        
+        for i in invalids:
+            name = name.replace(i, replacement)
+        return name
+    
+    def __replaceInvalidCharactersInColumnNames(self):
+        replacement = self.__tableConfig.invalidCharactersInColumnNamesReplacement
+        if replacement is None:
+            return
+        
+        self.__data = (
+            self.
+            __data
+            .select(
+                [col(f'`{c}`').alias(
+                    self.__sanitizeColumnName(c)) 
+                    for c in self.__data.columns
+                ]))
