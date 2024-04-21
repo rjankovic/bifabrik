@@ -41,6 +41,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tempTableName = None
         self.__tempTableLocation = None
         self.__odbcConnection = None
+        self.__watermarkColumn = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -382,20 +383,20 @@ src AS ({src_query}
         if len(key_columns) == 0:
             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
         
-        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
-        update_list = ",\n".join([f"tgt.[{item}]` = src.[{item}]`" for item in non_key_columns])
+        join_condition = " AND ".join([f"src.[{item}] = tgt.[{item}]" for item in key_columns])
+        update_list = ",\n".join([f"tgt.[{item}] = src.[{item}]" for item in non_key_columns])
         update_query = f'''
 UPDATE tgt SET
 {update_list}
 FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
-INNER JOIN [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt ON {join_condition}
+INNER JOIN [{self.__targetSchemaName}].[{self.__targetTableName}] tgt ON {join_condition}
 '''
         self.__execute_dml(update_query)
 
         insert_src_query = f'''
 SELECT src.*
 FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
-LEFT JOIN [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt ON {join_condition}
+LEFT JOIN [{self.__targetSchemaName}].[{self.__targetTableName}] tgt ON {join_condition}
 WHERE tgt.{key_columns[0]} IS NULL
 '''
         self.__append_target_query(insert_src_query)
@@ -428,7 +429,23 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
         if watermarkColumn is None:
             return
         
-        max_watermark_sql = f'SELECT MAX([{watermarkColumn}]) FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
+
+        raise Exception(f'Watermarks are not yet supported for warehouse tables.')
+    
+        ###############
+        # pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Snapshot isolation transaction failed in database 'LH_exp' because the object accessed by the statement has been modified by a DDL statement in another concurrent transaction since the start of this transaction.  It is disallowed because the metadata is not versioned. A concurrent update to metadata can lead to inconsistency if mixed with snapshot isolation. (3961) (SQLExecDirectW)")
+        #
+        #     361         insert_query = self.__create_insert_query()
+        #     362         append_sql = f'''WITH
+        #     363 src AS ({src_query}
+        #     364 )
+        #     365 {insert_query}
+        #     366 '''
+        # --> 367         self.__execute_dml(append_sql)
+        ###############
+
+        self.__watermarkColumn = watermarkColumn
+        max_watermark_sql = f'SELECT COALESCE(MAX([{watermarkColumn}]), \'\') FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
         # print(max_watermark_sql)
         max_watermark = self.__execute_select(max_watermark_sql)[0][0]
         # print(f'max watermark: {max_watermark}')
