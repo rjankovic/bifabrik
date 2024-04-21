@@ -410,7 +410,7 @@ WHERE tgt.{key_columns[0]} IS NULL
         
         join_condition = " AND ".join([f"src.[{item}] = tgt.[{item}]" for item in key_columns])
         delete_query = f'''
-DELETE tgt FROM [{self.__targetSchemaName}].[{self.__targetTableName}]' tgt
+DELETE tgt FROM [{self.__targetSchemaName}].[{self.__targetTableName}] tgt
 INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON {join_condition}
 '''
         self.__execute_dml(delete_query)
