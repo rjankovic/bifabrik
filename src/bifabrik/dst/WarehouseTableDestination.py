@@ -318,7 +318,7 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             if str(e.args[0]) == '42000' and e.args[1].find('the object accessed by the statement has been modified by a DDL statement in another concurrent transaction') > -1:
                 warn = 'Waiting 5 s for blocking DDL to finish'
                 print(warn)
-                self.__logger.warning(e[1])
+                self.__logger.warning(e.args[1])
                 self.__logger.warning(warn)
                 time.sleep(5)
                 self.__odbcConnection.execute(query)
