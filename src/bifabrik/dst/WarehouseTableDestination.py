@@ -314,8 +314,9 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
         try:
             self.__odbcConnection.execute(query)
             self.__odbcConnection.commit()
-        except pyodbc.ProgrammingError as e:
+        except Exception as e:
             print('Programming error DML')
+            print(str(type(e)))
             for i in range(len(e.args)): 
                 print(i)
                 print(str(e.args[i]))
