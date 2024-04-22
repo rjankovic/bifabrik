@@ -315,12 +315,23 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             self.__odbcConnection.execute(query)
             self.__odbcConnection.commit()
         except Exception as e:
-            print('Programming error DML')
-            print(str(type(e)))
-            for i in range(len(e.args)): 
-                print(i)
-                print(str(e.args[i]))
-            raise e
+            if str(e.args[0]) == '42000' and e.args[1].find('the object accessed by the statement has been modified by a DDL statement in another concurrent transaction') > -1:
+                warn = 'Waiting 5 s for blocking DDL to finish'
+                print(warn)
+                self.__logger.warning(e[1])
+                self.__logger.warning(warn)
+                time.sleep(5)
+                self.__odbcConnection.execute(query)
+                self.__odbcConnection.commit()
+            else:
+                raise e
+
+            # print('Programming error DML')
+            # print(str(type(e)))
+            # for i in range(len(e.args)): 
+            #     print(i)
+            #     print(str(e.args[i]))
+            # raise e
         # except Exception as e:
         #         print('DML exception')
         #         print(f'type: {str(type(e))}')
