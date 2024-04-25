@@ -22,7 +22,7 @@ Next, head over to Azure and create an app registration. Also create a secret fo
 
 Save the app's client secret value in Azure Key Vault. (`bifabrik` doesn't support direct input for credentials, just to be on the safe side.)
 
-Make sure that this app has read and write permissions to the Fabric warehouse - either through giving the app the workspace contributor (or higher) role in the workspace or by directly setting permissions to the warehouse.
+Make sure that this app has read and write permissions to the Fabric warehouse - either through giving the app the workspace contributor (or higher) role, or directly by setting permissions to the warehouse.
 
 Note that you probably cannot give a service principal access to your personal workspace (the one called "My workspace" in the UI), so place your warehouse in some other workspace.
 
