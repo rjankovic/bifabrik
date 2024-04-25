@@ -27,7 +27,18 @@ Make sure that this app has read and write permissions to the Fabric warehouse -
 Note that you probably cannot give a service principal access to your personal workspace (the one called "My workspace" in the UI), so place your warehouse in some other workspace.
 
 ### Configure destination warehouse in bifabrik
+Your configuration can look like this
 
+```python
+import bifabrik as bif
+
+bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+bif.config.destinationStorage.destinationWarehouseName = 'DW1'
+bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+
+```
 
 [Learn more about configuration](configuration.md)
 
