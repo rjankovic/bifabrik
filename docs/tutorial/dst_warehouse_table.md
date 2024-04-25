@@ -6,7 +6,7 @@ When loading data to a Fabric Warehouse, `bifabrik` can assist by
  - Implementing incremental load methods, identity columns, etc. similar to the [lakehouse table destination](dst_table.md)
 
 ## Connecting to a Fabric warehouse
-While Fabric notebooks can easily connect to lakehouses, things are not so straightforward when connecting to a Fabric warehouse (a.k.a Synapse Data Warehouse. We cannot attach a warehouse to a notebook and we have to use TSQL to write any data.
+While Fabric notebooks can easily connect to lakehouses, things are not so straightforward when connecting to a Fabric warehouse (a.k.a Synapse Data Warehouse). We cannot attach a warehouse to a notebook and we have to use TSQL to write any data.
 
 `bifabrik` uses [pyodbc](https://pypi.org/project/pyodbc/) with service principal authentication to connect to warehouses. For this to work, we need to set a few things up.
 
