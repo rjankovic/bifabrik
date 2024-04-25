@@ -12,6 +12,9 @@ While Fabric notebooks can easily connect to lakehouses, things are not so strai
 
 ### Allow service principal access
 
+In the Power BI admin portal, under Developer settings, enable "Service principals can access Fabric APIs
+
+![image](https://github.com/rjankovic/bifabrik/assets/2221666/ec77aeda-3076-4a45-9129-ce25890af7bc)
 
 
 ## UNDER CONSTRUCTION
