@@ -16,6 +16,20 @@ In the Power BI admin portal, under Developer settings, enable "Service principa
 
 ![image](https://github.com/rjankovic/bifabrik/assets/2221666/ec77aeda-3076-4a45-9129-ce25890af7bc)
 
+### Register an app and give it permissions
+
+Next, head over to Azure and create an app registration. Also create a secret for its authentication.
+
+Save the app's client secret value in Azure Key Vault. (`bifabrik` doesn't support direct input for credentials, just to be on the safe side.)
+
+Make sure that this app has read and write permissions to the Fabric warehouse Either through giving the app the workspace contributor (or higher) role in the workspace or by directly setting permissions to the warehouse.
+
+Note that you probably cannot give a service principal access to your personal workspace (the one called "My workspace" in the UI), so place your warehouse in some other workspace.
+
+### Configure destination warehouse in bifabrik
+
+
+[Learn more about configuration](configuration.md)
 
 ## UNDER CONSTRUCTION
 
