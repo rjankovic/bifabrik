@@ -1,4 +1,4 @@
-# Table destination
+# Lakehouse table destination
 
 If you just want to do a full load into a lakehouse table, go ahead:
 
@@ -7,6 +7,9 @@ import bifabrik as bif
 
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv') \
   .toTable('Survey2021').run()
+
+# alternatively, you can use
+# .toLakehouseTable('Survey2021').run()
 ```
 
 This writes a parquet (delta) file into the `Tables/` directory in the lakehouse. Fabric then makes a table out of it.
