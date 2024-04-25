@@ -32,15 +32,24 @@ Your configuration can look like this
 ```python
 import bifabrik as bif
 
-bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+# client ID of the app registration
 bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+
+# key vault where you saved the app's client secret
+bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+
+# name of the key vault secret that contains the app's secret
 bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+
+# name of the destination warehouse (you don't say!)
 bif.config.destinationStorage.destinationWarehouseName = 'DW1'
+
+# SQL connection string of the warehouse - can be found in the settings of the warehouse
 bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
 
 ```
 
-[Learn more about configuration](configuration.md)
+You can save this to a file for later use - [learn more about configuration](configuration.md)
 
 ## UNDER CONSTRUCTION
 
