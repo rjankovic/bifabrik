@@ -38,7 +38,7 @@ bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd1234
 # key vault where you saved the app's client secret
 bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
 
-# name of the key vault secret that contains the app's secret
+# name of the key vault secret that contains the app's client secret
 bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
 
 # name of the destination warehouse (you don't say!)
