@@ -453,7 +453,7 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
             return
         
 
-        raise Exception(f'Watermarks are not yet supported for warehouse tables.')
+        #raise Exception(f'Watermarks are not yet supported for warehouse tables.')
     
         ###############
         # pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Snapshot isolation transaction failed in database 'LH_exp' because the object accessed by the statement has been modified by a DDL statement in another concurrent transaction since the start of this transaction.  It is disallowed because the metadata is not versioned. A concurrent update to metadata can lead to inconsistency if mixed with snapshot isolation. (3961) (SQLExecDirectW)")
