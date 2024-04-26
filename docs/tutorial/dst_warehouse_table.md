@@ -105,7 +105,7 @@ To show other configuration options, use `help()` on the table destination:
 tableDestination = bif.fromSql('''
 SELECT * FROM LH_SILVER.publicholidays
 ''') \
-.toWarehouseTable(targetTableName = 'HolidayCounts2024', targetSchemaName = 'pbi') \
+.toWarehouseTable(targetTableName = 'HolidayCounts2024', targetSchemaName = 'pbi')
 
 help(tableDestination)
 ```
