@@ -96,9 +96,19 @@ GROUP BY countryOrRegion
 .identityColumnPattern('{tablename}Id') \
 .run()
 ```
-The result can look like this
+The schema will also be created automatically. The result can look like this:
 ![image](https://github.com/rjankovic/bifabrik/assets/2221666/2cfa0856-dda6-4fd7-b33b-389e9a9788d2)
 
+To show other configuration options, use `help()` on the table destination:
+
+```python
+tableDestination = bif.fromSql('''
+SELECT * FROM LH_SILVER.publicholidays
+''') \
+.toWarehouseTable(targetTableName = 'HolidayCounts2024', targetSchemaName = 'pbi') \
+
+help(tableDestination)
+```
 
 ## UNDER CONSTRUCTION
 
