@@ -59,6 +59,28 @@ So, if you haven't already, set a default lakehouse for your notebook, where the
 
 ![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
 
+## From lakehouse to warehouse
+
+Let's say we have data in a lakehouse and want to aggregate it and save into into a warehouse. Here is one way to do that, using Spark SQL for the aggregation.
+
+```python
+import bifabrik as bif
+
+bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+bif.config.destinationStorage.destinationWarehouseName = 'WH_GOLD'
+bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+
+bif.fromSql('''
+SELECT countryOrRegion `CountryOrRegion`
+,YEAR(date) `Year` 
+,COUNT(*) `PublicHolidayCount`
+FROM LH_SILVER.publicholidays
+GROUP BY countryOrRegion
+,YEAR(date)
+''').toWarehouseTable('HolidayCountsYearly').run()
+```
 
 ## UNDER CONSTRUCTION
 
