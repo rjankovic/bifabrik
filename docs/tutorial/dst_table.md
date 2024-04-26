@@ -184,7 +184,7 @@ Also, some of these [table utilities](util_table.md) can come in handy.
 
 ## Everything all at once
 
-Just for clarity, yes, you can combine multiple settings for the table destination
+An example combining different aspects of the configuration
 
 ```python
 import bifabrik as bif
