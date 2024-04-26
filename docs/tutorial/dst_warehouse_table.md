@@ -139,8 +139,6 @@ bif.fromCsv('CsvFiles/fact_append_*.csv').toWarehouseTable('snapshot1') \
     .run()
 ```
 
-## UNDER CONSTRUCTION
-
 ## Adding new columns
 
 Sometimes, we need to add new columns to an existing table. If the table is a full-load (overwrite), this is no problem - when there is a change in the target schema, the table gets recreated with the new schema.
