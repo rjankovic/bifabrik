@@ -2,7 +2,7 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class DestinationStorageConfiguration(Configuration):
-    """Defines the data destination lakehouse. By default refers to the default lakehouse of the notebook.
+    """Defines the data destination lakehouse or warehouse. By default refers to the default lakehouse of the notebook.
     """
     def __init__(self):
         self._explicitProps = {}
