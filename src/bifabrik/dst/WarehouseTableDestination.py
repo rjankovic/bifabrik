@@ -240,12 +240,26 @@ WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName
             if not match_found:
                 schema_change = True
                 consistent_changes = False
+                broken_column_name = orig_col_name
+                broken_column_type = orig_col_type
+                type_error = 'column deleted'
                 # deleted or renamed column - nogo
                 break
             if consistent_changes == False:
                 break
 
         if consistent_changes == False:
+            # problematic schema changes, but it's overwrite, so just drop and create the table
+            if incrementMethod == 'overwrite':
+                dropTableSql = f'''
+DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
+'''
+                lgr.info('Recreating the table due to schema changes')
+                self.__execute_dml(dropTableSql)
+                self.__execute_dml(createTableSql)
+                self.__append_target()
+                return
+            
             raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type}) - {type_error}')
             
         if schema_change:
