@@ -110,6 +110,32 @@ SELECT * FROM LH_SILVER.publicholidays
 help(tableDestination)
 ```
 
+## Incremental load
+
+Incremental load has the same options as in [lakehouse table destination](dst_table.md), where it is described in details. It bears repeating here briefly, though.
+
+### append
+
+Also using watermark to filter the incoming data
+
+```python
+bif.fromCsv('Files/CsvFiles/fact_append_*.csv').toWarehouseTable('TransactionsTable') \
+    .increment('append').watermarkColumn('Date').run()
+```
+
+### merge
+```python
+bif.fromCsv('Files/CsvFiles/scd_source_*.csv').toWarehouseTable('Dimension1') \
+    .increment('merge').mergeKeyColumns(['Code']).identityColumnPattern('{tablename}ID').run()
+```
+
+### snapshot
+```python
+bif.fromCsv('CsvFiles/fact_append_*.csv').toWarehouseTable('snapshot1') \
+    .increment('snapshot').snapshotKeyColumns(['Date', 'Code']) \
+    .run()
+```
+
 ## UNDER CONSTRUCTION
 
 If you just want to do a full load into a lakehouse table, go ahead:
