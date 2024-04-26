@@ -51,6 +51,15 @@ bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxb
 
 You can save this to a file for later use - [learn more about configuration](configuration.md)
 
+### Set the default lakehouse for the notebook
+
+Why do we need a lakehouse here? To get better performance when loading data into the warehouse. The source data is first written to a temporary delta table in the lakehouse before being inserted to the warehouse using TSQL (see [Ingest data into your Warehouse using Transact-SQL](https://learn.microsoft.com/en-us/fabric/data-warehouse/ingest-data-tsql)).
+
+So, if you haven't already, set a default lakehouse for your notebook, where the temporary tables will be stored.
+
+![default_lakehouse](https://github.com/rjankovic/bifabrik/assets/2221666/60951119-b0ce-40b1-8e7e-ba07b78ac06a)
+
+
 ## UNDER CONSTRUCTION
 
 If you just want to do a full load into a lakehouse table, go ahead:
