@@ -46,7 +46,6 @@ bif.config.destinationStorage.destinationWarehouseName = 'DW1'
 
 # SQL connection string of the warehouse - can be found in the settings of the warehouse
 bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
-
 ```
 
 You can save this to a file for later use - [learn more about configuration](configuration.md)
@@ -81,6 +80,25 @@ GROUP BY countryOrRegion
 ,YEAR(date)
 ''').toWarehouseTable('HolidayCountsYearly').run()
 ```
+
+With this, a `WH_GOLD.dbo.HolidayCountsYearly` table will be created (if it doesn't exist yet) and data filled with the results of the Spark SQL query. By default, this is a full load, overwriting any previous data in the table.
+
+We can also change the destination schema name and add an identity column:
+
+```python
+bif.fromSql('''
+SELECT countryOrRegion `CountryOrRegion`
+,COUNT(*) `PublicHolidayCount`
+FROM LH_SILVER.publicholidays
+WHERE YEAR(date) = 2024
+GROUP BY countryOrRegion
+''').toWarehouseTable(targetTableName = 'HolidayCounts2024', targetSchemaName = 'pbi') \
+.identityColumnPattern('{tablename}Id') \
+.run()
+```
+The result can look like this
+![image](https://github.com/rjankovic/bifabrik/assets/2221666/2cfa0856-dda6-4fd7-b33b-389e9a9788d2)
+
 
 ## UNDER CONSTRUCTION
 
