@@ -1,14 +1,12 @@
 # Semantic model utilities
 
-Semantic models in Fabric are defined [TMSL](https://learn.microsoft.com/en-us/analysis-services/tmsl/tabular-model-scripting-language-tmsl-reference?view=asallproducts-allversions) - basically JSON with commands to create / modify the models.
+Semantic models in Fabric are defined in [TMSL](https://learn.microsoft.com/en-us/analysis-services/tmsl/tabular-model-scripting-language-tmsl-reference?view=asallproducts-allversions) - basically JSON with commands to create / modify the models.
 
-_Now_, have you ever completely broken your semantic model because
- - the refresh started failing with unspecified errors
- - multiple people were making changes at the same time
- - the underlying delta tables changed and the model editor cannot load now
- - you had multiple tabs open editing over your own changes? No? That's only me? ok...
-
-Then you may benefit from this backup / restore feature.
+It's often convenient that semantic models are saved automatically as you make changes in the Fabric web interface, but on the other hand
+ - there is not an easy way back if you make a mistake in your model (if you enable git integration in the workspace, you get the model versioned, but how do you use that model.bim file from git?)
+ - if you want to separate your DEV and PROD environments and set up some sort of CI/CD, how do you deploy from one environment to the other?
+ 
+In other words, you may benefit from this backup / restore feature, scripting your models out to JSON, and deploying them from said JSON.
 
 Internally, this uses functions from the [sempy.fabric](https://learn.microsoft.com/en-us/python/api/semantic-link-sempy/sempy.fabric?view=semantic-link-python) library.
 
