@@ -132,6 +132,7 @@ def fromSparkSql(query: str = None) -> SparkSqlSource:
 
 def fromWarehouseSql(query: str) -> WarehouseSqlSource:
     """Load the result of a TSQL query from a Fabric warehouse to a table
+    Service principal authentication is used to connect to the warehouse. This needs to be configured as below
     
     Examples
     --------

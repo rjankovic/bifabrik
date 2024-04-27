@@ -56,4 +56,6 @@ class WarehouseSqlSource(DataSource):
         df = self._spark.createDataFrame(pd_df)
         
         self._result = df
+
+        self.__odbcConnection.close()
         self._completed = True
