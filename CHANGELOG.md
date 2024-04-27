@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.0 (2024-04-27)
+ - Fabric Warehouse table destination
+ - Fabric Warehouse T-SQL source
+
 ## v0.6.1 (2024-04-11)
  - Fixed breaking bug in Configuration.py file name
 
