@@ -135,10 +135,17 @@ def fromWarehouseSql(query: str) -> WarehouseSqlSource:
     
     Examples
     --------
-    
     >>> import bifabrik as bif
     >>>
-    >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
+    >>> bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+    >>> bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+    >>> bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+    >>> bif.config.sourceStorage.sourceWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+    >>>
+    >>> bif.fromWarehouseSql('''
+    >>> SELECT CountryOrRegion, Year, PublicHolidayCount FROM [DW1].[dbo].[HolidayCountsYearly]
+    >>> ''').toTable('HolidayCountsYearlyFromDW').run()
+    
     """
     ds = WarehouseSqlSource(__prepPipeline(), query)
     return ds

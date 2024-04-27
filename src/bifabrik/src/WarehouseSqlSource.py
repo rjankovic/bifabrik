@@ -7,13 +7,21 @@ import notebookutils.mssparkutils.fs
 import notebookutils.mssparkutils.credentials
 
 class WarehouseSqlSource(DataSource):
-    """SQL (SparkSQL) data source - executes a SparkSQL query
+    """TSQL data source loading data from a Fabric data warehouse
+    Service principal authentication is used to connect to the warehouse. This needs to be configured as below
 
     Examples
     --------
     > import bifabrik as bif
     >
-    > bif.fromSql.query('SELECT OrderId, CustomerId  FROM LH1.FactOrderLine WHERE ProductId = 791057').toTable('TransformedOrders1').run()
+    > bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+    > bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+    > bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+    > bif.config.sourceStorage.sourceWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+    >
+    > bif.fromWarehouseSql('''
+    > SELECT CountryOrRegion, Year, PublicHolidayCount FROM [DW1].[dbo].[HolidayCountsYearly]
+    > ''').toTable('HolidayCountsYearlyFromDW').run()
     """
 
     def __init__(self, parentPipeline, query):
