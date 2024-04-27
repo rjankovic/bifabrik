@@ -1,4 +1,4 @@
-# Warehouse T-SQL data source
+# Fabric warehouse T-SQL data source
 
 Usually, you will be loading data from a lakehouse to a warehouse, as in from silver to gold layer in your solution. For that, you can use the [warehouse destination](dst_warehouse_table.md).
 
