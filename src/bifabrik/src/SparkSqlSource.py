@@ -1,7 +1,7 @@
 from bifabrik.src.DataSource import DataSource
 from pyspark.sql.dataframe import DataFrame
 
-class SqlSource(DataSource):
+class SparkSqlSource(DataSource):
     """SQL (SparkSQL) data source - executes a SparkSQL query
 
     Examples
@@ -10,7 +10,7 @@ class SqlSource(DataSource):
     >
     > bif.fromSql.query('SELECT OrderId, CustomerId  FROM LH1.FactOrderLine WHERE ProductId = 791057').toTable('TransformedOrders1').run()
     """
-
+    
     def __init__(self, parentPipeline):
         super().__init__(parentPipeline)
         self._query = ""

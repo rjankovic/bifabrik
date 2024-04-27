@@ -26,7 +26,26 @@ class DataTransformation(Task):
         return dst
     
     def toWarehouseTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> WarehouseTableDestination:
-        """Sets the warehouse destination table name
+        """Sets the warehouse destination table name. The warehouse authentication needs to be configured - see https://rjankovic.github.io/bifabrik/tutorial/dst_warehouse_table.html
+
+        Examples
+        --------
+        > import bifabrik as bif
+        >
+        > bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+        > bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+        > bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+        > bif.config.destinationStorage.destinationWarehouseName = 'WH_GOLD'
+        > bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+        >
+        > bif.fromSql('''
+        > SELECT countryOrRegion `CountryOrRegion`
+        > ,YEAR(date) `Year` 
+        > ,COUNT(*) `PublicHolidayCount`
+        > FROM LH_SILVER.publicholidays
+        > GROUP BY countryOrRegion
+        > ,YEAR(date)
+        > ''').toWarehouseTable('HolidayCountsYearly').run()
         """
         dst = WarehouseTableDestination(self._pipeline, targetTableName, targetSchemaName)
         return dst

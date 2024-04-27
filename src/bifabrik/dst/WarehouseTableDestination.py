@@ -18,13 +18,27 @@ import pandas as pd
 
 # reuse the table destination configuration
 class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
-    """Saves data to a warehouse table.
+    """Saves data to a warehouse table. Uses pyodbc with service principal authentication, which needs to be configured.
+    See https://rjankovic.github.io/bifabrik/tutorial/dst_warehouse_table.html
 
     Examples
     --------
     > import bifabrik as bif
     >
-    > bif.fromSql.query('SELECT * FROM SomeTable').toTable('DestinationTable1').run()
+    > bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+    > bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+    > bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+    > bif.config.destinationStorage.destinationWarehouseName = 'WH_GOLD'
+    > bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+    >
+    > bif.fromSql('''
+    > SELECT countryOrRegion `CountryOrRegion`
+    > ,YEAR(date) `Year` 
+    > ,COUNT(*) `PublicHolidayCount`
+    > FROM LH_SILVER.publicholidays
+    > GROUP BY countryOrRegion
+    > ,YEAR(date)
+    > ''').toWarehouseTable('HolidayCountsYearly').run()
     """
     def __init__(self, pipeline: Pipeline, targetTableName: str, targetSchemaName: str = 'dbo'):
         super().__init__(pipeline)
@@ -44,7 +58,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__watermarkColumn = None
 
     def __str__(self):
-        return f'Table destination: {self.__targetTableName}'
+        return f'Warehouse table destination: [{self.__targetSchemaName}].[{self.__targetTableName}]'
     
     def execute(self, input: DataFrame) -> None:
         lgr = lg.getLogger()
@@ -344,18 +358,6 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
             else:
                 raise e
 
-            # print('Programming error DML')
-            # print(str(type(e)))
-            # for i in range(len(e.args)): 
-            #     print(i)
-            #     print(str(e.args[i]))
-            # raise e
-        # except Exception as e:
-        #         print('DML exception')
-        #         print(f'type: {str(type(e))}')
-        #         print(f'str: {str(e)}')
-        #         raise e
-    
     def __list_diff(self, first_list, second_list):
         diff = [item for item in first_list if item not in second_list]
         return diff
@@ -471,9 +473,9 @@ INNER JOIN [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src ON
             return
         
 
-        #raise Exception(f'Watermarks are not yet supported for warehouse tables.')
-    
         ###############
+        # DDL conflict would occur when using watermark before introducing the 5s retry in __execute_dml
+        #
         # pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Snapshot isolation transaction failed in database 'LH_exp' because the object accessed by the statement has been modified by a DDL statement in another concurrent transaction since the start of this transaction.  It is disallowed because the metadata is not versioned. A concurrent update to metadata can lead to inconsistency if mixed with snapshot isolation. (3961) (SQLExecDirectW)")
         #
         #     361         insert_query = self.__create_insert_query()

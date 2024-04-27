@@ -24,7 +24,8 @@ from bifabrik.src.CsvSource import CsvSource
 from bifabrik.src.ExcelSource import ExcelSource
 from bifabrik.src.SharePointListSource import SharePointListSource
 from bifabrik.src.JsonSource import JsonSource
-from bifabrik.src.SqlSource import SqlSource
+from bifabrik.src.SparkSqlSource import SparkSqlSource
+from bifabrik.src.WarehouseSqlSource import WarehouseSqlSource
 from bifabrik.src.SparkDfSource import SparkDfSource
 from bifabrik.src.PandasDfSource import PandasDfSource
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
@@ -103,8 +104,8 @@ def fromExcel(path: str = None) -> ExcelSource:
     return ds
 
 
-def fromSql(query: str = None) -> SqlSource:
-    """Load the result of a SQL query to a table
+def fromSql(query: str = None) -> SparkSqlSource:
+    """Load the result of a SparkSQL query to a table
     
     Examples
     --------
@@ -113,8 +114,33 @@ def fromSql(query: str = None) -> SqlSource:
     >>>
     >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
     """
-    ds = SqlSource(__prepPipeline())
+    return fromSparkSql(query)
+
+def fromSparkSql(query: str = None) -> SparkSqlSource:
+    """Load the result of a SparkSQL query to a table
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
+    """
+    ds = SparkSqlSource(__prepPipeline())
     ds.query(query)
+    return ds
+
+def fromWarehouseSql(query: str) -> WarehouseSqlSource:
+    """Load the result of a TSQL query from a Fabric warehouse to a table
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> bif.fromSql('SELECT A, B, C FROM Table1 WHERE D = 1').toTable('Table2').run()
+    """
+    ds = WarehouseSqlSource(__prepPipeline(), query)
     return ds
 
 def fromSparkDf(df: SparkDf) -> SparkDfSource:
