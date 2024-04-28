@@ -22,4 +22,40 @@ SELECT CountryOrRegion, Year, PublicHolidayCount FROM [DW1].[dbo].[HolidayCounts
 ''').toTable('HolidayCountsYearlyFromDW').run()
 ```
 
+## Warehouse to warehouse transformations
+
+Besides datasource, there is also a [Fabric warehouse table destination](dst_warehouse_table.md). You could even combine these two and have a warehouse -> warehouse transformation orchestrated from a python notebook:
+
+```python
+import bifabrik as bif
+
+bif.config.security.keyVaultUrl = 'https://kv-contoso.vault.azure.net/'
+bif.config.security.servicePrincipalClientId = '56712345-1234-7890-abcd-abcd12344d14'
+bif.config.security.servicePrincipalClientSecretKVSecretName = 'contoso-clientSecret'
+
+# can be the same connections string for source and destination;
+# would be different if your warehouses were in different workspaces
+bif.config.sourceStorage.sourceWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+bif.config.destinationStorage.destinationWarehouseConnectionString = 'dxtxxxxxxbue.datawarehouse.fabric.microsoft.com'
+
+# destination databse name
+bif.config.destinationStorage.destinationWarehouseName = 'WH_GOLD'
+
+bif.fromWarehouseSql('''
+SELECT 
+    Industry_code_NZSIOC 
+    ,Variable_code
+    ,Variable_name
+    ,AVG(Value) MaxValue
+FROM WH_SILVER.dbo.AnnualSurvey
+WHERE [Year] = 2020
+GROUP BY Industry_code_NZSIOC 
+    ,Variable_code
+    ,Variable_name
+''').toWarehouseTable('AverageSurveyValues') \
+.identityColumnPattern('{tablename}Id') \
+.run()
+```
+
+
 [Back](../index.md)
