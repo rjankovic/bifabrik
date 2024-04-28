@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.7.1 (2024-04-28)
+ - Fixed bug in Warehouse table destination type mapping
+
 ## v0.7.0 (2024-04-27)
  - Fabric Warehouse table destination
  - Fabric Warehouse T-SQL source
