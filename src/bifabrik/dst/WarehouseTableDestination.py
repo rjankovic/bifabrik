@@ -88,6 +88,18 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         odbcDatabase = mergedConfig.destinationStorage.destinationWarehouseName
         odbcTimeout = mergedConfig.destinationStorage.destinationWarehouseConnectionTimeout
         principalClientId = mergedConfig.security.servicePrincipalClientId
+        
+        if odbcServer is None:
+            raise Exception('Cannot connect to warehouse - destinationStorage.destinationWarehouseConnectionString not configured (copy this from the properties of your warehouse)')
+        if odbcDatabase is None:
+            raise Exception('Cannot connect to warehouse - destinationStorage.destinationWarehouseName not configured')
+        if principalClientId is None:
+            raise Exception('Cannot connect to warehouse - security.servicePrincipalClientId not configured (service principal authentication is used)')
+        if mergedConfig.security.keyVaultUrl is None:
+            raise Exception('Cannot connect to warehouse - security.keyVaultUrl not configured (service principal authentication is used and the client secret needs to be stored in key vault)')
+        if mergedConfig.security.servicePrincipalClientSecretKVSecretName is None:
+            raise Exception('Cannot connect to warehouse - security.servicePrincipalClientSecretKVSecretName not configured (service principal authentication is used and the client secret needs to be stored in key vault)')
+        
         principalClientSecret = notebookutils.mssparkutils.credentials.getSecret(mergedConfig.security.keyVaultUrl, mergedConfig.security.servicePrincipalClientSecretKVSecretName)
         constr = f"driver=ODBC Driver 18 for SQL Server;server={odbcServer};database={odbcDatabase};UID={principalClientId};PWD={principalClientSecret};Authentication=ActiveDirectoryServicePrincipal;Encrypt=yes;Timeout={odbcTimeout};"
         self.__odbcConnection = pyodbc.connect(constr)
@@ -162,9 +174,9 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
             elif s_type == 'tinyint' or s_type == 'byte' or s_type == 'smallint' or s_type == 'short':
                 col_type = 'SMALLINT'
             elif s_type == 'double':
-                col_type = 'DOUBLE'
+                col_type = 'FLOAT'
             elif s_type == 'float' or s_type == 'real':
-                col_type = 'REAL'
+                col_type = 'FLOAT'
             elif s_type == 'date' or s_type == 'timestamp':
                 col_type = 'DATETIME2(6)'
             elif s_type.startswith('binary') or s_type.startswith('byte'):
@@ -195,6 +207,8 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
             self.__append_target()
+            self.__odbcConnection.close()
+            self._completed = True
             return
 
         # sync schema if table exists
@@ -272,6 +286,8 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
                 self.__execute_dml(dropTableSql)
                 self.__execute_dml(createTableSql)
                 self.__append_target()
+                self.__odbcConnection.close()
+                self._completed = True
                 return
             
             raise Exception(f'Cannot resolve schema chnages in table [{self.__targetSchemaName}].[{self.__targetTableName}], column {broken_column_name}({broken_column_type}) - {type_error}')
@@ -313,8 +329,6 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
             # DROP temp_old table
             dropQuery = f'DROP TABLE [{self.__targetSchemaName}].[{whTempTableName}]'
             self.__execute_dml(dropQuery)
-            pass
-        
             
         # handle increments as in a lakehouse
         if incrementMethod == 'overwrite':
@@ -349,6 +363,14 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
         except Exception as e:
             if str(e.args[0]) == '42000' and e.args[1].find('the object accessed by the statement has been modified by a DDL statement in another concurrent transaction') > -1:
                 warn = 'Waiting 5 s for blocking DDL to finish'
+                print(warn)
+                self.__logger.warning(e.args[1])
+                self.__logger.warning(warn)
+                time.sleep(5)
+                self.__odbcConnection.execute(query)
+                self.__odbcConnection.commit()
+            elif str(e.args[0]) == '42S02' and e.args[1].find('Invalid object name') > -1 and e.args[1].find('temp') > -1:
+                warn = 'Waiting 5 s for the lakehouse temp table to come online'
                 print(warn)
                 self.__logger.warning(e.args[1])
                 self.__logger.warning(warn)

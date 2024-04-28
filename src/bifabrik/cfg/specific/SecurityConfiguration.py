@@ -10,6 +10,8 @@ class SecurityConfiguration(Configuration):
         self.__keyVaultUrl = None
         self.__loginKVSecretName = None
         self.__passwordKVSecretName = None
+        self.__servicePrincipalClientId = None
+        self.__servicePrincipalClientSecretKVSecretName = None
 
     @CfgProperty
     def keyVaultUrl(self) -> str:

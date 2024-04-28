@@ -46,6 +46,18 @@ class WarehouseSqlSource(DataSource):
         odbcDatabase = config.sourceStorage.sourceWarehouseName
         odbcTimeout = config.sourceStorage.sourceWarehouseConnectionTimeout
         principalClientId = config.security.servicePrincipalClientId
+
+        if odbcServer is None:
+            raise Exception('Cannot connect to warehouse - sourceStorage.sourceWarehouseConnectionString not configured (copy this from the properties of your warehouse)')
+        if odbcDatabase is None:
+            raise Exception('Cannot connect to warehouse - sourceStorage.sourceWarehouseName not configured')
+        if principalClientId is None:
+            raise Exception('Cannot connect to warehouse - security.servicePrincipalClientId not configured (service principal authentication is used)')
+        if config.security.keyVaultUrl is None:
+            raise Exception('Cannot connect to warehouse - security.keyVaultUrl not configured (service principal authentication is used and the client secret needs to be stored in key vault)')
+        if config.security.servicePrincipalClientSecretKVSecretName is None:
+            raise Exception('Cannot connect to warehouse - security.servicePrincipalClientSecretKVSecretName not configured (service principal authentication is used and the client secret needs to be stored in key vault)')
+        
         principalClientSecret = notebookutils.mssparkutils.credentials.getSecret(config.security.keyVaultUrl, config.security.servicePrincipalClientSecretKVSecretName)
         constr = f"driver=ODBC Driver 18 for SQL Server;server={odbcServer};database={odbcDatabase};UID={principalClientId};PWD={principalClientSecret};Authentication=ActiveDirectoryServicePrincipal;Encrypt=yes;Timeout={odbcTimeout};"
         if odbcDatabase is None:
