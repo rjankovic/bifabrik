@@ -46,7 +46,7 @@ SELECT
     Industry_code_NZSIOC 
     ,Variable_code
     ,Variable_name
-    ,AVG(Value) MaxValue
+    ,AVG(Value) AvgValue
 FROM WH_SILVER.dbo.AnnualSurvey
 WHERE [Year] = 2020
 GROUP BY Industry_code_NZSIOC 
