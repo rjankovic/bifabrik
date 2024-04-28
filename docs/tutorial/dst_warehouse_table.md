@@ -179,6 +179,8 @@ If configured, this will be added at the end of the table.
 bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-2021.csv').toWarehouseTable('AnnualSurvey') \
     .insertDateColumn('InsertTimestamp').identityColumnPattern('{tablename}ID').run()
 ```
+## Warehouse to warehouse transformations
 
+Besides this destination, there is also a [Fabric warehouse T-SQL data source](src_warehouse_sql.md). You can use [this](src_warehouse_sql.md) to run warehouse to warehouse transformations from notebooks.
 
 [Back](../index.md)
