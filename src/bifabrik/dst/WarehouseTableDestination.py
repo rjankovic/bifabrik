@@ -207,6 +207,8 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
             self.__append_target()
+            drop_temp_sql = f'DROP TABLE IF EXISTS `{self.__destinationLakehouse}`.`{self.__tempTableName}`'
+            self._spark.sql(drop_temp_sql)
             self.__odbcConnection.close()
             self._completed = True
             return
