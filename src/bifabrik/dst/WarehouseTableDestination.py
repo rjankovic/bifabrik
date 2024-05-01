@@ -377,8 +377,20 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
                 self.__logger.warning(e.args[1])
                 self.__logger.warning(warn)
                 time.sleep(5)
-                self.__odbcConnection.execute(query)
-                self.__odbcConnection.commit()
+                try:
+                    self.__odbcConnection.execute(query)
+                    self.__odbcConnection.commit()
+                except Exception as ee:
+                    if str(ee.args[0]) == '42000' and ee.args[1].find('the object accessed by the statement has been modified by a DDL statement in another concurrent transaction') > -1:
+                        warn = 'Waiting 5 s for blocking DDL to finish'
+                        print(warn)
+                        self.__logger.warning(ee.args[1])
+                        self.__logger.warning(warn)
+                        time.sleep(5)
+                        self.__odbcConnection.execute(query)
+                        self.__odbcConnection.commit()
+                    else:
+                        raise ee
             else:
                 raise e
 
@@ -451,14 +463,16 @@ src AS ({src_query}
             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
         
         join_condition = " AND ".join([f"src.[{item}] = tgt.[{item}]" for item in key_columns])
-        update_list = ",\n".join([f"tgt.[{item}] = src.[{item}]" for item in non_key_columns])
-        update_query = f'''
+        
+        if len(non_key_columns) > 0:
+            update_list = ",\n".join([f"tgt.[{item}] = src.[{item}]" for item in non_key_columns])
+            update_query = f'''
 UPDATE tgt SET
 {update_list}
 FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}] src
 INNER JOIN [{self.__targetSchemaName}].[{self.__targetTableName}] tgt ON {join_condition}
 '''
-        self.__execute_dml(update_query)
+            self.__execute_dml(update_query)
 
         insert_src_query = f'''
 SELECT src.*
