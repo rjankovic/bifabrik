@@ -11,7 +11,7 @@ class ConfigContainer:
     def setterFactory(self, attrName):
         def directSetter(val):
             #print(f'DirectSetter: {str(self)} - set {attrName} to {val}')
-            self.option(attrName, val)
+            self.option(attrName, val, True)
             return self
         return directSetter
     
@@ -59,17 +59,17 @@ class ConfigContainer:
                         self.__doc__ = (self.__doc__ or "") + f'\n{cfgpName}: {cfgAttribute.__doc__}\n'
 
        
-    def option(self, name, value = None):
+    def option(self, name, value = None, force_set = False):
         if not (name in self.__propDict):
             raise Exception(f'Configuration key not found: {name}.')
-        if value is None:
+        if value is None and not force_set:
             val = getattr(self.__propDict[name][0], name)
             return val
         #setattr(self.__propDict[name], name, value)
         for prop in self.__propDict[name]:
             setattr(prop, name, value)
         return self
-
+    
     def mergeToCopy(self, other):
         """Meges another configuration into this one; the 'other' config container takes priority.
         Returns a new configuration without affecting the original"""
