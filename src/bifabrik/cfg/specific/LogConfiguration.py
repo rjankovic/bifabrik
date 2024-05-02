@@ -3,19 +3,6 @@ from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class LogConfiguration(Configuration):
     """Logging configuration
-
-    Examples
-    --------
-    > import bifabrik as bif
-    > from bifabrik.cfg.specific.LogConfiguration import LogConfiguration
-    > from bifabrik.utils import log
-    > 
-    > cfg = LogConfiguration()
-    > cfg.logPath = '/log.csv'
-    > cfg.errorLogPath = '/error_log.csv'
-    > cfg.loggingLevel = 'DEBUG'
-    > 
-    > log.configureLogger(cfg)
     """
     def __init__(self):
         self._explicitProps = {}

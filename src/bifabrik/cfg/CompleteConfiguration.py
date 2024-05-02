@@ -11,6 +11,7 @@ from bifabrik.cfg.specific.DestinationStorageConfiguration import DestinationSto
 from bifabrik.cfg.specific.MetadataStorageConfiguration import MetadataStorageConfiguration
 from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
 from bifabrik.cfg.specific.SecurityConfiguration import SecurityConfiguration
+from bifabrik.cfg.specific.ValidationConfiguration import ValidationConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -23,6 +24,8 @@ class CompleteConfiguration(ConfigContainer):
     .option(name, value = None) gets / sets a named config property as in
     .option('delimiter', ';') #setter
     .option('delimiter') #getter
+
+    See https://rjankovic.github.io/bifabrik/tutorial/configuration.html for more examples
     """
     def __init__(self):
         self.__log = LogConfiguration()
@@ -35,6 +38,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__metadataStorage = MetadataStorageConfiguration()
         self.__destinationTable = TableConfiguration()
         self.__security = SecurityConfiguration()
+        self.__validationConfiguration = ValidationConfiguration()
         super().__init__()
         
 
@@ -86,6 +90,11 @@ class CompleteConfiguration(ConfigContainer):
     @property
     def security(self) -> SecurityConfiguration:
         return self.__security
+    
+    @property
+    def validationConfiguration(self) -> ValidationConfiguration:
+        """Data validation configuration"""
+        return self.__validationConfiguration
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""

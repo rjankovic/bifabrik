@@ -19,16 +19,27 @@ class ConfigContainer:
         rootAttribs = dir(self)
         noUnderscoreRootAttrNames = list(filter(lambda x: not x.startswith("_"), rootAttribs))
         
+        
+        firstConfigAttr = True
+        for rootAttrName in noUnderscoreRootAttrNames:
+            rootAttr = getattr(self, rootAttrName)
+            attrType = type(rootAttr)
+            if attrType.__bases__[0].__name__ == 'Configuration':
+                if firstConfigAttr:
+                    self.__doc__ = (self.__doc__ or "") + \
+f'\nConfiguration parts (properties of this container):\n' + \
+'===================================================\n\t'
+                firstConfigAttr = False
+                self.__doc__ = self.__doc__ + f'{rootAttrName}:\t{rootAttr.__doc__}'
+
         # for adding config options from the partial configs
-        if self.__doc__ is None:
-            self.__doc__ = 'Configuration options:'
-        else:
-            self.__doc__ = self.__doc__ + '\n\nConfiguration options:'
+        self.__doc__ = self.__doc__ + '\n\nConfiguration options:\n' + '=======================\n'
 
         for rootAttrName in noUnderscoreRootAttrNames:
             rootAttr = getattr(self, rootAttrName)
             attrType = type(rootAttr)
             if attrType.__bases__[0].__name__ == 'Configuration':
+
                 cfgPropNames = dir(attrType)
                 for cfgpName in cfgPropNames:
                     cfgAttribute = getattr(attrType, cfgpName)

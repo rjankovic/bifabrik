@@ -2,8 +2,7 @@ from bifabrik.cfg.engine.Configuration import Configuration
 from bifabrik.cfg.engine.Configuration import CfgProperty
 
 class MetadataStorageConfiguration(Configuration):
-    """Defines the data metadata lakehouse. By default refers to the default lakehouse of the notebook.
-    This is used for logs and metadata tables
+    """Defines the data metadata lakehouse. By default refers to the default lakehouse of the notebook. This is used for logs and metadata tables
     """
     def __init__(self):
         self._explicitProps = {}
