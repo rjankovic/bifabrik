@@ -4,11 +4,11 @@ from bifabrik.cfg.specific.ValidationConfiguration import ValidationConfiguratio
 class ValidationTransformationConfiguration(ConfigContainer):
 
     def __init__(self):
-        self.__validationConfiguration = ValidationConfiguration()
+        self.__validation = ValidationConfiguration()
         super().__init__()
         
 
     @property
-    def validationConfiguration(self) -> ValidationConfiguration:
+    def validation(self) -> ValidationConfiguration:
         """Data validation configuration"""
-        return self.__validationConfiguration
+        return self.__validation

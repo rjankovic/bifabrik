@@ -7,6 +7,7 @@ from bifabrik.dst.PandasDfDestination import PandasDfDestination
 from bifabrik.tsf.DataTransformation import DataTransformation
 from bifabrik.tsf import SparkDfTransformation
 from bifabrik.tsf import PandasDfTransformation
+from bifabrik.tsf.ValidationTransformation import ValidationTransformation
 from bifabrik.base.Task import Task
 
 class DataSource(Task):
@@ -81,4 +82,10 @@ class DataSource(Task):
         """Applies the givet function to transform the data as a Pandas DF
         """
         tsf = PandasDfTransformation.PandasDfTransformation(self._pipeline, func)
+        return tsf
+    
+    def validate(self, testName = '') -> ValidationTransformation:
+        """Evaluates a data quality test, logs / fails on error
+        """
+        tsf = ValidationTransformation(self._pipeline, testName)
         return tsf

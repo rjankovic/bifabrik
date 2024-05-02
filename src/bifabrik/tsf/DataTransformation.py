@@ -3,6 +3,7 @@ from bifabrik.dst.LakehouseTableDestination import LakehouseTableDestination
 from bifabrik.dst.WarehouseTableDestination import WarehouseTableDestination
 from bifabrik.dst.SparkDfDestination import SparkDfDestination
 from bifabrik.dst.PandasDfDestination import PandasDfDestination
+from bifabrik.tsf.ValidationTransformation import ValidationTransformation
 from bifabrik.base.Task import Task
 #from typing import Any, Self
 
@@ -74,4 +75,10 @@ class DataTransformation(Task):
         """
         from .PandasDfTransformation import PandasDfTransformation
         tsf = PandasDfTransformation(self._pipeline, func)
+        return tsf
+        
+    def validate(self, testName = '') -> ValidationTransformation:
+        """Evaluates a data quality test, logs / fails on error
+        """
+        tsf = ValidationTransformation(self._pipeline, testName)
         return tsf

@@ -38,7 +38,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__metadataStorage = MetadataStorageConfiguration()
         self.__destinationTable = TableConfiguration()
         self.__security = SecurityConfiguration()
-        self.__validationConfiguration = ValidationConfiguration()
+        self.__validation = ValidationConfiguration()
         super().__init__()
         
 
@@ -92,9 +92,9 @@ class CompleteConfiguration(ConfigContainer):
         return self.__security
     
     @property
-    def validationConfiguration(self) -> ValidationConfiguration:
+    def validation(self) -> ValidationConfiguration:
         """Data validation configuration"""
-        return self.__validationConfiguration
+        return self.__validation
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""

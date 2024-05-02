@@ -10,7 +10,7 @@ class ValidationConfiguration(Configuration):
         self.__messageColumnName = 'ValidationMessage'
         self.__errorResultValue = 'Error'
         self.__warningResultValue = 'Warning'
-        self.__okResultValue = 'OK'
+        # self.__okResultValue = 'OK'
         # fail / log / None
         self.__onError = 'fail'
         self.__onWarning = 'log'
@@ -58,16 +58,16 @@ class ValidationConfiguration(Configuration):
     def warningResultValue(self, val):
         self.__warningResultValue = val
 
-    @CfgProperty
-    def okResultValue(self) -> str:
-        """If the configured {resultColumnName} in the input data has the {okResultValue}, the row will be considered a OK.
-        All values other than {errorResultValue} or {warningResultValue} are also considered OK.
-        default 'OK'
-        """
-        return self.__okResultValue
-    @okResultValue.setter(key='okResultValue')
-    def okResultValue(self, val):
-        self.__okResultValue = val
+    # @CfgProperty
+    # def okResultValue(self) -> str:
+    #     """If the configured {resultColumnName} in the input data has the {okResultValue}, the row will be considered a OK.
+    #     All values other than {errorResultValue} or {warningResultValue} are also considered OK.
+    #     default 'OK'
+    #     """
+    #     return self.__okResultValue
+    # @okResultValue.setter(key='okResultValue')
+    # def okResultValue(self, val):
+    #     self.__okResultValue = val
 
     @CfgProperty
     def onError(self) -> str:
