@@ -82,7 +82,6 @@ If you want to persist your configuration beyond the PySpark session, you can sa
 > 
 > bifabrik configuration aims to cover many aspects of the lakehouse so that you can define your conventions once, use it repeatedly, and override when neccessary.
 
-See the [github page](https://rjankovic.github.io/bifabrik/tutorial/configuration.html) for more details on this.
 
 ### Spark SQL transformations
 Enough with the files! Let's make a simple Spark SQL transformation, writing data to another SQL table - a straightforward full load:
