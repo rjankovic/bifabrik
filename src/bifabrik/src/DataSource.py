@@ -7,7 +7,7 @@ from bifabrik.dst.PandasDfDestination import PandasDfDestination
 from bifabrik.tsf.DataTransformation import DataTransformation
 from bifabrik.tsf import SparkDfTransformation
 from bifabrik.tsf import PandasDfTransformation
-from bifabrik.tsf.ValidationTransformation import ValidationTransformation
+from bifabrik.tsf import ValidationTransformation
 from bifabrik.base.Task import Task
 
 class DataSource(Task):
@@ -84,8 +84,8 @@ class DataSource(Task):
         tsf = PandasDfTransformation.PandasDfTransformation(self._pipeline, func)
         return tsf
     
-    def validate(self, testName = '') -> ValidationTransformation:
+    def validate(self, testName = '') -> ValidationTransformation.ValidationTransformation:
         """Evaluates a data quality test, logs / fails on error
         """
-        tsf = ValidationTransformation(self._pipeline, testName)
+        tsf = ValidationTransformation.ValidationTransformation(self._pipeline, testName)
         return tsf
