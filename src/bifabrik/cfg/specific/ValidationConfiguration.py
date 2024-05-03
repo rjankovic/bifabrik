@@ -99,14 +99,14 @@ class ValidationConfiguration(Configuration):
     def onWarning(self, val):
         self.__onWarning = val
 
-    # @CfgProperty
-    # def testName(self) -> str:
-    #     """Name of the current validation test - if specified, will be included in logs / exceptions
-    #     """
-    #     return self.__testName
-    # @testName.setter(key='testName')
-    # def testName(self, val):
-    #     self.__testName = val
+    @CfgProperty
+    def testName(self) -> str:
+        """Name of the current validation test - if specified, will be included in logs / exceptions
+        """
+        return self.__testName
+    @testName.setter(key='testName')
+    def testName(self, val):
+        self.__testName = val
 
     @CfgProperty
     def maxErrors(self) -> int:

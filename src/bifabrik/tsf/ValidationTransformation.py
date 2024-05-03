@@ -24,18 +24,20 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
 
     def __init__(self, parentPipeline, testName = 'Unnamed'):
         super().__init__(parentPipeline)
-        self.__testName = testName
+        ValidationTransformationConfiguration.__init__(self)
+        self.validation.testName = testName
     
     def __str__(self):
-        return f'Data validation \`{self.__testName}\''
+        return f'Data validation \`{self.validation.testName}\''
     
     def execute(self, input) -> SparkDf:
         lgr = lg.getLogger()
         self.__logger = lgr
         self._error = None
         
-        config = self._pipeline.configuration.mergeToCopy(self).validation
-        
+        mergedConfig = self._pipeline.configuration.mergeToCopy(self)
+        config = mergedConfig.validation
+
         resultColumnName = config.resultColumnName
         messageColumnName = config.messageColumnName
         errorResultValue = config.errorResultValue
@@ -55,8 +57,9 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         if maxWarnings < 1:
             raise Exception('Invalid configuration - maxWarnings has to be a positive integer')
 
-        if self.__testName == None:
-            self.__testName = ''
+        if self.validation.testName == None:
+            self.validation.testName = ''
+        self.__testName = self.validation.testName
 
         # resultColumnName = 'ValidationResult'
         # messageColumnName = 'ValidationMessage'
@@ -67,9 +70,9 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         # onWarning = 'log'
         # testName = None
         
-        if not input.columns.contains(resultColumnName):
+        if not (resultColumnName in input.columns):
             raise Exception(f'The input dataframe does not contain the result column `{resultColumnName}`')
-        if not input.columns.contains(messageColumnName):
+        if not (messageColumnName in input.columns):
             raise Exception(f'The input dataframe does not contain the result column `{messageColumnName}`')
         
         errors = input.filter(col(resultColumnName) == errorResultValue).collect()
