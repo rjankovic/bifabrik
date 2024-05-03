@@ -28,7 +28,7 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         self.validation.testName = testName
     
     def __str__(self):
-        return f'Data validation \`{self.validation.testName}\''
+        return f'Data validation \'{self.validation.testName}\''
     
     def execute(self, input) -> SparkDf:
         lgr = lg.getLogger()
@@ -86,14 +86,19 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
                 remaining = remaining - 1
                 if remaining < 1:
                     break
-                lgr.error(f'Test {self.__testName}: {error[self.__messageColumnName]}; {self.rowToStr(error)}')
+                err = f'Test {self.__testName}: {error[self.__messageColumnName]}; {self.rowToStr(error)}'
+                lgr.error(err)
+                print(f'Error: {err}')
+        
         if onWarning in ['fail', 'log']:
             remaining = maxWarnings
             for warning in warnings:
                 remaining = remaining - 1
                 if remaining < 1:
                     break
-                lgr.warning(f'Test {self.__testName}: {warning[self.__messageColumnName]}; {self.rowToStr(warning)}')
+                wrn = f'Test {self.__testName}: {warning[self.__messageColumnName]}; {self.rowToStr(warning)}'
+                lgr.warning(wrn)
+                print(f'Warning: {wrn}')
 
         # fail if need be
         if onError == 'fail' and len(errors) > 0:
@@ -103,7 +108,8 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         if onWarning == 'fail' and len(warnings) > 0:
             warning = warnings[0]
             raise Exception(f'Test {self.__testName} failed: {warning[self.__messageColumnName]}; {self.rowToStr(warning)}')
-
+        
+        self._result = input
         self._completed = True
         return self._result
     
