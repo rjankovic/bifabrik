@@ -52,3 +52,9 @@ class Task:
         self._result = None
         self._error = None
         self._completed = False
+
+    def run(self) -> any:
+        """Run the pipeline.
+        Returns the result of the last task, if any.
+        """
+        return self._pipeline.execute()

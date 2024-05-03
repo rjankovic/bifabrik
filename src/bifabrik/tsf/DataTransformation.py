@@ -82,3 +82,9 @@ class DataTransformation(Task):
         from .ValidationTransformation import ValidationTransformation
         tsf = ValidationTransformation(self._pipeline, testName)
         return tsf
+    
+    # def run(self) -> any:
+    #     """Run the pipeline.
+    #     Returns the result of the last task, if any.
+    #     """
+    #     return self._pipeline.execute()

@@ -24,7 +24,7 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
 
     def __init__(self, parentPipeline, testName = 'Unnamed'):
         super().__init__(parentPipeline)
-        self.testName(testName)
+        self.__testName = testName
     
     def __str__(self):
         return f'Data validation \`{self.__testName}\''
@@ -34,8 +34,8 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         self.__logger = lgr
         self._error = None
         
-        config = self._pipeline.configuration.validation
-
+        config = self._pipeline.configuration.mergeToCopy(self).validation
+        
         resultColumnName = config.resultColumnName
         messageColumnName = config.messageColumnName
         errorResultValue = config.errorResultValue
@@ -44,9 +44,16 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         # fail / log / None
         onError = config.onError.lower()
         onWarning = config.onWarning.lower()
-        self.__testName = config.testName
         self.__resultColumnName = resultColumnName
         self.__messageColumnName = messageColumnName
+
+        maxErrors = config.maxErrors
+        maxWarnings = config.maxWarnings
+
+        if maxErrors < 1:
+            raise Exception('Invalid configuration - maxErrors has to be a positive integer')
+        if maxWarnings < 1:
+            raise Exception('Invalid configuration - maxWarnings has to be a positive integer')
 
         if self.__testName == None:
             self.__testName = ''
@@ -71,10 +78,18 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
 
         # log
         if onError in ['fail', 'log']:
+            remaining = maxErrors
             for error in errors:
+                remaining = remaining - 1
+                if remaining < 1:
+                    break
                 lgr.error(f'Test {self.__testName}: {error[self.__messageColumnName]}; {self.rowToStr(error)}')
         if onWarning in ['fail', 'log']:
+            remaining = maxWarnings
             for warning in warnings:
+                remaining = remaining - 1
+                if remaining < 1:
+                    break
                 lgr.warning(f'Test {self.__testName}: {warning[self.__messageColumnName]}; {self.rowToStr(warning)}')
 
         # fail if need be

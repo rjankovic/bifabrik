@@ -15,6 +15,8 @@ class ValidationConfiguration(Configuration):
         self.__onError = 'fail'
         self.__onWarning = 'log'
         self.__testName = None
+        self.__maxErrors = 10
+        self.__maxWarnings = 10
         
     @CfgProperty
     def resultColumnName(self) -> str:
@@ -97,11 +99,29 @@ class ValidationConfiguration(Configuration):
     def onWarning(self, val):
         self.__onWarning = val
 
+    # @CfgProperty
+    # def testName(self) -> str:
+    #     """Name of the current validation test - if specified, will be included in logs / exceptions
+    #     """
+    #     return self.__testName
+    # @testName.setter(key='testName')
+    # def testName(self, val):
+    #     self.__testName = val
+
     @CfgProperty
-    def testName(self) -> str:
-        """Name of the current validation test - if specified, will be included in logs / exceptions
+    def maxErrors(self) -> int:
+        """Maximum number of errors to be reported
         """
-        return self.__testName
-    @testName.setter(key='testName')
-    def testName(self, val):
-        self.__testName = val
+        return self.__maxErrors
+    @maxErrors.setter(key='maxErrors')
+    def maxErrors(self, val):
+        self.__maxErrors = val
+
+    @CfgProperty
+    def maxWarnings(self) -> int:
+        """Maximum number of warnings to be reported
+        """
+        return self.__maxWarnings
+    @maxWarnings.setter(key='maxWarnings')
+    def maxWarnings(self, val):
+        self.__maxWarnings = val

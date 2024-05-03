@@ -18,8 +18,8 @@ class DataDestination(Task):
         """
         self._pipeline.execute()
 
-    def run(self) -> any:
-        """Save the data to the destination. This is the "run" method at the end of the chain. 
-        Returns the result of the last task, if any.
-        """
-        return self._pipeline.execute()
+    # def run(self) -> any:
+    #     """Save the data to the destination. This is the "run" method at the end of the chain. 
+    #     Returns the result of the last task, if any.
+    #     """
+    #     return self._pipeline.execute()
