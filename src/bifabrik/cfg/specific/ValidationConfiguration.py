@@ -10,7 +10,6 @@ class ValidationConfiguration(Configuration):
         self.__messageColumnName = 'ValidationMessage'
         self.__errorResultValue = 'Error'
         self.__warningResultValue = 'Warning'
-        # self.__okResultValue = 'OK'
         # fail / log / None
         self.__onError = 'fail'
         self.__onWarning = 'log'
@@ -22,6 +21,7 @@ class ValidationConfiguration(Configuration):
     def resultColumnName(self) -> str:
         """Column of the input dataframe that contains the validation result. The recognized values of the column are set in the configuration - see
         errorResultValue, warningResultValue, okResultValue
+
         default 'ValidationResult'
         """
         return self.__resultColumnName
@@ -33,6 +33,7 @@ class ValidationConfiguration(Configuration):
     def messageColumnName(self) -> str:
         """Column of the input dataframe that contains the validation message. This can explain the reason for validation errors. 
         It will be included in the log / exception thrown from errors / warnings.
+
         default 'ValidationMessage'
         """
         return self.__messageColumnName
@@ -43,6 +44,7 @@ class ValidationConfiguration(Configuration):
     @CfgProperty
     def errorResultValue(self) -> str:
         """If the configured {resultColumnName} in the input data has the {errorResultValue}, the row will be considered a validation error.
+
         default 'Error'
         """
         return self.__errorResultValue
@@ -53,23 +55,13 @@ class ValidationConfiguration(Configuration):
     @CfgProperty
     def warningResultValue(self) -> str:
         """If the configured {resultColumnName} in the input data has the {warningResultValue}, the row will be considered a validation warning.
+
         default 'Warning'
         """
         return self.__warningResultValue
     @warningResultValue.setter(key='warningResultValue')
     def warningResultValue(self, val):
         self.__warningResultValue = val
-
-    # @CfgProperty
-    # def okResultValue(self) -> str:
-    #     """If the configured {resultColumnName} in the input data has the {okResultValue}, the row will be considered a OK.
-    #     All values other than {errorResultValue} or {warningResultValue} are also considered OK.
-    #     default 'OK'
-    #     """
-    #     return self.__okResultValue
-    # @okResultValue.setter(key='okResultValue')
-    # def okResultValue(self, val):
-    #     self.__okResultValue = val
 
     @CfgProperty
     def onError(self) -> str:
@@ -101,7 +93,7 @@ class ValidationConfiguration(Configuration):
 
     @CfgProperty
     def testName(self) -> str:
-        """Name of the current validation test - if specified, will be included in logs / exceptions
+        """Name of the current validation test - will be included in logs / exceptions
         """
         return self.__testName
     @testName.setter(key='testName')
@@ -111,6 +103,8 @@ class ValidationConfiguration(Configuration):
     @CfgProperty
     def maxErrors(self) -> int:
         """Maximum number of errors to be reported
+        
+        default 10
         """
         return self.__maxErrors
     @maxErrors.setter(key='maxErrors')
@@ -120,6 +114,8 @@ class ValidationConfiguration(Configuration):
     @CfgProperty
     def maxWarnings(self) -> int:
         """Maximum number of warnings to be reported
+
+        default 10
         """
         return self.__maxWarnings
     @maxWarnings.setter(key='maxWarnings')

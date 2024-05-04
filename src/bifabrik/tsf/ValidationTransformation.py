@@ -5,21 +5,27 @@ from pyspark.sql.functions import col
 from pyspark.sql.dataframe import DataFrame as SparkDf
 
 class ValidationTransformation(DataTransformation, ValidationTransformationConfiguration):
-    """Use spark dataframe as source
+    """Test the input data by checking the ValidationResult and ValidationMessage columns to determine if each row failed / passed the validation.
+    The column names / values checked can be changed in configuration.
     
     Examples
     --------
     
     >>> import bifabrik as bif
     >>>
-    >>> (
-    >>> bif
-    >>>     .fromCsv("Files/CsvFiles/annual-enterprise-survey-2021.csv")
-    >>>     .transformSparkDf(lambda df: df.withColumn('NewColumn', lit('NewValue')))
-    >>>     .toTable("Survey2")
-    >>>     .run()
+    >>> bif.fromSql('''
+    >>> WITH values AS(
+    >>> SELECT AnnualSurveyID
+    >>> ,Variable_code, Value
+    >>> ,CAST(REPLACE(Value, ',', '') AS DOUBLE) ValueDouble 
+    >>> FROM AnnualSurveyFromDW1
     >>> )
-    >>> 
+    >>> SELECT v.*
+    >>> ,IF(v.ValueDouble IS NULL, 'Error', 'OK') AS ValidationResult
+    >>> ,IF(v.ValueDouble IS NULL, CONCAT('"', Value, '" cannot be converted to double'), 'OK') AS ValidationMessage
+    >>> FROM values v
+    >>> ''').validate('NumberParsingTest') \
+    >>> .toTable('SurveyValuesParsed').run()
     """
 
     def __init__(self, parentPipeline, testName = 'Unnamed'):
@@ -79,26 +85,31 @@ class ValidationTransformation(DataTransformation, ValidationTransformationConfi
         warnings = input.filter(col(resultColumnName) == warningResultValue).collect()
         oks = input.filter(col(resultColumnName) != errorResultValue).filter(col(resultColumnName) != warningResultValue)
 
+        if onError is None:
+            onError = 'none'
+        if onWarning is None:
+            onWarning = 'none'
+        
         # log
         if onError in ['fail', 'log']:
             remaining = maxErrors
             for error in errors:
-                remaining = remaining - 1
                 if remaining < 1:
                     break
                 err = f'Test {self.__testName}: {error[self.__messageColumnName]}; {self.rowToStr(error)}'
                 lgr.error(err)
                 print(f'Error: {err}')
+                remaining = remaining - 1
         
         if onWarning in ['fail', 'log']:
             remaining = maxWarnings
             for warning in warnings:
-                remaining = remaining - 1
                 if remaining < 1:
                     break
                 wrn = f'Test {self.__testName}: {warning[self.__messageColumnName]}; {self.rowToStr(warning)}'
                 lgr.warning(wrn)
                 print(f'Warning: {wrn}')
+                remaining = remaining - 1
 
         # fail if need be
         if onError == 'fail' and len(errors) > 0:

@@ -77,14 +77,8 @@ class DataTransformation(Task):
         return tsf
         
     def validate(self, testName = ''):
-        """Evaluates a data quality test, logs / fails on error
+        """Test the input data by checking the ValidationResult and ValidationMessage columns to determine if each row failed / passed the validation
         """
         from .ValidationTransformation import ValidationTransformation
         tsf = ValidationTransformation(self._pipeline, testName)
         return tsf
-    
-    # def run(self) -> any:
-    #     """Run the pipeline.
-    #     Returns the result of the last task, if any.
-    #     """
-    #     return self._pipeline.execute()

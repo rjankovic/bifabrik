@@ -85,7 +85,7 @@ class DataSource(Task):
         return tsf
     
     def validate(self, testName = '') -> ValidationTransformation.ValidationTransformation:
-        """Evaluates a data quality test, logs / fails on error
+        """Test the input data by checking the ValidationResult and ValidationMessage columns to determine if each row failed / passed the validation.
         """
         tsf = ValidationTransformation.ValidationTransformation(self._pipeline, testName)
         return tsf
