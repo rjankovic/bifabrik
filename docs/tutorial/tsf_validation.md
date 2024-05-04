@@ -79,4 +79,6 @@ By default, the validation transformation is configured to look for the `Validat
 
 There is another column that the validation uses - the `ValidationMessage`. This is included in the exception / log message for records where the validation result is Error / Warning.
 
+## Validation settings
+
 [Back](../index.md)
