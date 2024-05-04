@@ -35,7 +35,9 @@ It so happens that a few rows have the value `'C'` in the `Value` column. Thus, 
 
 ![image](https://github.com/rjankovic/bifabrik/assets/2221666/51683a94-9978-487e-a3a0-1bb621add4f7)
 
-The errors are logged to the console, as well as to the log file. The log contains the `ValidationMessage` and the row values:
+The errors are logged to the console, as well as to the log file. The argument of the `validate` method set the test name. This is also included in the log to help with distinguishing between different tests.
+
+The log contains the `ValidationMessage` and the row values:
 
 ```
 ...
@@ -79,6 +81,32 @@ By default, the validation transformation is configured to look for the `Validat
 
 There is another column that the validation uses - the `ValidationMessage`. This is included in the exception / log message for records where the validation result is Error / Warning.
 
-## Validation settings
+## Customization
+
+To see the configuration options, run
+
+```python
+import bifabrik as bif
+help(bif.config.validation)
+```
+For example, you may want to change the column names that the validation uses to something shorter, and change the recognized `'Error'` and `'Warning'` values to just `'E'` and `'W'`
+
+```python
+bif.fromSql('''
+WITH values AS(
+    SELECT AnnualSurveyID
+    ,Variable_code, Value
+    ,CAST(REPLACE(Value, ',', '') AS DOUBLE) ValueDouble 
+    FROM AnnualSurvey
+)
+    SELECT v.*
+    ,IF(v.ValueDouble IS NULL, 'W', 'OK') AS Res
+    ,IF(v.ValueDouble IS NULL, CONCAT('"', Value, '" cannot be converted to double'), 'OK') AS Msg
+    FROM values v
+''').validate('NumberParsingTest') \
+.resultColumnName('Res').messageColumnName('Msg') \
+.errorResultValue('E').warningResultValue('W') \
+.run()
+```
 
 [Back](../index.md)
