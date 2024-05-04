@@ -17,6 +17,7 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
    - [Other sources](/tutorial/src_other.md)
 - Data transformations
    - [Spark / Pandas DataFrame](/tutorial/tsf_spark_df.md)
+   - [Data validation](/tutorial/tsf_validation.md)
 - Data destinations
    - [Lakehouse table](/tutorial/dst_table.md)
    - [Warehouse table](/tutorial/dst_warehouse_table.md)
