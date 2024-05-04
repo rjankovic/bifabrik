@@ -33,4 +33,6 @@ Note that most of this code is just a SparkSQL query. If we removed the `.valida
 
 By default, the validation transformation is configured to look for the `ValidationResult` column in the incoming data. Then it recognizes two values in this column - `'Error'` and `'Warning'`. Both errors and warnings are logged. Then, if there are some errors, the pipeline fails. If there are only warnings, they are still written to the log and console, but the pipeline continues. The validation transformation *does not change the data*, so if the data makes it throiugh the validation without failing the pipeline, it continues to the data destination / further transformations unaffected.
 
+There is another column that the validation uses - the `ValidationMessage`. This is included in the exception / log message for records where the validation result is Error / Warning.
+
 [Back](../index.md)
