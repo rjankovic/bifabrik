@@ -2,9 +2,9 @@
 
 Often, you will need to validate your data before loading it into the next layer of your lakehouse. This can involve various scenarios - comparing different lakehouses, validating data types, business rules, etc.
 
-So as not to restrict your validation logic, `bifabrik` only gets involved in processing the test results. The __validation transformation__ checks the values in specific columns indicating errorneous records. If errors / warnings are found, these can either fail the pipeline or not the issue to the [log file](util_log.md).
+So as not to restrict your validation logic, `bifabrik` only gets involved in processing the test results. The __validation transformation__ checks the values in specific columns indicating errorneous records. If errors / warnings are found, these can either fail the pipeline or just the issue and write it to the [log file](util_log.md).
 
-Let's have a look at an example to see what we mean by this.
+Let's have a look at an example to see how this works.
 
 ## Basic example
 
@@ -23,10 +23,10 @@ WITH values AS(
     ,CAST(REPLACE(Value, ',', '') AS DOUBLE) ValueDouble 
     FROM LAKEHOUSE1.AnnualSurvey
 )
-    SELECT v.*
+SELECT v.*
     ,IF(v.ValueDouble IS NULL, 'Error', 'OK') AS ValidationResult
     ,IF(v.ValueDouble IS NULL, CONCAT('"', Value, '" cannot be converted to double'), 'OK') AS ValidationMessage
-    FROM values v
+FROM values v
 ''')
 .validate('NumberParsingTest') \
 .toTable('SurveyValuesParsed').run()
@@ -99,14 +99,51 @@ WITH values AS(
     ,CAST(REPLACE(Value, ',', '') AS DOUBLE) ValueDouble 
     FROM AnnualSurvey
 )
-    SELECT v.*
+SELECT v.*
     ,IF(v.ValueDouble IS NULL, 'W', 'OK') AS Res
     ,IF(v.ValueDouble IS NULL, CONCAT('"', Value, '" cannot be converted to double'), 'OK') AS Msg
-    FROM values v
+FROM values v
 ''').validate('NumberParsingTest') \
 .resultColumnName('Res').messageColumnName('Msg') \
 .errorResultValue('E').warningResultValue('W') \
 .run()
+```
+
+Also note here that this pipeline ends with a transformation and does not save the data to a lakehouse. So it's here just to validate the data and warn of any issues, which is fine.
+
+The validation transformation can be combined with other sources / destinations / transformations. For example, here we load data from a CSV file and create the validation columns in a [PySpark transformation](tsf_spark_df.md):
+
+```python
+from pyspark.sql.functions import *
+import bifabrik as bif
+
+bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-*.csv') \
+.transformSparkDf(lambda df: 
+    df.withColumn('ValidationResult', regexp_replace('Value', ',', '').cast('double').isNotNull())
+        .withColumn('ValidationMessage', concat(lit('Parsing value: '), 'Value'))
+    ) \
+.validate('DoubleParsingTest') \
+.errorResultValue(False) \
+.run()
+```
+
+You can also use a Spark transformation to get rid of the `ValidationResult` and `ValidationMessage` if you don't want those in your destination table
+
+```python
+bif.fromSql('''
+WITH values AS(
+    SELECT AnnualSurveyID
+    ,Variable_code, Value
+    ,CAST(REPLACE(Value, ',', '') AS DOUBLE) ValueDouble 
+    FROM AnnualSurvey
+)
+SELECT v.*
+    ,IF(v.ValueDouble IS NULL, 'Warning', 'OK') AS ValidationResult
+    ,IF(v.ValueDouble IS NULL, CONCAT('"', Value, '" cannot be converted to double'), 'OK') AS ValidationMessage
+FROM values v
+''').validate('NumberParsingTest') \
+.transformSparkDf(lambda df: df.drop('ValidationResult').drop('ValidationMessage')) \
+.toTable('SurveyValidated').run()
 ```
 
 [Back](../index.md)
