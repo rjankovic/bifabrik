@@ -12,6 +12,7 @@ import time
 import datetime
 import notebookutils.mssparkutils.fs
 from bifabrik.utils import tableUtils as tu
+import bifabrik.dst.CommonDestinationUtils as commons
 
 class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -34,6 +35,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tableExists = False
         self.__logger = None
         self.__tableLocation = None
+        self.__addNARecord = False
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -67,12 +69,14 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
+        self.__addNARecord = self.__tableConfig.addNARecord
         self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
         self.__tableExists = self.__tableExistsF()
 
         self.__replaceInvalidCharactersInColumnNames()
         self.__insertIdentityColumn()
         self.__insertInsertDateColumn()
+        self.__insertNARecord()
 
 
         incrementMethod = mergedConfig.destinationTable.increment
@@ -163,6 +167,19 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         ts = time.time()
         r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
         self.__data = r
+
+    def __insertNARecord(self):
+        if not self.__addNARecord:
+            return
+        if self.__identityColumn is None:
+            raise Exception('Configuration error - when addNARecord is enabled, identityColumnPattern needs to be configured as well.')
+        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite']):
+            self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
+            return
+        na_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.`{self.__targetTableName}` WHERE `{self.__identityColumn}` = -1'
+        na_exists = self._spark.sql(na_exists_sql).collect()[0][0]
+        if na_exists == 0:
+            self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
 
     def __overwriteTarget(self):
         self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)

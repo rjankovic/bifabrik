@@ -14,6 +14,7 @@ class TableConfiguration(Configuration):
         self.__snapshotKeyColumns = []
         self.__invalidCharactersInColumnNamesReplacement = '_'
         self.__canAddNewColumns = True
+        self.__addNARecord = False
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -107,3 +108,13 @@ class TableConfiguration(Configuration):
     @canAddNewColumns.setter(key='canAddNewColumns')
     def canAddNewColumns(self, val):
         self.__canAddNewColumns = val
+    
+    @CfgProperty
+    def addNARecord(self) -> bool:
+        """Add a dimension "N/A" record with identity -1, N/A for strings, 0 for numbers. identityColumnPattern needs to be configured when this is enabled.
+        default False
+        """
+        return self.__addNARecord
+    @addNARecord.setter(key='addNARecord')
+    def addNARecord(self, val):
+        self.__addNARecord = val
