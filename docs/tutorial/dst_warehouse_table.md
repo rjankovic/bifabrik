@@ -161,7 +161,7 @@ bif.fromSql('''
 .addNARecord(True) \
 .increment('merge') \
 .mergeKeyColumns(['Variable_code']) \
-.run()```
+.run()
 ```
 
 ## Adding new columns
