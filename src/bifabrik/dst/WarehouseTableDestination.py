@@ -503,8 +503,8 @@ END
     
     def __overwrite_target(self):
         delte_sql = f'DELETE FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
-        self.__insertNARecord()
         self.__execute_dml(delte_sql)
+        self.__insertNARecord()
         self.__append_target()
     
     def __merge_taget(self):
