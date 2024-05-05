@@ -73,16 +73,15 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
         self.__tableExists = self.__tableExistsF()
 
-        self.__replaceInvalidCharactersInColumnNames()
-        self.__insertIdentityColumn()
-        self.__insertInsertDateColumn()
-        self.__insertNARecord()
-
-
         incrementMethod = mergedConfig.destinationTable.increment
         if incrementMethod is None:
             incrementMethod = 'overwrite'
         self.__incrementMethod = incrementMethod
+
+        self.__replaceInvalidCharactersInColumnNames()
+        self.__insertIdentityColumn()
+        self.__insertInsertDateColumn()
+        self.__insertNARecord()
 
         self.__resolveSchemaDifferences()
         
@@ -173,7 +172,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             return
         if self.__identityColumn is None:
             raise Exception('Configuration error - when addNARecord is enabled, identityColumnPattern needs to be configured as well.')
-        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite']):
+        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
             self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
             return
         na_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.`{self.__targetTableName}` WHERE `{self.__identityColumn}` = -1'
