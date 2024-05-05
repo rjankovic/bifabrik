@@ -115,7 +115,7 @@ The log file can look like this
 2024-02-01 23:19:45,961	INFO	test info log 2
 2024-02-01 23:19:45,961	INFO	test info log 3
 2024-02-01 23:19:45,961	ERROR	error 1
-2024-02-01 23:19:45,974	ERROR	error2
+2024-02-01 23:19:45,974	ERROR	error 2
 ```
 
 The error log is similar, but it only writes logs with severity `ERROR` or `CRITICAL`.
