@@ -126,6 +126,26 @@ Supported placeholders:
 {lakehousename} : the lakehouse name
 ```
 
+## Adding the N/A (Unknown) record
+
+When loading dimensions for a dimensional model, it's common practice to add an N/A (or "Unknown") record into your dimensions so that you can link facts to that one if your lookups fail.
+
+To accommodate this, `bifabrik` has the `addNARecord` option (ture / false, false by default). If enabled, it adds a record to the table that has -1 in the identity column, 0 in other numeric columns and "N/A" in string columns.
+
+If the table already has a "-1" record, this will not add another one. Also, this option is only available when you have the `identityColumnPattern` configured.
+
+```python
+bif.fromCsv('Files/CsvFiles/annual-enterprise-survey-*.csv') \
+.toTable('SurveyData') \
+.identityColumnPattern('{tablename}ID') \
+.addNARecord(True) \
+.run()
+```
+
+The result can look like this
+
+![image](https://github.com/rjankovic/bifabrik/assets/2221666/3556a20b-4eb7-4b85-9f50-29d1bf341f3d)
+
 ## Insert timestamp
 
 You can append a column with the current timestamp to newly inserted columns - just set the `insertDateColumn` on the table destination.
