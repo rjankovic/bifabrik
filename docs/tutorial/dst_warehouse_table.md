@@ -139,6 +139,31 @@ bif.fromCsv('CsvFiles/fact_append_*.csv').toWarehouseTable('snapshot1') \
     .run()
 ```
 
+## Identity column
+
+The identity column can be configured the same way as for the [lakehouse table destination](dst_table.md).
+
+## Adding the N/A (Unknown) record
+
+When loading dimensions for a dimensional model, it's common practice to add an N/A (or "Unknown") record into your dimensions so that you can link facts to that one if your lookups fail.
+
+To accommodate this, `bifabrik` has the `addNARecord` option (ture / false, false by default). If enabled, it adds a record to the table that has -1 in the identity column, 0 in other numeric columns and "N/A" in string columns.
+
+If the table already has a "-1" record, this will not add another one. Also, this option is only available when you have the `identityColumnPattern` configured.
+
+```python
+bif.fromSql('''
+ SELECT Variable_code, COUNT(*) ResponseCount
+ FROM SurveyData
+ GROUP BY Variable_code
+''').toWarehouseTable('SurveyDataAgg') \
+.identityColumnPattern('{tablename}ID') \
+.addNARecord(True) \
+.increment('merge') \
+.mergeKeyColumns(['Variable_code']) \
+.run()```
+```
+
 ## Adding new columns
 
 Sometimes, we need to add new columns to an existing table. If the table is a full-load (overwrite), this is no problem - when there is a change in the target schema, the table gets recreated with the new schema.
