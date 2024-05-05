@@ -127,11 +127,13 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             self.__tableExists = True
 
+
         # watermark filter filters self.__data DF - this has to be done before thedata is written to the lakehouse temp table
         self.__filterByWatermark()
         # the same replacement as in a lakehouse needs to be applied to the column in order to save the temp table to the lakehouse
         self.__replaceInvalidCharactersInColumnNames()
         
+
         # save to temp table in the lakehouse
         dstLh = mergedConfig.destinationStorage.destinationLakehouse
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
@@ -196,9 +198,6 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         
         self.__tableColumns = inputTableColumns
         
-        # add N/A row if configured (and not in the table yet)
-        self.__insertNARecord()
-
         # create warehouse table if not exists        
         columnDefs = map(lambda x: f'{x[0]} {x[1]} NULL', inputTableColumns)
         column_defs_join = ',\n'.join(columnDefs)
@@ -209,6 +208,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
 '''
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
+            self.__insertNARecord()
             self.__append_target()
             drop_temp_sql = f'DROP TABLE IF EXISTS `{self.__destinationLakehouse}`.`{self.__tempTableName}`'
             self._spark.sql(drop_temp_sql)
@@ -217,14 +217,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
             return
 
         # sync schema if table exists
-        origColumnsTypesDf = self.__execute_select(f'''
-SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
-FROM sys.schemas s
-INNER JOIN sys.tables t ON s.schema_id = t.schema_id
-INNER JOIN sys.columns c ON c.object_id = t.object_id
-INNER JOIN sys.types tt ON tt.system_type_id = c.system_type_id
-WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
-        ''')
+        origColumnsTypesDf = self.__get_current_table_structure()
 
         consistent_changes = True
         schema_change = False
@@ -334,7 +327,11 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
             # DROP temp_old table
             dropQuery = f'DROP TABLE [{self.__targetSchemaName}].[{whTempTableName}]'
             self.__execute_dml(dropQuery)
-            
+        
+        if incrementMethod != 'overwrite':
+            # overwrite will handle it's N/A record by itself
+            self.__insertNARecord()
+
         # handle increments as in a lakehouse
         if incrementMethod == 'overwrite':
             self.__overwrite_target()
@@ -397,6 +394,17 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
             else:
                 raise e
 
+    def __get_current_table_structure(self):
+        df = self.__execute_select(f'''
+SELECT s.name schema_name, t.name table_name, c.name column_name, tt.name type_name, tt.max_length, tt.precision, tt.scale 
+FROM sys.schemas s
+INNER JOIN sys.tables t ON s.schema_id = t.schema_id
+INNER JOIN sys.columns c ON c.object_id = t.object_id
+INNER JOIN sys.types tt ON tt.system_type_id = c.system_type_id
+WHERE s.name = '{self.__targetSchemaName}' AND t.name = '{self.__targetTableName}'
+        ''')
+        return df
+    
     def __list_diff(self, first_list, second_list):
         diff = [item for item in first_list if item not in second_list]
         return diff
@@ -443,19 +451,51 @@ src AS ({src_query}
 '''
         self.__execute_dml(append_sql)
 
-    def __insertNARecord(self):
+    def __insertNARecord(self):        
         self.__addNARecord = self.__tableConfig.addNARecord
         if not self.__addNARecord:
             return
         if self.__identityColumn is None:
             raise Exception('Configuration error - when addNARecord is enabled, identityColumnPattern needs to be configured as well.')
-        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
-            self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
-            return
-        na_exists_sql = f'SELECT COUNT(*) FROM [{self.__targetSchemaName}].[{self.__targetTableName}] WHERE [{self.__identityColumn}] = -1'
-        na_exists = self.__execute_select(na_exists_sql)[0][0]
-        if na_exists == 0:
-            self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
+                
+        # IF NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[SurveyData] WHERE [SurveyDataID] = -1)
+        # BEGIN
+        #     INSERT INTO [dbo].[SurveyData] ([SurveyDataID], [Year], [Industry_aggregation_NZSIOC])
+        #     VALUES(-1, 0, 'N/A')
+        # END
+
+        columnsTypesDf = self.__get_current_table_structure()
+
+        insert_list = []
+        value_list = []
+
+        for c in columnsTypesDf:
+            col_name = c.column_name
+            col_type = c.type_name.upper()
+            insert_list.append(col_name)
+            if col_name == self.__identityColumn:
+                value_list.append('-1')
+            elif col_type in ['INT', 'BIGINT', 'SMALLINT', 'BIT']:
+                value_list.append('0')
+            elif col_type in ['REAL', 'FLOAT']:
+                value_list.append('0.0')
+            elif col_type in ['DATETIME', 'DATETIME2']:
+                value_list.append("'2000-01-01'")
+            elif col_type in ['VARCHAR', 'CHAR']:
+                value_list.append("'N/A'")
+        
+        insert_columns = list(map(lambda x: f'[{x}]', insert_list))
+        insert_columns_join = ", \n".join(insert_columns)
+        values_join = ", \n".join(value_list)
+
+        insert_query = f'''
+IF NOT EXISTS(SELECT TOP 1 1 FROM [{self.__targetSchemaName}].[{self.__targetTableName}] WHERE [{self.__identityColumn}] = -1)
+BEGIN
+    INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}] ({insert_columns_join})
+    VALUES({values_join})
+END
+'''
+        self.__execute_dml(insert_query)
     
     def __append_target(self):
         src_query = f'SELECT * FROM [{self.__destinationLakehouse}].[dbo].[{self.__tempTableName}]'
@@ -463,6 +503,7 @@ src AS ({src_query}
     
     def __overwrite_target(self):
         delte_sql = f'DELETE FROM [{self.__targetSchemaName}].[{self.__targetTableName}]'
+        self.__insertNARecord()
         self.__execute_dml(delte_sql)
         self.__append_target()
     
