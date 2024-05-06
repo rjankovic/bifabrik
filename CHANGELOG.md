@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.0 (2024-05-TBD)
+ - Data validation transformation
+ - Generic N/A record option for table destinations
+ - current lakehouse metadata helper functions in fsUtils
+
 ## v0.7.1 (2024-04-28)
  - Fixed bug in Warehouse table destination type mapping
 
