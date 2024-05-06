@@ -15,6 +15,7 @@ __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
 __defaultWorkspaceRefName = 'default'
 __defaultLakehouseId = None
+__defaultLakehouseWorkspaceId = None
 __defaultLakehouseRefName = 'default'
 #lgr = lg.getLogger()
 
@@ -284,6 +285,7 @@ defaultMount = getDefaultLakehouseAbfsPath()
 if defaultMount is not None:
     wsLh = getWorkspaceAndLakehouseIdFromMountSource(defaultMount)    
     __defaultLakehouseId = wsLh['lakehouseId']
+    __defaultLakehouseWorkspaceId = wsLh['workspaceId']
 
 def mapLakehouses(workspaceId: str, workspaceName: str):
     lm = LakehouseMap(workspaceId = workspaceId, workspaceName = workspaceName)
@@ -357,6 +359,8 @@ def getLakehouseMeta(lakehouse: str, workspace: str = None, suppressNotFound = F
     errMsg = f'Could not find lakehouse {lakehouse} in workspace {workspace}'
 
     if lakehouse is None:
+        if suppressNotFound:
+            return None
         raise Exception(errMsg)
     
     lhMap = __workspaceMap[workspace]
@@ -371,6 +375,28 @@ def getLakehouseMeta(lakehouse: str, workspace: str = None, suppressNotFound = F
             return None
         raise Exception(errMsg)
     return lh
+
+def currentLakehouse() -> LakehouseMeta:
+    '''Info on the notebook's default (attached) lakehouse
+    '''
+    l =  getLakehouseMeta(lakehouse = __defaultLakehouseId, workspace = __defaultLakehouseWorkspaceId, suppressNotFound = True)
+    if l is None: 
+        return None
+    return {
+        'lakehouseName' : l.lakehouseName,
+        'lakehouseId' : l.lakehouseId,
+        'workspaceName' : l.workspaceName,
+        'workspaceId' : l.workspaceId,
+        'basePath' : l.basePath
+    } 
+
+def currentLakehouseName() -> str:
+    '''Name of the notebook's default (attached) lakehouse
+    '''
+    clh = currentLakehouse()
+    if clh is None:
+        return None
+    return clh['lakehouseName']
 
 def getLakehousePath(lakehouse: str, workspace: str = None, suppressNotFound = False, useImplicitDefaultLakehousePath = False):
     """
