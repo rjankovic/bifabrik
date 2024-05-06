@@ -27,9 +27,21 @@ fsu.currentLakehouse()
 
 # >> {'lakehouseName': 'LH_BRONZE',
 # >>  'lakehouseId': 'abcdxyz-1234-abcd-qqqq-bcc12345678d',
-# >>  'workspaceName': 'Data',
+# >>  'workspaceName': 'WS_BI',
 # >>  'workspaceId': '1234567-1234-abcd-qqqq-bcc12345678d',
 # >>  'basePath': 'abfss://xxxxx@onelake.dfs.fabric.microsoft.com/xxxxxx'}
+```
+
+## `getLakehouseMeta()`
+
+find a lakehouse by workspace and lakehouse name or ID. 
+
+If found, returns a metadata object `bifabrik.utils.fsUtils.LakehouseMeta` (with same properties as the dictionary from `currentLakehouse()`)
+
+```python
+meta = fsu.getLakehouseMeta(workspace = 'WS_BI', lakehouse = 'LH_SILVER')
+
+meta.__dict__
 ```
 
 ## `filePatternSearch()`
