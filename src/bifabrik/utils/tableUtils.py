@@ -4,6 +4,7 @@ Delta table utilities - add / rename / remove columns
 
 import pyspark.sql.session as pss
 from pyspark.sql.functions import lit, col
+import bifabrik.utils.fsUtils as fsu
 
 spark = pss.SparkSession.builder.getOrCreate()
 
@@ -62,3 +63,14 @@ def dropTableColumn(databaseName: str, tableName: str, columnName: str):
     alterQuery = f'ALTER TABLE `{databaseName}`.`{tableName}` DROP COLUMN `{columnName}`'
     print(alterQuery)
     spark.sql(alterQuery)
+
+def listTables():
+    """List table names in the current lakehouse"""
+    currentLh = fsu.currentLakehouse()
+    if currentLh is None:
+        return []
+    
+    df = spark.sql('SHOW TABLES')
+    df = df.filter('isTemporary = False').select('tableName')
+    l = list(map(lambda x: x.tableName, df.collect()))
+    return l
