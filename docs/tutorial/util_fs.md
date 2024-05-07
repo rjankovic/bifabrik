@@ -1,14 +1,52 @@
 # File system utilities
 
-As a side-effect of the library, a few filesystem tools have been created to make Fabric filesystem navigation easier. See the fsUtils module:
+As a side-effect of the library, a few filesystem tools have been created to make Fabric filesystem navigation easier. These tools can be used independently of the core `bifabrik` class. See the fsUtils module:
 
 ```python
 from bifabrik.utils import fsUtils as fsu
 
 help(fsu)
 ```
+## `currentLakehouseName()`
 
-One notable function is `filePatternSearch`, which seems to be a bit of a blind spot in the standard `mssparkutils.fs` in Fabric
+A straightforward function that returns the name of the lakehouse attached to the notebook. If there is no default lakehouse mounted, returns none
+
+```python
+import bifabrik.utils.fsUtils as fsu
+
+fsu.currentLakehouseName()
+# >> 'LH_BRONZE'
+```
+
+## `currentLakehouse()`
+
+An extended version of `currentLakehouseName()`, returning a dictionary of the attached lakehouse's metadata
+
+```python
+fsu.currentLakehouse()
+
+# >> {'lakehouseName': 'LH_BRONZE',
+# >>  'lakehouseId': 'abcdxyz-1234-abcd-qqqq-bcc12345678d',
+# >>  'workspaceName': 'WS_BI',
+# >>  'workspaceId': '1234567-1234-abcd-qqqq-bcc12345678d',
+# >>  'basePath': 'abfss://xxxxx@onelake.dfs.fabric.microsoft.com/xxxxxx'}
+```
+
+## `getLakehouseMeta()`
+
+find a lakehouse by workspace and lakehouse name or ID. 
+
+If found, returns a metadata object `bifabrik.utils.fsUtils.LakehouseMeta` (with same properties as the dictionary from `currentLakehouse()`)
+
+```python
+meta = fsu.getLakehouseMeta(workspace = 'WS_BI', lakehouse = 'LH_SILVER')
+
+meta.__dict__
+```
+
+## `filePatternSearch()`
+
+Recursive file pattern search, supports the '*' notation
 
 ```python
 from bifabrik.utils import fsUtils as fsu
@@ -18,7 +56,5 @@ fsu.filePatternSearch("fld1/*/data/*.csv")
 ```
 
 This uses `glob2` internally, but does not support the recursive pattern (`**/...`)
-
-This utility is independent of the core `bifabrik` class - you don't need to initialize that one or pass the spark session here.
 
 [Back](../index.md)
