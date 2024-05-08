@@ -4,6 +4,7 @@
  - Data validation transformation
  - Generic N/A record option for table destinations
  - Current lakehouse metadata helper functions in fsUtils
+ - Batch restore for delta tables in tableUtils
 
 ## v0.7.1 (2024-04-28)
  - Fixed bug in Warehouse table destination type mapping
