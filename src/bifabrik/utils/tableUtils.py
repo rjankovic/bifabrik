@@ -5,6 +5,7 @@ Delta table utilities - add / rename / remove columns
 import pyspark.sql.session as pss
 from pyspark.sql.functions import lit, col
 import bifabrik.utils.fsUtils as fsu
+from datetime import datetime
 
 spark = pss.SparkSession.builder.getOrCreate()
 
@@ -64,6 +65,7 @@ def dropTableColumn(databaseName: str, tableName: str, columnName: str):
     print(alterQuery)
     spark.sql(alterQuery)
 
+
 def listTables():
     """List table names in the current lakehouse"""
     currentLh = fsu.currentLakehouse()
@@ -83,3 +85,55 @@ def listTables():
             res.append(element)
     
     return res
+
+def tablesHistory(tables):
+    '''Lists the history for all tables in the list in one dataframe'''
+    uni_df = None
+    for tbl in tables:
+        df = spark.sql(f'DESCRIBE HISTORY {tbl}')
+        df = df.select(lit(tbl).alias("tableName"), "*")
+        if uni_df is None:
+            uni_df = df
+        uni_df = uni_df.union(df)
+    return uni_df
+
+def restoreToPIT(tables, timestamp):
+    '''Restores the tables in the current lakehouse to the point in time (their last version before the given timestamp)
+
+    Parameters:
+        tables (array[str]):    list of table names (['table1', 'table2']). You can get the list of all tables using listTables()
+        timestamp:  Either a string in the format '%Y-%m-%d %H:%M:%S.%f' (UTC time) or datetime.datetime
+
+    Examples
+    --------
+    
+    >>> import bifabrik.utils.tableUtils as tu
+    >>> tables = tu.listTables()
+    >>> tu.restoreToPIT(tables, '2024-05-08 16:30:00')
+
+    '''
+    ts = None
+    if isinstance(timestamp, datetime):
+        ts = timestamp
+    elif isinstance(timestamp, str):
+        if '.' in timestamp:
+            ts = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
+        else:
+            ts = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+    
+    history = tablesHistory(tables)
+    eq = history.where(f"timestamp = '{ts}'")
+    if eq.count() > 0:
+        raise Exception(f"There are transactions with the exact timestamp '{ts}'. Please select a point in time between the transactions.")
+    
+    prev = history.where(f"timestamp < '{ts}'")
+    for t in tables:
+        tprev = prev.filter(f"tableName = '{t}'")
+        if tprev.count() == 0:
+            print(f"`{t}` has no versions before {ts}; skipping")
+            continue
+        h = tprev.orderBy(tprev.timestamp.desc()).head()
+        print(f"Restoring `{h.tableName}` to version {h.version} ({h.timestamp})")
+        rsql = f"RESTORE TABLE `{h.tableName}` TO VERSION AS OF {h.version}"
+        spark.sql(rsql)
+        
