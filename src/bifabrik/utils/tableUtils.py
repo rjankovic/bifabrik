@@ -86,6 +86,16 @@ def listTables():
     
     return res
 
+'''The delta table history for all tables in the list, returned as a single dataframe
+
+Examples
+--------
+
+>>> import bifabrik.utils.tableUtils as tu
+>>> 
+>>> tableList = tu.listTables()
+>>> th = tu.tablesHistory(tableList)
+'''
 def tablesHistory(tables):
     '''Lists the history for all tables in the list in one dataframe'''
     uni_df = None
@@ -106,7 +116,7 @@ def restoreToPIT(tables, timestamp):
 
     Examples
     --------
-    
+
     >>> import bifabrik.utils.tableUtils as tu
     >>> tables = tu.listTables()
     >>> tu.restoreToPIT(tables, '2024-05-08 16:30:00')
