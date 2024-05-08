@@ -73,4 +73,13 @@ def listTables():
     df = spark.sql('SHOW TABLES')
     df = df.filter('isTemporary = False').select('tableName')
     l = list(map(lambda x: x.tableName, df.collect()))
-    return l
+
+    dfw = spark.sql('SHOW VIEWS')
+    lw = list(map(lambda x: x.viewName, dfw.collect()))
+
+    res = []
+    for element in l:
+        if element not in lw:
+            res.append(element)
+    
+    return res
