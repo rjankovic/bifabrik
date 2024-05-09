@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bifabrik"
-version = "0.7.38"
+version = "0.8.0"
 description = "Microsoft Fabric ETL toolbox"
 authors = ["Radovan Jankovič"]
 license = "MIT"
