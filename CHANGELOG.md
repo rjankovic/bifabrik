@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0 (2024-05-TBD)
+## v0.8.0 (2024-05-09)
  - Data validation transformation
  - Generic N/A record option for table destinations
  - Current lakehouse metadata helper functions in fsUtils
