@@ -69,6 +69,11 @@ class CsvSource(DataSource, CsvSourceConfiguration):
                 quoting = mergedConfig.csv.quoting,
                 escapechar = mergedConfig.csv.escapechar
                 )
+            if pd_df.empty:
+                w = f'File {src_file} has no data - skipping'
+                lgr.warn(w)
+                print(w)
+                continue
             df = self._spark.createDataFrame(pd_df)
             fileDfs.append(df)
         if len(fileDfs) == 0:
