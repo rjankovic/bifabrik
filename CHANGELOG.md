@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.8.1 (2024-05-19)
+ - fix handling CSV files with no data
+
 ## v0.8.0 (2024-05-09)
  - Data validation transformation
  - Generic N/A record option for table destinations
