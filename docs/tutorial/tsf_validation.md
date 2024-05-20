@@ -2,7 +2,7 @@
 
 Often, you will need to validate your data before loading it into the next layer of your lakehouse. This can involve various scenarios - comparing different lakehouses, validating data types, business rules, etc.
 
-So as not to restrict your validation logic, `bifabrik` only gets involved in processing the test results. The __validation transformation__ checks the values in specific columns indicating errorneous records. If errors / warnings are found, these can either fail the pipeline or just the issue and write it to the [log file](util_log.md).
+So as not to restrict your validation logic, `bifabrik` only gets involved in processing the test results. The __validation transformation__ checks the values in specific columns indicating errorneous records. If errors / warnings are found, these can either fail the pipeline or just note the issue and write it to the [log file](util_log.md).
 
 Let's have a look at an example to see how this works.
 
