@@ -448,3 +448,11 @@ def archiveFiles(files, archiveFolder, filePattern, lakehouse = None, workspace 
 
         log.info(f'Archiving {file} -> {fullTargetPath}')
         notebookutils.mssparkutils.fs.mv(file, fullTargetPath)
+
+def getWorkspaceId(workspace):
+    if workspace is None:
+        return __defaultWorkspaceId
+    lhMap = __workspaceMap[workspace]
+    if lhMap is None:
+        return None
+    return lhMap.workspaceId
