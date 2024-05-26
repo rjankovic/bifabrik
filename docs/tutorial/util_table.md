@@ -9,7 +9,7 @@ help(tu)
 
 ## Restore tables to to earlier version
 
-These tools makes use of time travel in delta tables and the [RESTORE command](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/delta-restore), making it easier to perform batch restore operations.
+These tools make use of time travel in delta tables and the [RESTORE command](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/delta-restore), making it easier to perform batch restore operations.
 
 ### List lakehouse tables
 
