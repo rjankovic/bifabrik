@@ -39,6 +39,7 @@ def executePipeline(pipeline: str, workspace: str = None, parameters: dict = {},
         
         jobType = f"Pipeline"
         relativeUrl = f"/v1/workspaces/{workspaceId}/items/{pipelineId}/jobs/instances?jobType={jobType}"
+        print(relativeUrl)
         response = None
         if len(parameters) == 0:
             response = client.post(relativeUrl)
@@ -49,30 +50,32 @@ def executePipeline(pipeline: str, workspace: str = None, parameters: dict = {},
                 }    
             }
             response = client.post(relativeUrl, json = payload)
-            location = response.headers['Location']
+        
+        location = response.headers['Location']
 
-            progress = print(client.get(location).json())
-            print(progress)
+        progress = client.get(location).json()
+        print(progress)
 
-            if not waitForExit:
-                return
-            
-            status = progress.status
+        if not waitForExit:
+            return progress
+        
+        status = progress['status']
 
-            waitTime = 5
-            totalWait = 0
-            while status in ['NotStarted', 'InProgress']:
-                time.sleep(waitTime)
-                totalWait = totalWait + waitTime
+        waitTime = 5
+        totalWait = 0
+        while status in ['NotStarted', 'InProgress']:
+            time.sleep(waitTime)
+            totalWait = totalWait + waitTime
+            if totalWait > 5:
                 waitTime = waitTime * 2
-                progress = print(client.get(location).json())
-                status = progress.status
-                print(f'After {totalWait} s: {status}')
-            
-            if status == 'Completed':
-                return
-            
-            raise Exception(f'Pipeline ended with status {progress}')
+            progress = client.get(location).json()
+            status = progress['status']
+            print(f'After {totalWait} s: {status}')
+        
+        if status == 'Completed':
+            return
+        
+        raise Exception(f'Pipeline ended with status {progress}')
         
     #  {'id': 'a7385224-4b19-48de-99e6-e02c8077efbc',
     #  'itemId': '0e56ed7f-ccfc-4d1f-a5d6-dad14b8ebb79',
