@@ -20,7 +20,7 @@ api.executePipeline('MyPipeline', 'MyWorkspace')
 or synchronously wait for the pipeline to complete:
 
 ```python
-api.executePipelineWait('PL_ExtractHeliosCZ', 'Data')
+api.executePipelineWait('MyPipeline', 'MyWorkspace')
 
 #> /v1/workspaces/xxxxx/items/xxxxx/jobs/instances?jobType=Pipeline
 #> {'id': 'xxxxx', 'itemId': 'xxxxx', 'jobType': 'Pipeline', 'invokeType': 'Manual', 'status': 'NotStarted', 'failureReason': None, 'rootActivityId': 'xxxxx', 'startTimeUtc': '2024-05-26T15:01:55.76', 'endTimeUtc': None}
