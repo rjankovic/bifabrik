@@ -11,7 +11,7 @@ If you find a problem or have a feature request, please submit it here: https://
 
 ## Quickstart
 
-First, let's install the library. Either add the bifabrik library to an environment in Fabric and attach that environment to your notebook.
+First, let's install the library. Either add the `bifabrik` library to an environment in Fabric and attach that environment to your notebook.
 
 Or you can add `%pip install bifabrik` at the beginning of the notebook.
 
