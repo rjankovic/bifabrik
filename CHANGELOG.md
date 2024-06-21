@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.9.0 (2024-06-21)
+ - Fabric pipeline execution via API
+
 ## v0.8.1 (2024-05-19)
  - fix handling CSV files with no data
 
