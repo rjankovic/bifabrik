@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bifabrik"
-version = "0.9.0"
+version = "0.9.3"
 description = "Microsoft Fabric ETL toolbox"
 authors = ["Radovan Jankovič"]
 license = "MIT"
@@ -10,10 +10,10 @@ documentation = "https://rjankovic.github.io/bifabrik/"
 repository = "https://github.com/rjankovic/bifabrik/"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 glob2 = ">=0.7"
 pandas = ">=2.0"
-semantic-link = ">=0.5.1"
+semantic-link = ">=0.7.7"
 SharePlum = ">=0.5.1"
 
 [tool.poetry.dev-dependencies]

@@ -5,7 +5,7 @@ class CsvConfiguration(Configuration):
     """Configuration related to loading CSV files
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__delimiter = ','
         self.__header = 'infer'
         self.__thousands = None

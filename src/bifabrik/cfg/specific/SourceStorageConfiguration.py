@@ -5,7 +5,7 @@ class SourceStorageConfiguration(Configuration):
     """Defines the data source lakehouse or warehouse. By default refers to the default lakehouse of the notebook.
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__sourceWorkspace = None
         self.__sourceLakehouse = None
         self.__sourceWarehouseConnectionString = None

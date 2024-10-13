@@ -1,5 +1,6 @@
 class Configuration:
-    pass
+    def __init__(self):
+        self._explicitProps = {}
 
 class CfgProperty(property):
     def __set__(self, obj, value):

@@ -5,7 +5,8 @@ class TableConfiguration(Configuration):
     """Configuration related to saving data to delta tables in a Fabric lakehouse or warehouse
     """
     def __init__(self):
-        self._explicitProps = {}
+        #self._explicitProps = {}
+        super().__init__()
         self.__watermarkColumn = None
         self.__increment = None
         self.__identityColumnPattern = None

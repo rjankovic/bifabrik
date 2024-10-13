@@ -5,7 +5,6 @@ class FileSourceConfiguration(Configuration):
     """Configuration related to loading data from files (aspects common for all file formats)
     """
     def __init__(self):
-        self._explicitProps = {}
         self.__encoding = None
         self.__locale = None
         self.__moveFilesToArchive: bool = False

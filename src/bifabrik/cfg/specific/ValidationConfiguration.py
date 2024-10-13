@@ -5,7 +5,7 @@ class ValidationConfiguration(Configuration):
     """Configuration related to saving data to delta tables in a Fabric lakehouse or warehouse
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__resultColumnName = 'ValidationResult'
         self.__messageColumnName = 'ValidationMessage'
         self.__errorResultValue = 'Error'

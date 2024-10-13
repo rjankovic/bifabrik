@@ -5,7 +5,7 @@ class SecurityConfiguration(Configuration):
     """Credentials configuration, currently used for connecting to Fabric warehouses and the SharePointListSource. (Passwords aren't actually stored here, this configuration only refers to KeyVault secrets.)
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__keyVaultUrl = None
         self.__loginKVSecretName = None
         self.__passwordKVSecretName = None

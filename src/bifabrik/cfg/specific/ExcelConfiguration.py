@@ -5,7 +5,7 @@ class ExcelConfiguration(Configuration):
     """Configuration related to loading Excel files
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__sheetName = 0
         self.__header = 0
         self.__names = None

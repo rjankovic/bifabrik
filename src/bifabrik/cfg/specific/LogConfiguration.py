@@ -5,7 +5,7 @@ class LogConfiguration(Configuration):
     """Logging configuration
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__loggingEnabled = True
         self.__logLakehouse = None
         self.__logWorkspace = None

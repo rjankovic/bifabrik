@@ -5,7 +5,7 @@ class JsonConfiguration(Configuration):
     """Configuration related to loading CSV files
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__primitivesAsString = None
         self.__prefersDecimal = None
         self.__allowComments = None

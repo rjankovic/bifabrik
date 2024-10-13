@@ -5,7 +5,7 @@ class MetadataStorageConfiguration(Configuration):
     """Defines the data metadata lakehouse. By default refers to the default lakehouse of the notebook. This is used for logs and metadata tables
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__metadataWorkspaceName = None
         self.__metadataLakehouseName = None
         self.__tmslBackupPathPattern = 'Files/tmsl_backup/{workspacename}/{datasetname}/{datasetname}_{timestamp}.json'

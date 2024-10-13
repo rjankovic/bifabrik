@@ -5,7 +5,7 @@ class DestinationStorageConfiguration(Configuration):
     """Defines the data destination lakehouse or warehouse. By default refers to the default lakehouse of the notebook.
     """
     def __init__(self):
-        self._explicitProps = {}
+        super().__init__()
         self.__destinationWorkspace = None
         self.__destinationLakehouse = None
         self.__destinationWarehouseConnectionString = None
