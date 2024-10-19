@@ -7,12 +7,16 @@ class CsvConfiguration(Configuration):
     def __init__(self):
         super().__init__()
         self.__delimiter = ','
+        # super().createCfgProperty("delimiter", """From pandas:
+        # Character or regex pattern to treat as the delimiter. If sep=None, the C engine cannot automatically detect the separator, but the Python parsing engine can, meaning the latter will be used and automatically detect the separator from only the first valid row of the file by Pythons builtin sniffer tool
+        # """)        
         self.__header = 'infer'
         self.__thousands = None
         self.__decimal = '.'
         self.__quotechar = '"'
         self.__quoting = 0
         self.__escapechar = None
+        
 
     @CfgProperty
     def delimiter(self) -> str:
