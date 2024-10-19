@@ -28,6 +28,7 @@ from bifabrik.src.SparkSqlSource import SparkSqlSource
 from bifabrik.src.WarehouseSqlSource import WarehouseSqlSource
 from bifabrik.src.SparkDfSource import SparkDfSource
 from bifabrik.src.PandasDfSource import PandasDfSource
+from bifabrik.src.JdbcSource import JdbcSource
 from bifabrik.cfg.CompleteConfiguration import CompleteConfiguration
 import bifabrik.utils.log as log
 from bifabrik.base.Pipeline import Pipeline
@@ -195,6 +196,20 @@ def fromSharePointList(siteUrl: str, listName: str) -> SharePointListSource:
     >>>     .toTable('Customers').run()
     """
     ds = SharePointListSource(__prepPipeline(), siteUrl, listName)
+    return ds
+
+def fromJdbcQuery(query: str) -> JdbcSource:
+    """Load data from a JDBC source
+    
+    Examples
+    --------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
+    """
+    ds = JdbcSource(__prepPipeline())
+    ds.jdbcQuery(query)
     return ds
 
 def __getattr__(name):

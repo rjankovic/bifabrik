@@ -12,6 +12,7 @@ from bifabrik.cfg.specific.MetadataStorageConfiguration import MetadataStorageCo
 from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
 from bifabrik.cfg.specific.SecurityConfiguration import SecurityConfiguration
 from bifabrik.cfg.specific.ValidationConfiguration import ValidationConfiguration
+from bifabrik.cfg.specific.JdbcConfiguration import JdbcConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -39,6 +40,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__destinationTable = TableConfiguration()
         self.__security = SecurityConfiguration()
         self.__validation = ValidationConfiguration()
+        self.__jdbc = JdbcConfiguration()
         super().__init__()
         
 
@@ -95,6 +97,11 @@ class CompleteConfiguration(ConfigContainer):
     def validation(self) -> ValidationConfiguration:
         """Data validation configuration"""
         return self.__validation
+    
+    @property
+    def jdbc(self) -> JdbcConfiguration:
+        """JDBC configuration"""
+        return self.__jdbc
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
