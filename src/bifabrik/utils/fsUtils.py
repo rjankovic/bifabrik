@@ -10,6 +10,7 @@ import logging
 import os
 import datetime
 import time
+from IPython.display import clear_output
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
@@ -192,6 +193,7 @@ def getMounts():
     global __mounts
     if __mounts is None:
         __mounts = notebookutils.mssparkutils.fs.mounts()
+        clear_output(wait=True)
     return __mounts
 
 def getDefaultLakehouseAbfsPath() -> str:

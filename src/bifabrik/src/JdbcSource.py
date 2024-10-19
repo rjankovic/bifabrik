@@ -23,7 +23,11 @@ class JdbcSource(DataSource, JdbcSourceConfiguration):
         self.__mergedConfig = None
 
     def __str__(self):
-        return f'JDBC source: {self.__url}'
+        url = None
+        if self.__mergedConfig is not None:
+            if 'jdbcUrl' in self.__mergedConfig.jdbc._explicitProps:
+                url = self.__mergedConfig.jdbc._explicitProps['jdbcUrl']
+        return f'JDBC source: {url}'
     
     def execute(self, input):
         lgr = log.getLogger()
@@ -46,12 +50,12 @@ class JdbcSource(DataSource, JdbcSourceConfiguration):
         # get JDBC-speific options in a loop
         # (if the jdbcUser option is specified, it overrides the user from loginKVSecretName)
         for key in mergedConfig.jdbc._explicitProps:
-            sparkKey = key[3:]
+            sparkKey = key[4:]
             sparkKey = sparkKey[0].lower() + sparkKey[1:]
             
-            lgr.info(f'Setting {sparkKey} to {mergedConfig.fileSource._explicitProps[key]}')
-            print(f'Setting {sparkKey} to {mergedConfig.fileSource._explicitProps[key]}')
-            readerBase.option(sparkKey, mergedConfig.fileSource._explicitProps[key])
+            lgr.info(f'Setting {sparkKey} to {mergedConfig.jdbc._explicitProps[key]}')
+            print(f'Setting {sparkKey} to {mergedConfig.jdbc._explicitProps[key]}')
+            readerBase.option(sparkKey, mergedConfig.jdbc._explicitProps[key])
 
         df = readerBase.load()
         
