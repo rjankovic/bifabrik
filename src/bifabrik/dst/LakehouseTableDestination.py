@@ -137,9 +137,13 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         return name
 
     def __insertIdentityColumn(self):
+        df_res = self.__insertIdentityColumn(self.__data)
+        self.__data = df_res
+
+    def __insertIdentityColumn(self, df):
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         if identityColumnPattern is None:
-            return
+            return df
         
         lhName = self.__lhMeta.lakehouseName
         initID = 0
@@ -154,12 +158,12 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                 initID = 0
         
         # place the identity column at the beginning of the table
-        schema = [obj[0]  for obj in self.__data.dtypes]
+        schema = [obj[0]  for obj in df.dtypes]
         schema.insert(0, identityColumn)
-        df_ids  = self.__data.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
+        df_ids  = df.withColumn(identityColumn, row_number().over(Window.orderBy(schema[1])).cast('bigint')).select(schema)
         df_res = df_ids.withColumn(identityColumn,col(identityColumn) + initID)
         
-        self.__data = df_res
+        return df_res
 
     def __insertInsertDateColumn(self):
         insertDateColumn = self.__tableConfig.insertDateColumn
@@ -274,21 +278,331 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             scd1_update = ""
 
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        # temp table name in case we needed to use the large table approach
+        src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__target_table_name}_withid"
         self.__data.createOrReplaceTempView(src_view_name)
         mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
-        merge_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
-            USING {src_view_name}  AS src \
+
+        # split data into news and updates
+        
+        # 1. separate new records dataframe
+
+        src_news_df = self._spark.sql(f'''
+        SELECT src.* 
+        FROM {src_view_name} AS src
+        LEFT JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
+        WHERE tgt.`{key_columns[0]}` IS NULL
+        ''')
+        
+        # 2. generate IDs for the news DF independently - we don't want to mix these with the updates
+        news_df = self.__insertIdentityColumn(src_news_df)
+
+        # 3. separate updated records dataframe 
+        # and if identity column is configured, include in in the DF
+
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+
+        if identityColumnPattern is None:
+            src_updates_df = self._spark.sql(f'''
+            SELECT src.* 
+            FROM {src_view_name} AS src
+            INNER JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
+            ''')    
+        else:
+            insert_list = f'`{self.__identityColumn}`, {insert_list}'
+            insert_values = f'src.`{self.__identityColumn}`, {insert_values}'
+            src_updates_df = self._spark.sql(f'''
+            SELECT tgt.{self.__identityColumn}, src.* 
+            FROM {src_view_name} AS src
+            INNER JOIN {self.__targetTableName} AS tgt ON {join_condition}
+            ''')
+        
+        # 4. create an unified dataframe
+        uni_df = news_df.union(src_updates_df)
+
+        # get the target table size
+
+        tableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
+        tableGB = tableBytes / 1024 / 1024 / 1024
+        print(f'Target GB: {tableGB}')
+
+        largetTableModeEnabled =  self.__tableConfig.largeTableMethodEnabled
+        sourceSizeThreshold = self.__tableConfig.largeTableMethodSourceThresholdGB
+        targetSizeThreshold = self.__tableConfig.largeTableMethodDestinationThresholdGB
+
+        # to find out the source data sie, we need to save the source dataframe to a table
+        # only do this if the target table size threshold is crossed
+        # and the large table method is enabled
+
+        if tableGB >= targetSizeThreshold and largetTableModeEnabled:
+
+            print(f'writing to {src_temp_table_name_withid}')
+            
+            uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
+            
+            #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+            input_row_count = uni_df.count()
+            print(f'input count {input_row_count}')
+
+            inputBytes = self._spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
+            inputGB = inputBytes / 1024 / 1024 / 1024
+            print(f'Source GB: {inputGB}')
+            # delete_src_temp_table_name_withid = True
+        else:
+            inputBytes = 0
+            uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+
+        print('checking for duplicates')
+        duplicates_check = self._spark.sql(f'''
+        SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
+        GROUP BY {key_col_list}
+        HAVING COUNT(*) > 1
+        ''')
+        if duplicates_check.count() > 0:
+            display(duplicates_check)
+            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
+
+        #mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
+        
+        update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
+        scd1_update = f"WHEN MATCHED THEN UPDATE SET \
+            {update_list} "
+
+        if tableGB < targetSizeThreshold or inputGB < sourceSizeThreshold:
+            # small table - direct update / insert
+            merge_sql_update_basic = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
+            USING {src_temp_table_name_withid}  AS src \
             ON {join_condition} \
             {scd1_update}\
+            "
+
+            merge_sql_insert_basic = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
+            USING {src_temp_table_name_withid}  AS src \
+            ON {join_condition} \
             WHEN NOT MATCHED THEN INSERT ( \
             {insert_list} \
             ) VALUES ( \
             {insert_values} \
             )\
             "
-        self.__logger.info("----SCD1 MERGE SQL")
-        self.__logger.info(merge_sql)
-        self._spark.sql(merge_sql)
+
+            print('merge update')
+            print(merge_sql_update_basic)
+            self._spark.sql(merge_sql_update_basic)
+
+            print('merge insert')
+            print(merge_sql_insert_basic)
+            self._spark.sql(merge_sql_insert_basic)
+            
+            self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
+
+            # merge_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
+            # USING {src_view_name}  AS src \
+            # ON {join_condition} \
+            # {scd1_update}\
+            # WHEN NOT MATCHED THEN INSERT ( \
+            # {insert_list} \
+            # ) VALUES ( \
+            # {insert_values} \
+            # )\
+            # "
+            # self.__logger.info("----SCD1 MERGE SQL")
+            # self.__logger.info(merge_sql)
+            # self._spark.sql(merge_sql)
+
+            return
+        
+        print('large table strategy')
+        
+        tgt_temp_table_name = f'temp_scd_tgt_{self.__target_table_name}'
+        print(f'pooling rows for update to {tgt_temp_table_name}')
+        tgt_df_query = f'''
+        SELECT tgt.* 
+        FROM {src_temp_table_name_withid} AS src
+        INNER JOIN {self.__targetTableName} AS tgt ON {join_condition}
+        '''
+
+        print(tgt_df_query)
+        tgt_df = self._spark.sql(tgt_df_query)
+
+        tgt_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{tgt_temp_table_name}')
+
+        # waiting for the new tables to "come online"
+        time.sleep(10)
+
+        
+        df_tgt_temp = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
+        print(f'tgt temp count {df_tgt_temp.count()}')
+        
+
+        # 5. merge update and insert to the temp destination from source view
+        
+        merge_sql_update_temp = f"MERGE INTO {mergeDbRef}{tgt_temp_table_name} AS tgt \
+                    USING {src_temp_table_name_withid}  AS src \
+                    ON {join_condition} \
+                    {scd1_update}\
+                    "
+        print('merge update temp')
+        print(merge_sql_update_temp)
+        self._spark.sql(merge_sql_update_temp)
+
+        merge_sql_insert_temp = f"MERGE INTO {mergeDbRef}{tgt_temp_table_name} AS tgt \
+            USING {src_temp_table_name_withid}  AS src \
+            ON {join_condition} \
+            WHEN NOT MATCHED THEN INSERT ( \
+            {insert_list} \
+            ) VALUES ( \
+            {insert_values} \
+            )\
+            "
+        print('merge insert temp')
+        print(merge_sql_insert_temp)
+        self._spark.sql(merge_sql_insert_temp)
+
+        df_merged = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
+        print(df_merged.count())
+
+        # 5. add unmodified (unaffected, unmatched) rows from target to the temp table
+        # (Xmerge delete from target table using temp destination (on merge keys))
+
+        print('adding unchanged rows to temp')
+
+        #tgt_temp_table_name = f'temp_scd_tgt_{self.__target_table_name}'
+        tgt_unchanged_df_query = f'''
+        SELECT tgt.* 
+        FROM {self.__targetTableName} AS tgt
+        LEFT JOIN {src_temp_table_name_withid} AS src ON {join_condition}
+        WHERE src.`{key_columns[0]}` IS NULL
+        '''
+        print(tgt_unchanged_df_query)
+        tgt_unchanged_df = self._spark.sql(tgt_unchanged_df_query)
+
+        print(tgt_unchanged_df.count())
+        tgt_unchanged_df.write.mode("append").format("delta").save(f'Tables/{tgt_temp_table_name}')
+
+        print('writing back to target table')
+
+        #print('appending new and updated rows')
+        #df_full = spark.sql(f'SELECT * FROM `{tgt_temp_table_name}`')
+        df_full = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
+        print(f'writing {df_full.count()} rows')
+        df_full.write.mode("overwrite").format("delta").save(self.__tableLocation)
+
+        self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
+        self._spark.sql(f'DROP TABLE IF EXISTS {tgt_temp_table_name}')
+
+# ################
+
+
+
+
+
+#         ############################
+
+#         all_columns = self.__data.columns
+#         key_columns = list(map(lambda x: self.__sanitize_column_name(x), self.__key_columns))
+#         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identity_column, self.__insert_date_column, self.__audit_column])
+        
+#         # print('key columns')
+#         # print(key_columns)
+#         # print('non-key columns')
+#         # print(non_key_columns)
+        
+#         if len(key_columns) == 0:
+#             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
+
+#         join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
+#         key_col_list = ", ".join([f"`{item}`" for item in key_columns])
+#         insert_list = ", ".join([f"`{item}`" for item in all_columns])
+#         insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
+        
+        
+#         # table consisisting only of key columns - no need for the update clause
+#         if len(non_key_columns) == 0:
+#             scd1_update = ""
+
+#         src_view_name = f"src_{self.__target_table_name}"
+#         src_temp_table_name_withid = f"temp_src_{self.__target_table_name}_withid"
+#         #src_view_name_withid_part = f"src_{self.__target_table_name}_withid_part"
+#         self.__data.createOrReplaceTempView(src_view_name)
+        
+#         src_news_df = spark.sql(f'''
+#         SELECT src.* 
+#         FROM {src_view_name} AS src
+#         LEFT JOIN {self.__target_table_name} AS tgt ON {join_condition}
+#         WHERE tgt.`{key_columns[0]}` IS NULL
+#         ''')
+#         news_df = self.__insert_identity_column(src_news_df)
+        
+
+#         #print(f'IC {self.__identity_column}')
+#         #display(news_df)
+
+#         if self.__identity_column_pattern is None:
+#             src_updates_df = spark.sql(f'''
+#             SELECT src.* 
+#             FROM {src_view_name} AS src
+#             INNER JOIN {self.__target_table_name} AS tgt ON {join_condition}
+#             ''')    
+#         else:
+#             self.__identity_column = self.__identity_column_pattern.format(table_name = self.__target_table_name)
+#             insert_list = f'`{self.__identity_column}`, {insert_list}'
+#             insert_values = f'src.`{self.__identity_column}`, {insert_values}'
+#             src_updates_df = spark.sql(f'''
+#             SELECT tgt.{self.__identity_column}, src.* 
+#             FROM {src_view_name} AS src
+#             INNER JOIN {self.__target_table_name} AS tgt ON {join_condition}
+#             ''')
+        
+#         uni_df = news_df.union(src_updates_df)
+
+#         tableBytes = spark.sql(f'describe detail {self.__target_table_name}').select("sizeInBytes").collect()[0][0]
+#         tableGB = tableBytes / 1024 / 1024 / 1024
+#         print(f'Target GB: {tableGB}')
+
+#         delete_src_temp_table_name_withid = False
+#         delete_tgt_temp_table_name = False
+
+#         if tableGB >= 20:
+
+#             print(f'writing to {src_temp_table_name_withid}')
+            
+#             uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
+            
+#             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+#             input_row_count = uni_df.count()
+#             print(f'input count {input_row_count}')
+
+#             inputBytes = spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
+#             inputGB = inputBytes / 1024 / 1024 / 1024
+#             print(f'Source GB: {inputGB}')
+#             delete_src_temp_table_name_withid = True
+#         else:
+#             inputBytes = 0
+#             uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+
+            
+            
+
+#         print('checking for duplicates')
+#         duplicates_check = spark.sql(f'''
+#         SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
+#         GROUP BY {key_col_list}
+#         HAVING COUNT(*) > 1
+#         ''')
+#         if duplicates_check.count() > 0:
+#             display(duplicates_check)
+#             raise Exception(f'There are duplicate records about to be merged into {self.__target_table_name}')
+
+#         #mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
+#         merge_db_ref = f'' 
+
+        
+
+#         update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
+#         scd1_update = f"WHEN MATCHED THEN UPDATE SET \
+#             {update_list} "
+
 
     def __snapshotTarget(self):
         # first delete the snapshot to be replaced

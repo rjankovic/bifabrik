@@ -17,6 +17,9 @@ class TableConfiguration(Configuration):
         self.__canAddNewColumns = True
         self.__addNARecord = False
         self.__addBadValueRecord = False
+        self.__largeTableMethodEnabled = True
+        self.__largeTableMethodSourceThresholdGB: float = 0.2
+        self.__largeTableMethodDestinationThresholdGB: float = 20
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -130,3 +133,33 @@ class TableConfiguration(Configuration):
     @addBadValueRecord.setter(key='addBadValueRecord')
     def addBadValueRecord(self, val):
         self.__addBadValueRecord = val
+
+    @CfgProperty
+    def largeTableMethodEnabled(self) -> bool:
+        """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table
+        default False
+        """
+        return self.__largeTableMethodEnabled
+    @largeTableMethodEnabled.setter(key='largeTableMethodEnabled')
+    def largeTableMethodEnabled(self, val):
+        self.__largeTableMethodEnabled = val
+
+    @CfgProperty
+    def largeTableMethodSourceThresholdGB(self) -> float:
+        """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table - threshold for the size of the source data in GB
+        default 0.2
+        """
+        return self.__largeTableMethodSourceThresholdGB
+    @largeTableMethodSourceThresholdGB.setter(key='largeTableMethodSourceThresholdGB')
+    def largeTableMethodSourceThresholdGB(self, val):
+        self.__largeTableMethodSourceThresholdGB = val
+    
+    @CfgProperty
+    def largeTableMethodDestinationThresholdGB(self) -> float:
+        """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table - threshold for the size of the destination table in GB
+        default 20
+        """
+        return self.__largeTableMethodDestinationThresholdGB
+    @largeTableMethodDestinationThresholdGB.setter(key='largeTableMethodDestinationThresholdGB')
+    def largeTableMethodDestinationThresholdGB(self, val):
+        self.__largeTableMethodDestinationThresholdGB = val
