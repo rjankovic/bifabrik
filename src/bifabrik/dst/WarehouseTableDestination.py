@@ -58,6 +58,7 @@ class WarehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__odbcConnection = None
         self.__watermarkColumn = None
         self.__addNARecord = False
+        self.__addBadValueRecord = False
 
     def __str__(self):
         return f'Warehouse table destination: [{self.__targetSchemaName}].[{self.__targetTableName}]'
@@ -209,6 +210,7 @@ CREATE TABLE [{self.__targetSchemaName}].[{self.__targetTableName}](
         if not self.__tableExists:
             self.__execute_dml(createTableSql)
             self.__insertNARecord()
+            self.__insertBadValueRecord()
             self.__append_target()
             drop_temp_sql = f'DROP TABLE IF EXISTS `{self.__destinationLakehouse}`.`{self.__tempTableName}`'
             self._spark.sql(drop_temp_sql)
@@ -331,6 +333,7 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
         if incrementMethod != 'overwrite':
             # overwrite will handle it's N/A record by itself
             self.__insertNARecord()
+            self.__insertBadValueRecord()
 
         # handle increments as in a lakehouse
         if incrementMethod == 'overwrite':
@@ -490,6 +493,52 @@ src AS ({src_query}
 
         insert_query = f'''
 IF NOT EXISTS(SELECT TOP 1 1 FROM [{self.__targetSchemaName}].[{self.__targetTableName}] WHERE [{self.__identityColumn}] = -1)
+BEGIN
+    INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}] ({insert_columns_join})
+    VALUES({values_join})
+END
+'''
+        self.__execute_dml(insert_query)
+
+    def __insertBadValueRecord(self):        
+        self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
+        if not self.__addBadValueRecord:
+            return
+        if self.__identityColumn is None:
+            raise Exception('Configuration error - when addBadValueRecord is enabled, identityColumnPattern needs to be configured as well.')
+                
+        # IF NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[SurveyData] WHERE [SurveyDataID] = -1)
+        # BEGIN
+        #     INSERT INTO [dbo].[SurveyData] ([SurveyDataID], [Year], [Industry_aggregation_NZSIOC])
+        #     VALUES(-1, 0, 'N/A')
+        # END
+
+        columnsTypesDf = self.__get_current_table_structure()
+
+        insert_list = []
+        value_list = []
+
+        for c in columnsTypesDf:
+            col_name = c.column_name
+            col_type = c.type_name.upper()
+            insert_list.append(col_name)
+            if col_name == self.__identityColumn:
+                value_list.append('0')
+            elif col_type in ['INT', 'BIGINT', 'SMALLINT', 'BIT']:
+                value_list.append('0')
+            elif col_type in ['REAL', 'FLOAT']:
+                value_list.append('0.0')
+            elif col_type in ['DATETIME', 'DATETIME2']:
+                value_list.append("'2000-01-01'")
+            elif col_type in ['VARCHAR', 'CHAR']:
+                value_list.append("'Bad value'")
+        
+        insert_columns = list(map(lambda x: f'[{x}]', insert_list))
+        insert_columns_join = ", \n".join(insert_columns)
+        values_join = ", \n".join(value_list)
+
+        insert_query = f'''
+IF NOT EXISTS(SELECT TOP 1 1 FROM [{self.__targetSchemaName}].[{self.__targetTableName}] WHERE [{self.__identityColumn}] = 0)
 BEGIN
     INSERT INTO [{self.__targetSchemaName}].[{self.__targetTableName}] ({insert_columns_join})
     VALUES({values_join})

@@ -1,7 +1,7 @@
 import datetime
 from pyspark.sql.functions import *
 
-def addNARecord(df, spark, targetTableName: str, identityColumn:str ):
+def addNARecord(df, spark, targetTableName: str, identityColumn:str, idValue = -1, stringValue = 'N/A'):
         na_data = []
         col_names = []
         casts = []
@@ -11,9 +11,9 @@ def addNARecord(df, spark, targetTableName: str, identityColumn:str ):
             col_type = f[1]
             
             if col_name == identityColumn:
-                na_data.append(-1)
+                na_data.append(idValue)
             elif col_type == 'string' or col_type.startswith('char') or col_type.startswith('varchar'):
-                na_data.append('N/A')
+                na_data.append(stringValue)
             elif col_type == 'date' or col_type == 'timestamp':
                 na_data.append('2000-01-01')
             else:
@@ -25,4 +25,6 @@ def addNARecord(df, spark, targetTableName: str, identityColumn:str ):
         cast_df = na_df.select(*casts)
         union_df = cast_df.union(df)
         return union_df
-        
+
+def addBadValueRecord(df, spark, targetTableName: str, identityColumn:str):
+     addNARecord(df, spark, targetTableName, identityColumn, idValue = 0, stringValue = 'Bad value')

@@ -36,6 +36,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__logger = None
         self.__tableLocation = None
         self.__addNARecord = False
+        self.__addBadValueRecord = False
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -70,6 +71,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
         self.__addNARecord = self.__tableConfig.addNARecord
+        self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
         self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
         self.__tableExists = self.__tableExistsF()
 
@@ -81,7 +83,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__replaceInvalidCharactersInColumnNames()
         self.__insertIdentityColumn()
         self.__insertInsertDateColumn()
+        
         self.__insertNARecord()
+        self.__insertBadValueRecord()
 
         self.__resolveSchemaDifferences()
         
@@ -179,6 +183,19 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         na_exists = self._spark.sql(na_exists_sql).collect()[0][0]
         if na_exists == 0:
             self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
+    
+    def __insertBadValueRecord(self):
+        if not self.__addBadValueRecord:
+            return
+        if self.__identityColumn is None:
+            raise Exception('Configuration error - when addBadValueRecord is enabled, identityColumnPattern needs to be configured as well.')
+        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
+            self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
+            return
+        bv_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.`{self.__targetTableName}` WHERE `{self.__identityColumn}` = 0'
+        bv_exists = self._spark.sql(bv_exists_sql).collect()[0][0]
+        if bv_exists == 0:
+            self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
 
     def __overwriteTarget(self):
         self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
@@ -303,10 +320,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__appendTarget()
 
     def __tableExistsF(self):
-         """Checks if a table in the lakehouse exists.
-         """
-         fileExists = notebookutils.mssparkutils.fs.exists(self.__tableLocation)
-         
+        """Checks if a table in the lakehouse exists.
+        """
+        #fileExists = notebookutils.mssparkutils.fs.exists(self.__tableLocation)
+        #return fileExists
+        
+        df_tables = self._spark.sql('SHOW TABLES')
+        df_f = df_tables.filter(lower('tableName') == self.self.__targetTableName.lower())
+        if df_f.count() > 0:
+            return True
+        return False
+
         #  dstLh = self.__config.destinationStorage.destinationLakehouse
         #  dstWs = self.__config.destinationStorage.destinationWorkspace
         #  p = f'Tables/{self.__targetTableName}'
@@ -317,7 +341,6 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #      print('exists')
         #  else:
         #      print('does not exist')
-         return fileExists
     
     def __filterByWatermark(self):
         if not(self.__tableExists):

@@ -16,6 +16,7 @@ class TableConfiguration(Configuration):
         self.__invalidCharactersInColumnNamesReplacement = '_'
         self.__canAddNewColumns = True
         self.__addNARecord = False
+        self.__addBadValueRecord = False
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -119,3 +120,13 @@ class TableConfiguration(Configuration):
     @addNARecord.setter(key='addNARecord')
     def addNARecord(self, val):
         self.__addNARecord = val
+
+    @CfgProperty
+    def addBadValueRecord(self) -> bool:
+        """Add a dimension "Bad Value" record with identity 0, Bad Value for strings, 0 for numbers. identityColumnPattern needs to be configured when this is enabled.
+        default False
+        """
+        return self.__addBadValueRecord
+    @addBadValueRecord.setter(key='addBadValueRecord')
+    def addBadValueRecord(self, val):
+        self.__addBadValueRecord = val
