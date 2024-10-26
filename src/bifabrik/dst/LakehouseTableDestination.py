@@ -81,9 +81,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__incrementMethod = incrementMethod
 
         self.__replaceInvalidCharactersInColumnNames()
-        self.__insertIdentityColumn()
-        self.__insertInsertDateColumn()
         
+        identityColumnPattern = self.__tableConfig.identityColumnPattern
+        if identityColumnPattern is not None:
+            identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, lakehousename = self.__lhMeta.lakehouseName)
+            self.__identityColumn = identityColumn
+
+        # merge handles identity insert itself - separating the new records from the updates
+        if incrementMethod != 'merge' or self.__identityColumn is None:
+            self.__insertIdentityColumn()
+
+        self.__insertInsertDateColumn()
         self.__insertNARecord()
         self.__insertBadValueRecord()
 
@@ -137,19 +145,20 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         return name
 
     def __insertIdentityColumn(self):
-        df_res = self.__insertIdentityColumn(self.__data)
+        df_res = self.__insertIdentityColumnToDf(self.__data)
         self.__data = df_res
 
-    def __insertIdentityColumn(self, df):
+    def __insertIdentityColumnToDf(self, df):
         identityColumnPattern = self.__tableConfig.identityColumnPattern
+        print(f'adding to df using pattern {identityColumnPattern}')
         if identityColumnPattern is None:
             return df
         
         lhName = self.__lhMeta.lakehouseName
-        initID = 0
         identityColumn = self.__tableConfig.identityColumnPattern.format(tablename = self.__targetTableName, lakehousename = lhName)
         self.__identityColumn = identityColumn
 
+        initID = 0
         if self.__tableExists:
             query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
             initID = self._spark.sql(query).collect()[0][0]
@@ -219,11 +228,16 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
         cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
         cols_old = self._spark.createDataFrame(df_old.dtypes, ["old_name", "old_type"])
+        cols_new = cols_new.filter(cols_new.new_name != self.__identityColumn)
+        cols_old = cols_old.filter(cols_old.old_name != self.__identityColumn)
+
         compare = (
             cols_new.join(cols_old, cols_new.new_name == cols_old.old_name, how="outer")
             .fillna("")
         )
-        difference = compare.filter(compare.new_type != compare.old_type)
+        # TODO: catch unsolvable type differences
+        difference = compare.filter(compare.new_type != compare.old_type) \
+            .filter((col('old_name') == '') | (col('new_name') == ''))
 
         canAddColumns = self.__tableConfig.canAddNewColumns
 
@@ -270,6 +284,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
         insert_list = ", ".join([f"`{item}`" for item in all_columns])
         insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
+        key_col_list = ", ".join([f"`{item}`" for item in key_columns])
         
         scd1_update = f"WHEN MATCHED THEN UPDATE SET \
             {update_list} "
@@ -279,7 +294,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         # temp table name in case we needed to use the large table approach
-        src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__target_table_name}_withid"
+        src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_withid"
         self.__data.createOrReplaceTempView(src_view_name)
         mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
 
@@ -295,7 +310,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         ''')
         
         # 2. generate IDs for the news DF independently - we don't want to mix these with the updates
-        news_df = self.__insertIdentityColumn(src_news_df)
+        news_df = self.__insertIdentityColumnToDf(src_news_df)
 
         # 3. separate updated records dataframe 
         # and if identity column is configured, include in in the DF
@@ -318,6 +333,10 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             ''')
         
         # 4. create an unified dataframe
+        print('news_df')
+        news_df.printSchema()
+        print('src_updates_df')
+        src_updates_df.printSchema()
         uni_df = news_df.union(src_updates_df)
 
         # get the target table size
@@ -414,7 +433,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         
         print('large table strategy')
         
-        tgt_temp_table_name = f'temp_scd_tgt_{self.__target_table_name}'
+        tgt_temp_table_name = f'temp_scd_tgt_{self.__targetTableName}'
         print(f'pooling rows for update to {tgt_temp_table_name}')
         tgt_df_query = f'''
         SELECT tgt.* 
@@ -640,7 +659,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #return fileExists
         
         df_tables = self._spark.sql('SHOW TABLES')
-        df_f = df_tables.filter(lower('tableName') == self.self.__targetTableName.lower())
+        df_f = df_tables.filter(lower('tableName') == self.__targetTableName.lower())
         if df_f.count() > 0:
             return True
         return False
