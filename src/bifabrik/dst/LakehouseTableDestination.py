@@ -333,10 +333,12 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             ''')
         
         # 4. create an unified dataframe
-        print('news_df')
-        news_df.printSchema()
-        print('src_updates_df')
-        src_updates_df.printSchema()
+        
+        # print('news_df')
+        # news_df.printSchema()
+        # print('src_updates_df')
+        # src_updates_df.printSchema()
+
         uni_df = news_df.union(src_updates_df)
 
         # get the target table size
