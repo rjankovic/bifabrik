@@ -149,8 +149,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__data = df_res
 
     def __insertIdentityColumnToDf(self, df):
+        lgr = lg.getLogger()
         identityColumnPattern = self.__tableConfig.identityColumnPattern
-        print(f'adding to df using pattern {identityColumnPattern}')
+        lgr.info(f'adding identity to df using pattern {identityColumnPattern}')
         if identityColumnPattern is None:
             return df
         
@@ -266,6 +267,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
 
     def __mergeTarget(self):
+        lgr = lg.getLogger()
         all_columns = self.__data.columns
         key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn])
@@ -345,7 +347,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         tableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
         tableGB = tableBytes / 1024 / 1024 / 1024
-        print(f'Target GB: {tableGB}')
+        lgr.info(f'Target GB: {tableGB}')
 
         largetTableModeEnabled =  self.__tableConfig.largeTableMethodEnabled
         sourceSizeThreshold = self.__tableConfig.largeTableMethodSourceThresholdGB
@@ -357,23 +359,23 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         if tableGB >= targetSizeThreshold and largetTableModeEnabled:
 
-            print(f'writing to {src_temp_table_name_withid}')
+            lgr.info(f'writing to {src_temp_table_name_withid}')
             
             uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
             
             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             input_row_count = uni_df.count()
-            print(f'input count {input_row_count}')
+            lgr.info(f'input count {input_row_count}')
 
             inputBytes = self._spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
             inputGB = inputBytes / 1024 / 1024 / 1024
-            print(f'Source GB: {inputGB}')
+            lgr.info(f'Source GB: {inputGB}')
             # delete_src_temp_table_name_withid = True
         else:
             inputBytes = 0
             uni_df.createOrReplaceTempView(src_temp_table_name_withid)
 
-        print('checking for duplicates')
+        lgr.info('checking for duplicates')
         duplicates_check = self._spark.sql(f'''
         SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
         GROUP BY {key_col_list}
@@ -407,12 +409,12 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             )\
             "
 
-            print('merge update')
-            print(merge_sql_update_basic)
+            lgr.info('merge update')
+            lgr.info(merge_sql_update_basic)
             self._spark.sql(merge_sql_update_basic)
 
-            print('merge insert')
-            print(merge_sql_insert_basic)
+            lgr.info('merge insert')
+            lgr.info(merge_sql_insert_basic)
             self._spark.sql(merge_sql_insert_basic)
             
             self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
@@ -433,17 +435,18 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
             return
         
-        print('large table strategy')
+        msg = 'large table mrege strategy'
+        lgr.info(msg)
         
         tgt_temp_table_name = f'temp_scd_tgt_{self.__targetTableName}'
-        print(f'pooling rows for update to {tgt_temp_table_name}')
+        lgr.info(f'pooling rows for update to {tgt_temp_table_name}')
         tgt_df_query = f'''
         SELECT tgt.* 
         FROM {src_temp_table_name_withid} AS src
         INNER JOIN {self.__targetTableName} AS tgt ON {join_condition}
         '''
 
-        print(tgt_df_query)
+        lgr.info(tgt_df_query)
         tgt_df = self._spark.sql(tgt_df_query)
 
         tgt_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{tgt_temp_table_name}')
@@ -453,7 +456,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         
         df_tgt_temp = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
-        print(f'tgt temp count {df_tgt_temp.count()}')
+        lgr.info(f'tgt temp count {df_tgt_temp.count()}')
         
 
         # 5. merge update and insert to the temp destination from source view
@@ -463,8 +466,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                     ON {join_condition} \
                     {scd1_update}\
                     "
-        print('merge update temp')
-        print(merge_sql_update_temp)
+        lgr.info('merge update temp')
+        lgr.info(merge_sql_update_temp)
         self._spark.sql(merge_sql_update_temp)
 
         merge_sql_insert_temp = f"MERGE INTO {mergeDbRef}{tgt_temp_table_name} AS tgt \
@@ -476,17 +479,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             {insert_values} \
             )\
             "
-        print('merge insert temp')
-        print(merge_sql_insert_temp)
+        lgr.info('merge insert temp')
+        lgr.info(merge_sql_insert_temp)
         self._spark.sql(merge_sql_insert_temp)
 
         df_merged = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
-        print(df_merged.count())
+        lgr.info(df_merged.count())
 
         # 5. add unmodified (unaffected, unmatched) rows from target to the temp table
         # (Xmerge delete from target table using temp destination (on merge keys))
 
-        print('adding unchanged rows to temp')
+        lgr.info('adding unchanged rows to temp')
 
         #tgt_temp_table_name = f'temp_scd_tgt_{self.__target_table_name}'
         tgt_unchanged_df_query = f'''
@@ -495,18 +498,18 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         LEFT JOIN {src_temp_table_name_withid} AS src ON {join_condition}
         WHERE src.`{key_columns[0]}` IS NULL
         '''
-        print(tgt_unchanged_df_query)
+        lgr.info(tgt_unchanged_df_query)
         tgt_unchanged_df = self._spark.sql(tgt_unchanged_df_query)
 
-        print(tgt_unchanged_df.count())
+        lgr.info(tgt_unchanged_df.count())
         tgt_unchanged_df.write.mode("append").format("delta").save(f'Tables/{tgt_temp_table_name}')
 
-        print('writing back to target table')
+        lgr.info('writing back to target table')
 
         #print('appending new and updated rows')
         #df_full = spark.sql(f'SELECT * FROM `{tgt_temp_table_name}`')
         df_full = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
-        print(f'writing {df_full.count()} rows')
+        lgr.info(f'writing {df_full.count()} rows')
         df_full.write.mode("overwrite").format("delta").save(self.__tableLocation)
 
         self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')

@@ -54,7 +54,7 @@ class JdbcSource(DataSource, JdbcSourceConfiguration):
             sparkKey = sparkKey[0].lower() + sparkKey[1:]
             
             lgr.info(f'Setting {sparkKey} to {mergedConfig.jdbc._explicitProps[key]}')
-            print(f'Setting {sparkKey} to {mergedConfig.jdbc._explicitProps[key]}')
+            #print(f'Setting {sparkKey} to {mergedConfig.jdbc._explicitProps[key]}')
             readerBase.option(sparkKey, mergedConfig.jdbc._explicitProps[key])
 
         df = readerBase.load()
