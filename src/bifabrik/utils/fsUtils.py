@@ -11,6 +11,8 @@ import os
 import datetime
 import time
 from IPython.display import clear_output
+import json
+import pyspark.sql.session as pss
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
@@ -221,6 +223,27 @@ class LakehouseMeta:
     workspaceId: str = None
     basePath: str = None
 
+    def serialize(self) -> str:
+        res = {
+            'lakehouseName': self.lakehouseName,
+            'lakehouseId':  self.lakehouseId,
+            'workspaceName': self.workspaceName,
+            'workspaceId': self.workspaceId,
+            'basePath': self.basePath
+        }
+        j = json.dumps(res, indent=4)
+        return j
+    @staticmethod
+    def deserialize(json_data):
+        d = json.loads(json_data)
+        l = LakehouseMeta()
+        l.lakehouseName = d['lakehouseName']
+        l.lakehouseId = d['lakehouseId']
+        l.workspaceName = d['workspaceName']
+        l.workspaceId = d['workspaceId']
+        l.basePath = d['basePath']
+        return l
+
 class LakehouseMap():
 
     def __init__(self, workspaceId: str, workspaceName: str):
@@ -250,6 +273,26 @@ class LakehouseMap():
     def __iter__(self):
         for k in self.__dictById:
             yield self.__dictById[k]
+    
+    def serialize(self) -> str:
+        res = { 'workspaceId': self.workspaceId, 'workspaceName': self.workspaceName }
+        lhmaps = []
+        for l in list(self.__dictById.values()):
+            lhmaps.append(l.serialize())
+        res['lakehouses'] = lhmaps
+        j = json.dumps(res, indent=4)
+        return j
+    
+    @staticmethod
+    def deserialize(json_data):
+        lm = LakehouseMap(None, None)
+        d = json.loads(json_data)
+        lm.workspaceId = d['workspaceId']
+        lm.workspaceName = d['workspaceName']
+        for l in d['lakehouses']:
+            l_deser = LakehouseMeta.deserialize(l)
+            lm.addLakehouse(l_deser)
+        return lm
 
 class WorkspaceMap:
 
@@ -280,6 +323,22 @@ class WorkspaceMap:
     def __iter__(self):
         for k in self.__dictById:
             yield self.__dictById[k]
+    
+    def serialize(self) -> str:
+        res = []
+        for l in list(self.__dictById.values()):
+            res.append(l.serialize())
+        j = json.dumps(res, indent=4)
+        return j
+
+    @staticmethod
+    def deserialize(json_data):
+        m = WorkspaceMap()
+        d = json.loads(json_data)
+        for l in d:
+            l_deser = LakehouseMap.deserialize(l)
+            m.addWorkspace(l_deser)
+        return m
 
 __workspaceMap = WorkspaceMap()
 
@@ -306,7 +365,7 @@ def mapLakehouses(workspaceId: str, workspaceName: str):
         lm.addLakehouse(l)
     return lm
 
-def mapWorkspaces():
+def mapWorkspacesUsingSempy():
     global __workspaceMap
     global __defaultWorkspaceId
     global __defaultWorkspaceRefName
@@ -325,6 +384,25 @@ def mapWorkspaces():
         __workspaceMap.addWorkspace(mwslm)
     
     return __workspaceMap
+
+
+def mapWorkspaces():
+    global __workspaceMap
+
+    spark = pss.SparkSession.builder.getOrCreate()
+    map_config_key = 'bifabrik.fs.workspaceMap'
+    
+    if spark.sparkContext._conf.contains(map_config_key):
+        print(f'reading lakehouse mapping from sparkContext._conf [{map_config_key}]')
+        map_serialized = spark.sparkContext._conf.get(map_config_key)
+        deser = WorkspaceMap.deserialize(map_serialized)
+        __workspaceMap = deser
+    else:
+        mapWorkspacesUsingSempy()    
+        #print(f'setting {map_config_key}')
+        serialized = __workspaceMap.serialize()
+        spark.sparkContext._conf.set(map_config_key, serialized)
+
 
 mapWorkspaces()
 
