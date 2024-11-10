@@ -25,3 +25,7 @@ There is a lot of flexibility with JDBC
  - The JDBC URL usually has options specific to your data source
  - If need be, specify the JDBC driver, e.g. `bif.config.jdbc.jdbcDriver = 'com.mysql.cj.jdbc.Driver'`
  - To see all the JDBC options, run `help(bif.config.jdbc)`. These correspond to their PySpark equivalents
+
+You can save your Key Vault configuration and other repetitive setup in a file - see [Configuration](configuration.md).
+
+[Back](../index.md)
