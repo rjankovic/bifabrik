@@ -205,8 +205,19 @@ def fromJdbcQuery(query: str) -> JdbcSource:
     --------
     
     >>> import bifabrik as bif
-    >>>
-    >>> bif.fromCsv('orders*.csv').toTable('Orders').run()
+    >>> 
+    >>> # You will probably need to configure the user name and password.
+    >>> # Passwords cannot be set directly - store in Key Vault and run the notebook with sufficient permissions.
+    >>> bif.config.jdbc.jdbcUser = 'my.jdbc.user'
+    >>> bif.config.security.keyVaultUrl = 'https://contoso-kv.vault.azure.net/'
+    >>> bif.config.security.passwordKVSecretName = 'Contoso-MariaDb-Password'
+    >>> 
+    >>> db_host = "127.0.0.1"
+    >>> db_port = "3306"
+    >>> db_name = "contoso"
+    >>> url = f'jdbc:mysql://{db_host}:{db_port}/{db_name}?useUnicode=true&tinyInt1isBit=FALSE&useLegacyDatetimeCode=false'
+    >>> 
+    >>> bif.fromJdbcQuery('SELECT * FROM contoso.orders').jdbcUrl(url).toTable('MariaDB_Orders').run()
     """
     ds = JdbcSource(__prepPipeline())
     ds.jdbcQuery(query)

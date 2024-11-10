@@ -136,7 +136,7 @@ class TableConfiguration(Configuration):
     @CfgProperty
     def largeTableMethodEnabled(self) -> bool:
         """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table
-        default False
+        default True
         """
         return self.__largeTableMethodEnabled
     @largeTableMethodEnabled.setter(key='largeTableMethodEnabled')

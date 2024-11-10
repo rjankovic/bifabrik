@@ -363,6 +363,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             
             uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
             
+            # waiting for the new table to "come online"
+            time.sleep(10)
+
             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             input_row_count = uni_df.count()
             lgr.info(f'input count {input_row_count}')
