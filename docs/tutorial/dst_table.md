@@ -91,9 +91,9 @@ Internally, Spark SQL `MERGE` statement is used to insrt new rows and update row
 >
 > To check or change the settings, use the following properties
 > ```python
-> print(bif.config.destinationTable.largeTableMethodEnabled) # default True
-> print(bif.config.destinationTable.largeTableMethodSourceThresholdGB) # default 0.2
-> print(bif.config.destinationTable.largeTableMethodDestinationThresholdGB) # default 20
+> bif.config.destinationTable.largeTableMethodEnabled # default True
+> bif.config.destinationTable.largeTableMethodSourceThresholdGB # default 0.2
+> bif.config.destinationTable.largeTableMethodDestinationThresholdGB # default 20
 > ```
 
 ### snapshot
