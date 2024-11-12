@@ -165,7 +165,7 @@ bif.config.fileSource.moveFilesToArchive = True
 bif.config.fileSource.archiveFolder = 'Files/CsvSources/Archive'
 bif.config.fileSource.archiveFilePattern = 'processed_{filename}_{timestamp}{extension}'
 
-bif.config.security.keyVaultUrl = 'https://kv-givetbi.vault.azure.net/'
+bif.config.security.keyVaultUrl = 'https://kv-contosobi.vault.azure.net/'
 bif.config.security.loginKVSecretName = 'SharePointLogin'
 bif.config.security.passwordKVSecretName = 'SharePointPwd'
 
