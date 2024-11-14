@@ -2,7 +2,7 @@
 name = "bifabrik"
 version = "0.10.0"
 description = "Microsoft Fabric ETL toolbox"
-authors = ["Radovan Jankovič"]
+authors = ["Radovan Jankovič", email = "jankovic.rj@gmail.com"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://rjankovic.github.io/bifabrik/"
