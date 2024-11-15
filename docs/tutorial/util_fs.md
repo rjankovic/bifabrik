@@ -39,10 +39,12 @@ find a lakehouse by workspace and lakehouse name or ID.
 If found, returns a metadata object `bifabrik.utils.fsUtils.LakehouseMeta` (with same properties as the dictionary from `currentLakehouse()`)
 
 ```python
+# the workspace parameter is optional, by default this searches the current workspace
 meta = fsu.getLakehouseMeta(workspace = 'WS_BI', lakehouse = 'LH_SILVER')
 
 meta.__dict__
 ```
+> During initialization, `bifabrik` scans the lakehouses across all workspaces and saves this  information to `spark.sparkContext._conf['bifabrik.fs.workspaceMap']` for use through the lifetime of the session.
 
 ## `filePatternSearch()`
 
