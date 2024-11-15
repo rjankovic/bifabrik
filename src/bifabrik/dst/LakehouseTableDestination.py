@@ -23,10 +23,16 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     >
     > bif.fromSql.query('SELECT * FROM SomeTable').toTable('DestinationTable1').run()
     """
-    def __init__(self, pipeline: Pipeline, targetTableName: str):
+    def __init__(self, pipeline: Pipeline, targetTableName: str, targetSchemaName: str = 'dbo'):
         super().__init__(pipeline)
         TableDestinationConfiguration.__init__(self)
         self.__targetTableName = targetTableName
+        self.__targetSchemaName = targetSchemaName
+        if '.' in targetTableName:
+            split_name = targetTableName.split('.')
+            self.__targetSchemaName = split_name[0]
+            self.__targetTableName = split_name[1]
+            
         self.__data = None
         self.__config = None
         self.__lhBasePath = None
@@ -422,20 +428,6 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             
             self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
 
-            # merge_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
-            # USING {src_view_name}  AS src \
-            # ON {join_condition} \
-            # {scd1_update}\
-            # WHEN NOT MATCHED THEN INSERT ( \
-            # {insert_list} \
-            # ) VALUES ( \
-            # {insert_values} \
-            # )\
-            # "
-            # self.__logger.info("----SCD1 MERGE SQL")
-            # self.__logger.info(merge_sql)
-            # self._spark.sql(merge_sql)
-
             return
         
         msg = 'large table mrege strategy'
@@ -518,117 +510,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
         self._spark.sql(f'DROP TABLE IF EXISTS {tgt_temp_table_name}')
 
-# ################
 
-
-
-
-
-#         ############################
-
-#         all_columns = self.__data.columns
-#         key_columns = list(map(lambda x: self.__sanitize_column_name(x), self.__key_columns))
-#         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identity_column, self.__insert_date_column, self.__audit_column])
-        
-#         # print('key columns')
-#         # print(key_columns)
-#         # print('non-key columns')
-#         # print(non_key_columns)
-        
-#         if len(key_columns) == 0:
-#             raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
-
-#         join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
-#         key_col_list = ", ".join([f"`{item}`" for item in key_columns])
-#         insert_list = ", ".join([f"`{item}`" for item in all_columns])
-#         insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
-        
-        
-#         # table consisisting only of key columns - no need for the update clause
-#         if len(non_key_columns) == 0:
-#             scd1_update = ""
-
-#         src_view_name = f"src_{self.__target_table_name}"
-#         src_temp_table_name_withid = f"temp_src_{self.__target_table_name}_withid"
-#         #src_view_name_withid_part = f"src_{self.__target_table_name}_withid_part"
-#         self.__data.createOrReplaceTempView(src_view_name)
-        
-#         src_news_df = spark.sql(f'''
-#         SELECT src.* 
-#         FROM {src_view_name} AS src
-#         LEFT JOIN {self.__target_table_name} AS tgt ON {join_condition}
-#         WHERE tgt.`{key_columns[0]}` IS NULL
-#         ''')
-#         news_df = self.__insert_identity_column(src_news_df)
-        
-
-#         #print(f'IC {self.__identity_column}')
-#         #display(news_df)
-
-#         if self.__identity_column_pattern is None:
-#             src_updates_df = spark.sql(f'''
-#             SELECT src.* 
-#             FROM {src_view_name} AS src
-#             INNER JOIN {self.__target_table_name} AS tgt ON {join_condition}
-#             ''')    
-#         else:
-#             self.__identity_column = self.__identity_column_pattern.format(table_name = self.__target_table_name)
-#             insert_list = f'`{self.__identity_column}`, {insert_list}'
-#             insert_values = f'src.`{self.__identity_column}`, {insert_values}'
-#             src_updates_df = spark.sql(f'''
-#             SELECT tgt.{self.__identity_column}, src.* 
-#             FROM {src_view_name} AS src
-#             INNER JOIN {self.__target_table_name} AS tgt ON {join_condition}
-#             ''')
-        
-#         uni_df = news_df.union(src_updates_df)
-
-#         tableBytes = spark.sql(f'describe detail {self.__target_table_name}').select("sizeInBytes").collect()[0][0]
-#         tableGB = tableBytes / 1024 / 1024 / 1024
-#         print(f'Target GB: {tableGB}')
-
-#         delete_src_temp_table_name_withid = False
-#         delete_tgt_temp_table_name = False
-
-#         if tableGB >= 20:
-
-#             print(f'writing to {src_temp_table_name_withid}')
-            
-#             uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
-            
-#             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
-#             input_row_count = uni_df.count()
-#             print(f'input count {input_row_count}')
-
-#             inputBytes = spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
-#             inputGB = inputBytes / 1024 / 1024 / 1024
-#             print(f'Source GB: {inputGB}')
-#             delete_src_temp_table_name_withid = True
-#         else:
-#             inputBytes = 0
-#             uni_df.createOrReplaceTempView(src_temp_table_name_withid)
-
-            
-            
-
-#         print('checking for duplicates')
-#         duplicates_check = spark.sql(f'''
-#         SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
-#         GROUP BY {key_col_list}
-#         HAVING COUNT(*) > 1
-#         ''')
-#         if duplicates_check.count() > 0:
-#             display(duplicates_check)
-#             raise Exception(f'There are duplicate records about to be merged into {self.__target_table_name}')
-
-#         #mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
-#         merge_db_ref = f'' 
-
-        
-
-#         update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
-#         scd1_update = f"WHEN MATCHED THEN UPDATE SET \
-#             {update_list} "
 
 
     def __snapshotTarget(self):
@@ -672,17 +554,6 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             return True
         return False
 
-        #  dstLh = self.__config.destinationStorage.destinationLakehouse
-        #  dstWs = self.__config.destinationStorage.destinationWorkspace
-        #  p = f'Tables/{self.__targetTableName}'
-        #  print(f'Looking for table {p}')
-        #  fileExists = fsUtils.fileExists(path = p, lakehouse = dstLh, workspace = dstWs)
-         
-        #  if fileExists:
-        #      print('exists')
-        #  else:
-        #      print('does not exist')
-    
     def __filterByWatermark(self):
         if not(self.__tableExists):
             return

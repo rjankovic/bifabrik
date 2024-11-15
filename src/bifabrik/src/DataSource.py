@@ -24,15 +24,17 @@ class DataSource(Task):
     #     """
     #     pass
 
-    def toTable(self, targetTableName: str) -> LakehouseTableDestination:
-        """Sets the lakehouse destination table name
+    def toTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> LakehouseTableDestination:
+        """Sets the lakehouse destination table name.
+        The name can contain a schema as in 'schema.table' or you can specify the schema in the targetSchemaName parameter.
         """
-        return self.toLakehouseTable(targetTableName)
+        return self.toLakehouseTable(targetTableName, targetSchemaName)
     
-    def toLakehouseTable(self, targetTableName: str) -> LakehouseTableDestination:
-        """Sets the lakehouse destination table name
+    def toLakehouseTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> LakehouseTableDestination:
+        """Sets the lakehouse destination table name.
+        The name can contain a schema as in 'schema.table' or you can specify the schema in the targetSchemaName parameter.
         """
-        dst = LakehouseTableDestination(self._pipeline, targetTableName)
+        dst = LakehouseTableDestination(self._pipeline, targetTableName, targetSchemaName)
         return dst
     
     def toWarehouseTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> WarehouseTableDestination:

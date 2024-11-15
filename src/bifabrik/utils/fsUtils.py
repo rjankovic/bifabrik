@@ -222,6 +222,7 @@ class LakehouseMeta:
     workspaceName: str = None
     workspaceId: str = None
     basePath: str = None
+    schemasEnabled: bool = False
 
     def serialize(self) -> str:
         res = {
@@ -229,7 +230,8 @@ class LakehouseMeta:
             'lakehouseId':  self.lakehouseId,
             'workspaceName': self.workspaceName,
             'workspaceId': self.workspaceId,
-            'basePath': self.basePath
+            'basePath': self.basePath,
+            'schemasEnabled': self.schemasEnabled
         }
         j = json.dumps(res, indent=4)
         return j
@@ -242,6 +244,7 @@ class LakehouseMeta:
         l.workspaceName = d['workspaceName']
         l.workspaceId = d['workspaceId']
         l.basePath = d['basePath']
+        l.schemasEnabled = d['schemasEnabled']
         return l
 
 class LakehouseMap():
@@ -362,6 +365,13 @@ def mapLakehouses(workspaceId: str, workspaceName: str):
         l.workspaceName = workspaceName
         l.workspaceId = workspaceId
         l.basePath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lh.id}"
+
+        dbo_path = f"{l.basePath}/Tables/dbo"
+        if notebookutils.mssparkutils.fs.exists(dbo_path):
+            l.schemasEnabled = True
+        else:
+            l.schemasEnabled = False
+
         lm.addLakehouse(l)
     return lm
 
@@ -467,7 +477,8 @@ def currentLakehouse() -> LakehouseMeta:
         'lakehouseId' : l.lakehouseId,
         'workspaceName' : l.workspaceName,
         'workspaceId' : l.workspaceId,
-        'basePath' : l.basePath
+        'basePath' : l.basePath,
+        'schemasEnabled': l.schemasEnabled
     } 
 
 def currentLakehouseName() -> str:
