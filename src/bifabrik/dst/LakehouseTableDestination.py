@@ -32,7 +32,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             split_name = targetTableName.split('.')
             self.__targetSchemaName = split_name[0]
             self.__targetTableName = split_name[1]
-            
+
         self.__data = None
         self.__config = None
         self.__lhBasePath = None
@@ -76,9 +76,14 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         dstWs = mergedConfig.destinationStorage.destinationWorkspace
         self.__lhBasePath = fsUtils.getLakehousePath(dstLh, dstWs)
         self.__lhMeta = fsUtils.getLakehouseMeta(dstLh, dstWs)
+        self.__useSchema = self.__lhMeta.schemasEnabled
+        self.__sechemaRefPrefix = ''
+        self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
+        if self.__useSchema:
+            self.__sechemaRefPrefix = f'{self.__targetSchemaName}.'
+            self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName
         self.__addNARecord = self.__tableConfig.addNARecord
         self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
-        self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetTableName
         self.__tableExists = self.__tableExistsF()
 
         incrementMethod = mergedConfig.destinationTable.increment
@@ -167,7 +172,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         initID = 0
         if self.__tableExists:
-            query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__targetTableName}"
+            query = f"SELECT MAX({identityColumn}) FROM {lhName}.{self.__sechemaRefPrefix}{self.__targetTableName}"
             initID = self._spark.sql(query).collect()[0][0]
             # if the table exists, but is empty
             if initID is None:
@@ -199,7 +204,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
             self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
             return
-        na_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.`{self.__targetTableName}` WHERE `{self.__identityColumn}` = -1'
+        na_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}`{self.__targetTableName}` WHERE `{self.__identityColumn}` = -1'
         na_exists = self._spark.sql(na_exists_sql).collect()[0][0]
         if na_exists == 0:
             self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
@@ -212,7 +217,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
             self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
             return
-        bv_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.`{self.__targetTableName}` WHERE `{self.__identityColumn}` = 0'
+        bv_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}`{self.__targetTableName}` WHERE `{self.__identityColumn}` = 0'
         bv_exists = self._spark.sql(bv_exists_sql).collect()[0][0]
         if bv_exists == 0:
             self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
@@ -231,7 +236,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if self.__incrementMethod == 'overwrite':
             return
         
-        target_table = f'{self.__lhMeta.lakehouseName}.{self.__targetTableName}'
+        target_table = f'{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}{self.__targetTableName}'
         df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
         cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
         cols_old = self._spark.createDataFrame(df_old.dtypes, ["old_name", "old_type"])
@@ -304,7 +309,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # temp table name in case we needed to use the large table approach
         src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_withid"
         self.__data.createOrReplaceTempView(src_view_name)
-        mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
+        mergeDbRef = f'{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}' 
 
         # split data into news and updates
         
@@ -489,7 +494,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #tgt_temp_table_name = f'temp_scd_tgt_{self.__target_table_name}'
         tgt_unchanged_df_query = f'''
         SELECT tgt.* 
-        FROM {self.__targetTableName} AS tgt
+        FROM {mergeDbRef}{self.__targetTableName} AS tgt
         LEFT JOIN {src_temp_table_name_withid} AS src ON {join_condition}
         WHERE src.`{key_columns[0]}` IS NULL
         '''
@@ -526,7 +531,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         self.__data.createOrReplaceTempView(src_view_name)
-        mergeDbRef = f'{self.__lhMeta.lakehouseName}.'
+        mergeDbRef = f'{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}'
 
         merge_delete_sql = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
             USING (SELECT DISTINCT {join_column_list} FROM {src_view_name})  AS src \
@@ -545,14 +550,21 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     def __tableExistsF(self):
         """Checks if a table in the lakehouse exists.
         """
-        #fileExists = notebookutils.mssparkutils.fs.exists(self.__tableLocation)
-        #return fileExists
         
-        df_tables = self._spark.sql('SHOW TABLES')
-        df_f = df_tables.filter(lower('tableName') == self.__targetTableName.lower())
-        if df_f.count() > 0:
-            return True
-        return False
+        default_location = self.__lhBasePath + "/Tables/" + self.__targetTableName
+        lowercase_location = self.__lhBasePath + "/Tables/" + self.__targetTableName.lower()
+        if self.__useSchema:
+            default_location = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName
+            lowercase_location = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName.lower()
+            
+        fileExists = notebookutils.mssparkutils.fs.exists(default_location) or notebookutils.mssparkutils.fs.exists(lowercase_location)
+        return fileExists
+        
+        # df_tables = self._spark.sql('SHOW TABLES')
+        # df_f = df_tables.filter(lower('tableName') == self.__targetTableName.lower())
+        # if df_f.count() > 0:
+        #     return True
+        # return False
 
     def __filterByWatermark(self):
         if not(self.__tableExists):
@@ -566,7 +578,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if watermarkColumn is None:
             return
         
-        max_watermark_sql = f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__targetTableName}'
+        max_watermark_sql = f'SELECT MAX(`{watermarkColumn}`) FROM {self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}{self.__targetTableName}'
         # print(max_watermark_sql)
         max_watermark = self._spark.sql(max_watermark_sql).collect()[0][0]
         # print(f'max watermark: {max_watermark}')
