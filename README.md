@@ -103,7 +103,7 @@ GROUP BY Industry_name_NZSIOC
 
 ### More options
 
-`bifabrik` can help with incremental loads, identity columsn (auto-increment), dataframe transformations and more
+`bifabrik` can help with incremental loads, identity columns (auto-increment), dataframe transformations and more
 
 For example
 ```python
