@@ -342,7 +342,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             src_updates_df = self._spark.sql(f'''
             SELECT tgt.{self.__identityColumn}, src.* 
             FROM {src_view_name} AS src
-            INNER JOIN {self.__targetTableName} AS tgt ON {join_condition}
+            INNER JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
             ''')
         
         # 4. create an unified dataframe
@@ -443,7 +443,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         tgt_df_query = f'''
         SELECT tgt.* 
         FROM {src_temp_table_name_withid} AS src
-        INNER JOIN {self.__targetTableName} AS tgt ON {join_condition}
+        INNER JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
         '''
 
         lgr.info(tgt_df_query)
