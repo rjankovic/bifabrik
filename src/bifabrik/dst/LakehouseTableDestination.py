@@ -461,7 +461,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # 5. merge update and insert to the temp destination from source view
         
-        merge_sql_update_temp = f"MERGE INTO {mergeDbRef}{tgt_temp_table_name} AS tgt \
+        merge_sql_update_temp = f"MERGE INTO {tgt_temp_table_name} AS tgt \
                     USING {src_temp_table_name_withid}  AS src \
                     ON {join_condition} \
                     {scd1_update}\
@@ -470,7 +470,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         lgr.info(merge_sql_update_temp)
         self._spark.sql(merge_sql_update_temp)
 
-        merge_sql_insert_temp = f"MERGE INTO {mergeDbRef}{tgt_temp_table_name} AS tgt \
+        merge_sql_insert_temp = f"MERGE INTO {tgt_temp_table_name} AS tgt \
             USING {src_temp_table_name_withid}  AS src \
             ON {join_condition} \
             WHEN NOT MATCHED THEN INSERT ( \
