@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.10.5 (2024-11-10)
+ - cross-lakehouse lakehouse bug fixed for merge operation
+ - support for lakehouses with schemas
+
 ## v0.10.0 (2024-11-10)
  - JDBC source support
  - merge method for large tables
