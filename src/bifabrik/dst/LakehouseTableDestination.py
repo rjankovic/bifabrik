@@ -100,7 +100,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__identityColumn = identityColumn
 
         # merge handles identity insert itself - separating the new records from the updates
-        if (incrementMethod != 'merge' and incrementMethod != 'scd2') or self.__identityColumn is None:
+        if (incrementMethod != 'merge' and incrementMethod != 'scd2') or self.__identityColumn is None or not(self.__tableExists):
             self.__insertIdentityColumn()
 
         self.__insertInsertDateColumn()
