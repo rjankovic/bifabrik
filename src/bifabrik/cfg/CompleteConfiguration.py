@@ -86,7 +86,7 @@ class CompleteConfiguration(ConfigContainer):
     
     @property
     def destinationTable(self) -> TableConfiguration:
-        "Destination table settings (increment method, identity column, etc.)"
+        """Destination table settings (increment method, identity column, etc.)"""
         return self.__destinationTable
     
     @property

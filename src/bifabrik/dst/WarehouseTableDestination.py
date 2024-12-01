@@ -297,7 +297,7 @@ DROP TABLE [{self.__targetSchemaName}].[{self.__targetTableName}]
             if not canAddColumns:
                 raise Exception(f'Cannot resolve schema chnages in destination table [{self.__targetSchemaName}].[{self.__targetTableName}] because the `canAddNewColumns` setting is False')
             
-            msg = f'Rebuilding table [{self.__targetSchemaName}].[{self.__targetTableName}], to add new columns...'
+            msg = f'Rebuilding table [{self.__targetSchemaName}].[{self.__targetTableName}] to add new columns...'
             self.__logger.info(msg)
             print(msg)
 

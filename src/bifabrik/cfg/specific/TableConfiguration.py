@@ -19,6 +19,10 @@ class TableConfiguration(Configuration):
         self.__largeTableMethodEnabled = True
         self.__largeTableMethodSourceThresholdGB: float = 0.2
         self.__largeTableMethodDestinationThresholdGB: float = 20
+        self.__rowStartColumn = 'RowStart'
+        self.__rowEndColumn = 'RowEnd'
+        self.__currentRowColumn = 'CurrentRow'
+        self.__scd2SoftDelete = False
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -37,12 +41,15 @@ class TableConfiguration(Configuration):
         None or "overwrite" : full load
         "append"            : add incoming rows to the table
         "merge"             : update / insert (SCD 1) after matching based on the mergeKeyColumns setting
+        "scd2"              : perform SCD2 matching rows based on the mergeKeyColumns setting, using RowStartColumn, RowEndColumn and CurrentRowColumn column names 
         "snapshot"          : based on the snapshotKeyColumns setting (typically a date), inseert the new records and remove any old records that refer to a newly loaded snapshot key
         default None
         """
         return self.__increment
     @increment.setter(key='increment')
     def increment(self, val):
+        if val is not None:
+            val = val.lower()
         self.__increment = val
 
     @CfgProperty
@@ -53,7 +60,11 @@ class TableConfiguration(Configuration):
         return self.__mergeKeyColumns
     @mergeKeyColumns.setter(key='mergeKeyColumns')
     def mergeKeyColumns(self, val):
-        self.__mergeKeyColumns = val
+        t = str(type(val))
+        if t == "<class 'str'>":
+            self.__mergeKeyColumns = val.split(',')
+        else:
+            self.__mergeKeyColumns = val
 
     @CfgProperty
     def snapshotKeyColumns(self) -> str:
@@ -162,3 +173,43 @@ class TableConfiguration(Configuration):
     @largeTableMethodDestinationThresholdGB.setter(key='largeTableMethodDestinationThresholdGB')
     def largeTableMethodDestinationThresholdGB(self, val):
         self.__largeTableMethodDestinationThresholdGB = val
+
+    @CfgProperty
+    def rowStartColumn(self) -> str:
+        """Only for SCD2 increment - the row start timestamp column name
+        default RowStart
+        """
+        return self.__rowStartColumn
+    @rowStartColumn.setter(key='rowStartColumn')
+    def rowStartColumn(self, val):
+        self.__rowStartColumn = val
+    
+    @CfgProperty
+    def rowEndColumn(self) -> str:
+        """Only for SCD2 increment - the row end timestamp column name
+        default RowEnd
+        """
+        return self.__rowEndColumn
+    @rowEndColumn.setter(key='rowEndColumn')
+    def rowEndColumn(self, val):
+        self.__rowEndColumn = val
+    
+    @CfgProperty
+    def currentRowColumn(self) -> str:
+        """Only for SCD2 increment - the current row (Ture / False) column name
+        default CurrentRow
+        """
+        return self.__currentRowColumn
+    @currentRowColumn.setter(key='currentRowColumn')
+    def currentRowColumn(self, val):
+        self.__currentRowColumn = val
+    
+    @CfgProperty
+    def scd2SoftDelete(self) -> bool:
+        """For SCD 2 increment, set the RowEnd timestamp for rows not found in source (for full load only)
+        default False
+        """
+        return self.__scd2SoftDelete
+    @scd2SoftDelete.setter(key='scd2SoftDelete')
+    def scd2SoftDelete(self, val):
+        self.__scd2SoftDelete = val

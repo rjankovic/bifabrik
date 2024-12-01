@@ -86,7 +86,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
         self.__tableExists = self.__tableExistsF()
 
-        incrementMethod = mergedConfig.destinationTable.increment
+        incrementMethod = mergedConfig.destinationTable.increment.lower()
         if incrementMethod is None:
             incrementMethod = 'overwrite'
         self.__incrementMethod = incrementMethod
@@ -99,7 +99,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__identityColumn = identityColumn
 
         # merge handles identity insert itself - separating the new records from the updates
-        if incrementMethod != 'merge' or self.__identityColumn is None:
+        if (incrementMethod != 'merge' and incrementMethod != 'scd2') or self.__identityColumn is None:
             self.__insertIdentityColumn()
 
         self.__insertInsertDateColumn()
@@ -121,6 +121,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__mergeTarget()
         elif incrementMethod == 'snapshot':
             self.__snapshotTarget()
+        elif incrementMethod == 'scd2':
+            self.__scd2Target()
         else:
             raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
@@ -515,8 +517,161 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
         self._spark.sql(f'DROP TABLE IF EXISTS {tgt_temp_table_name}')
 
+    def __scd2Target(self):
+        lgr = lg.getLogger()
+        row_start_column = self.__tableConfig.rowStartColumn
+        row_end_column = self.__tableConfig.rowEndColumn
+        current_row_column = self.__tableConfig.currentRowColumn
+        all_columns = self.__data.columns
+        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
+        non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn, row_start_column, row_end_column, current_row_column])
+        soft_deletes = self.__tableConfig.scd2SoftDelete
+        
+        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        # temp table name in case we needed to use the large table approach
+        src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_withid"
+        self.__data.createOrReplaceTempView(src_view_name)
+        db_reference = f'{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}' 
+        
+        # print('key columns')
+        # print(key_columns)
+        # print('non-key columns')
+        # print(non_key_columns)
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for SCD 2 increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
+        
+        # TODO: instead of SQL, use pyspark for cross-workspace ETL
+        join_condition = " AND ".join([f"src.`{item}` = tgt.`{item}`" for item in key_columns])
+        # update_list = ", ".join([f"`{item}` = src.`{item}`" for item in non_key_columns])
+        # insert_list = ", ".join([f"`{item}`" for item in all_columns])
+        # insert_values = ", ".join([f"src.`{item}`" for item in all_columns])
+        key_col_list = ", ".join([f"`{item}`" for item in key_columns])
+
+        # 1. check for duplicates
+        # 2. if soft deletes are enabled, end-date deleted rows (source left join target...)
+        # 3. target left join source to find matches
+        # 4. for matched rows, find rows where all non-key attributes are the same as before and remove them from source
+        # 5. end-date remaining matched current rows in target
+        # 6. add RowStart, RowEnd and CurrentRow to source rows
+        # 7. generate identity column for the source data if configured
+        # 8. append all source rows to target
 
 
+        # 1. check for duplicates
+
+        deduplicated = self.__data.dropDuplicates(key_columns)
+        orig_count = self.__data.count()
+        deduplicated_count = deduplicated.count()
+        if orig_count > deduplicated_count:
+            duplicates_df = self.__data.exceptAll(deduplicated)
+            display(duplicates_df)
+            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
+        
+        # 2. if soft deletes are enabled, end-date deleted rows (target left join source...)
+
+        # will be used throughout the method
+        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        self.__data.createOrReplaceTempView(src_view_name)
+        end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
+        
+        if soft_deletes:
+            soft_deletes_sql = f"""
+            MERGE INTO {db_reference}{self.__targetTableName} AS tgt
+            USING(
+                SELECT {key_col_list}
+                FROM {src_view_name}
+                WHERE {current_row_column} = TRUE
+            ) AS src
+            ON {join_condition}
+            WHEN NOT MATCHED BY SOURCE THEN UPDATE {end_date_merge_update}
+            """
+            
+            lgr.info('running SQL merge to handle soft deletes')
+            print('soft delete sql:')
+            print(soft_deletes_sql)
+            self._spark.sql(soft_deletes_sql)
+        
+        # 3. target left join source to find matches
+        
+# baded on https://medium.com/yipitdata-engineering/how-to-use-broadcasting-for-more-efficient-joins-in-spark-2d53a336b02b
+# SELECT
+# /*+ BROADCAST(small_df_a) */
+# /*+ BROADCAST(small_df_b) */
+# /*+ BROADCAST(small_df_c) */
+# *
+# FROM large_df
+# LEFT JOIN small_df_a
+# USING (id)
+# LEFT JOIN small_df_b
+# USING (id)
+# LEFT JOIN small_df_c
+# USING (id)
+
+        #select_non_key_list = ", " + ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in non_key_columns])
+        # non-key match condition
+
+        if len(non_key_columns) == 0:
+            non_key_match = f"COALESCE(src.{key_columns[0]} = tgt.{key_columns[0]}, FALSE) AS __non_key_match"
+        else:
+            non_key_match = f"COALESCE(IF " + " AND ".join([f"src.{item} = tgt.{item}" for item in non_key_columns]) + " THEN FALSE ELSE TRUE, FALSE) AS __non_key_match"
+        select_key_list = ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in key_columns])
+        target_left_join_sql = f"""
+SELECT  {select_key_list}, {non_key_match} 
+/*+ BROADCAST(src) */
+FROM {src_view_name} AS src ON {join_condition}
+LEFT JOIN {db_reference}{self.__targetTableName} AS tgt
+"""
+        lgr.info('running SQL left join to find matching rows')
+        print('left join sql')
+        print(target_left_join_sql)
+        df_left_join = self._spark.sql(target_left_join_sql)
+        left_join_temp_name = f"temp_match_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        
+        # 4. for matched rows, find rows where all non-key attributes are the same as before and remove them from source
+
+        df_left_join = df_left_join.filter(df_left_join.__non_key_match == False)
+        df_left_join.createOrReplaceTempView(left_join_temp_name)
+        self.__data.createOrReplaceTempView(src_view_name)
+        end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
+
+        src_view_name_filtered_with_id = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_filtered_with_id"
+        join_condition_src_left_join = " AND ".join([f"src.`{item}` = lj.`src_{item}`" for item in key_columns])
+        
+        # 6. add RowStart, RowEnd and CurrentRow to source rows
+        
+        src_filtered_sql = f'SELECT src.*, CURRENT_TIMESTAMP() AS {row_start_column}, CAST(9999-12-31 AS TIMESTMP) AS {row_end_column}, TRUE AS {current_row_column} \
+        FROM {src_view_name} src INNER JOIN {left_join_temp_name} AS lj ON {join_condition_src_left_join}'
+
+        print('filtered source query')
+        print(src_filtered_sql)
+        df_src_filtered = self._spark.sql(src_filtered_sql)
+        
+        # 7. generate identity column for the source data if configured
+
+        df_src_filtered_with_id = self.__insertIdentityColumnToDf(df_src_filtered)
+        
+        #df_src_filtered_with_id.createOrReplaceTempView(src_view_name_filtered_with_id)
+        
+        # 5. end-date remaining matched current rows in target
+
+        join_condition_tgt = " AND ".join([f"src.tgt_`{item}` = tgt.`{item}`" for item in key_columns])
+        enddate_old_rows_sql = f"""
+            MERGE INTO {db_reference}{self.__targetTableName} AS tgt
+            USING {left_join_temp_name} AS src
+            ON {join_condition_tgt}
+            WHEN MATCHED THEN UPDATE {end_date_merge_update}
+            """
+        lgr.info('end-dating old rows')
+        print('end-date old rows SQL')
+        print(enddate_old_rows_sql)
+        self._spark.sql(enddate_old_rows_sql)
+
+        # 8. append all source rows to target
+        
+        print('appending new / updated data')
+        self.__data.write.mode("append").format("delta").save(df_src_filtered_with_id)
+        
 
     def __snapshotTarget(self):
         # first delete the snapshot to be replaced
