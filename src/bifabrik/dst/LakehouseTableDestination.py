@@ -43,6 +43,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__tableLocation = None
         self.__addNARecord = False
         self.__addBadValueRecord = False
+        self.__scd2RowStartTimestamp = None
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -105,6 +106,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertInsertDateColumn()
         self.__insertNARecord()
         self.__insertBadValueRecord()
+        self.__insertScd2TrackingColumns()
 
         self.__resolveSchemaDifferences()
         
@@ -197,6 +199,28 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         ts = time.time()
         r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
         self.__data = r
+    
+    def __insertScd2TrackingColumns(self):        
+        # self.__rowStartColumn = self.__tableConfig.rowStartColumn
+        # row_end_column = self.__tableConfig.rowEndColumn
+        # current_row_column = self.__tableConfig.currentRowColumn
+
+        # src_filtered_sql = f'SELECT src.*, CURRENT_TIMESTAMP() AS {row_start_column}, CAST(9999-12-31 AS TIMESTMP) AS {row_end_column}, TRUE AS {current_row_column} \
+        # FROM {src_view_name} src INNER JOIN {left_join_temp_name} AS lj ON {join_condition_src_left_join}'
+        
+        if self.__incrementMethod != 'scd2':
+            return
+        
+        row_start_ts = ts = time.time()
+        row_end = time.strptime("9999-12-31", '%Y-%m-%d')
+        row_end_ts = time.mktime(row_end)
+        self.__scd2RowStartTimestamp = row_start_ts
+        r = self.__data \
+            .withColumn(self.__tableConfig.rowStartColumn, lit(row_start_ts).cast("timestamp")) \
+            .withColumn(self.__tableConfig.rowEndColumn, lit(row_end_ts).cast("timestamp")) \
+            .withColumn(self.__tableConfig.currentRowColumn, lit(True))
+        self.__data = r
+
 
     def __insertNARecord(self):
         if not self.__addNARecord:
@@ -614,13 +638,14 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if len(non_key_columns) == 0:
             non_key_match = f"COALESCE(src.{key_columns[0]} = tgt.{key_columns[0]}, FALSE) AS __non_key_match"
         else:
-            non_key_match = f"COALESCE(IF " + " AND ".join([f"src.{item} = tgt.{item}" for item in non_key_columns]) + " THEN FALSE ELSE TRUE, FALSE) AS __non_key_match"
+            non_key_match = f"COALESCE((" + " AND ".join([f"src.{item} = tgt.{item}" for item in non_key_columns]) + "), FALSE) AS __non_key_match"
         select_key_list = ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in key_columns])
         target_left_join_sql = f"""
-SELECT  {select_key_list}, {non_key_match} 
-/*+ BROADCAST(src) */
-FROM {src_view_name} AS src ON {join_condition}
-LEFT JOIN {db_reference}{self.__targetTableName} AS tgt
+SELECT
+/*+ BROADCAST(src) */ 
+{select_key_list}, {non_key_match} 
+FROM {src_view_name} AS src
+LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND tgt.`{current_row_column}` = TRUE
 """
         lgr.info('running SQL left join to find matching rows')
         print('left join sql')
@@ -630,18 +655,24 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt
         
         # 4. for matched rows, find rows where all non-key attributes are the same as before and remove them from source
 
-        df_left_join = df_left_join.filter(df_left_join.__non_key_match == False)
+        df_left_join.printSchema()
+        df_left_join = df_left_join.filter('`__non_key_match` = FALSE')
         df_left_join.createOrReplaceTempView(left_join_temp_name)
         self.__data.createOrReplaceTempView(src_view_name)
-        end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
+        
+        end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
+        #end_date_merge_update = f'SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
 
         src_view_name_filtered_with_id = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_filtered_with_id"
         join_condition_src_left_join = " AND ".join([f"src.`{item}` = lj.`src_{item}`" for item in key_columns])
         
         # 6. add RowStart, RowEnd and CurrentRow to source rows
         
-        src_filtered_sql = f'SELECT src.*, CURRENT_TIMESTAMP() AS {row_start_column}, CAST(9999-12-31 AS TIMESTMP) AS {row_end_column}, TRUE AS {current_row_column} \
+        src_filtered_sql = f'SELECT src.* \
         FROM {src_view_name} src INNER JOIN {left_join_temp_name} AS lj ON {join_condition_src_left_join}'
+
+        #src_filtered_sql = f'SELECT src.*, CURRENT_TIMESTAMP() AS {row_start_column}, CAST(9999-12-31 AS TIMESTMP) AS {row_end_column}, TRUE AS {current_row_column} \
+        #FROM {src_view_name} src INNER JOIN {left_join_temp_name} AS lj ON {join_condition_src_left_join}'
 
         print('filtered source query')
         print(src_filtered_sql)
@@ -655,12 +686,12 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt
         
         # 5. end-date remaining matched current rows in target
 
-        join_condition_tgt = " AND ".join([f"src.tgt_`{item}` = tgt.`{item}`" for item in key_columns])
+        join_condition_tgt = " AND ".join([f"src.`tgt_{item}` = tgt.`{item}`" for item in key_columns])
         enddate_old_rows_sql = f"""
             MERGE INTO {db_reference}{self.__targetTableName} AS tgt
             USING {left_join_temp_name} AS src
             ON {join_condition_tgt}
-            WHEN MATCHED THEN UPDATE {end_date_merge_update}
+            WHEN MATCHED AND tgt.`{current_row_column}` = TRUE THEN UPDATE {end_date_merge_update}
             """
         lgr.info('end-dating old rows')
         print('end-date old rows SQL')
@@ -670,7 +701,7 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt
         # 8. append all source rows to target
         
         print('appending new / updated data')
-        self.__data.write.mode("append").format("delta").save(df_src_filtered_with_id)
+        df_src_filtered_with_id.write.mode("append").format("delta").save(self.__tableLocation)
         
 
     def __snapshotTarget(self):
