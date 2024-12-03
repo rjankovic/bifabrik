@@ -87,9 +87,10 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
         self.__tableExists = self.__tableExistsF()
 
-        incrementMethod = mergedConfig.destinationTable.increment.lower()
+        incrementMethod = mergedConfig.destinationTable.increment
         if incrementMethod is None:
             incrementMethod = 'overwrite'
+        incrementMethod = incrementMethod.lower()
         self.__incrementMethod = incrementMethod
 
         self.__replaceInvalidCharactersInColumnNames()
@@ -597,7 +598,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # will be used throughout the method
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         self.__data.createOrReplaceTempView(src_view_name)
-        end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
+        end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
+        #end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
         
         if soft_deletes:
             soft_deletes_sql = f"""
@@ -608,7 +610,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                 WHERE {current_row_column} = TRUE
             ) AS src
             ON {join_condition}
-            WHEN NOT MATCHED BY SOURCE THEN UPDATE {end_date_merge_update}
+            WHEN NOT MATCHED BY SOURCE AND tgt.`{current_row_column}` = TRUE THEN UPDATE {end_date_merge_update}
             """
             
             lgr.info('running SQL merge to handle soft deletes')
@@ -660,7 +662,7 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         df_left_join.createOrReplaceTempView(left_join_temp_name)
         self.__data.createOrReplaceTempView(src_view_name)
         
-        end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
+        #end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
         #end_date_merge_update = f'SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
 
         src_view_name_filtered_with_id = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_filtered_with_id"
