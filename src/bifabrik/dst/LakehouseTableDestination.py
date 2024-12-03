@@ -226,9 +226,13 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     def __insertNARecord(self):
         if not self.__addNARecord:
             return
+        # bad value and N/A records could cause duplicates in the merge columns
+        # so insert these only when creating the table
+        if self.__tableExists and self.__incrementMethod in ['merge', 'scd2']:
+            return
         if self.__identityColumn is None:
             raise Exception('Configuration error - when addNARecord is enabled, identityColumnPattern needs to be configured as well.')
-        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
+        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'snapshot']):
             self.__data = commons.addNARecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
             return
         na_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}`{self.__targetTableName}` WHERE `{self.__identityColumn}` = -1'
@@ -239,9 +243,13 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     def __insertBadValueRecord(self):
         if not self.__addBadValueRecord:
             return
+        # bad value and N/A records could cause duplicates in the merge columns
+        # so insert these only when creating the table
+        if self.__tableExists and self.__incrementMethod in ['merge', 'scd2']:
+            return
         if self.__identityColumn is None:
             raise Exception('Configuration error - when addBadValueRecord is enabled, identityColumnPattern needs to be configured as well.')
-        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'overwrite', 'snapshot']):
+        if (not self.__tableExists) or (self.__incrementMethod in ['overwrite', 'snapshot']):
             self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
             return
         bv_exists_sql = f'SELECT COUNT(*) FROM {self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}`{self.__targetTableName}` WHERE `{self.__identityColumn}` = 0'
@@ -407,8 +415,13 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             input_row_count = uni_df.count()
             lgr.info(f'input count {input_row_count}')
-
-            inputBytes = self._spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
+            try:
+                inputBytes = self._spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
+            except Exception as e:
+                self.__logger.warning(f'failed to get the size of {src_temp_table_name_withid}')
+                self.__logger.warning(e)
+                time.sleep(20)
+                inputBytes = self._spark.sql(f'describe detail {src_temp_table_name_withid}').select("sizeInBytes").collect()[0][0]
             inputGB = inputBytes / 1024 / 1024 / 1024
             lgr.info(f'Source GB: {inputGB}')
             # delete_src_temp_table_name_withid = True
@@ -745,7 +758,9 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
             default_location = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName
             lowercase_location = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName.lower()
             
+        self.__logger.info('checking the existence of ' + lowercase_location + ':')
         fileExists = notebookutils.mssparkutils.fs.exists(default_location) or notebookutils.mssparkutils.fs.exists(lowercase_location)
+        self.__logger.info(fileExists)
         return fileExists
         
         # df_tables = self._spark.sql('SHOW TABLES')
