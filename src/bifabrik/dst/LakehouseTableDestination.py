@@ -651,9 +651,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # non-key match condition
 
         if len(non_key_columns) == 0:
-            non_key_match = f"COALESCE(src.{key_columns[0]} = tgt.{key_columns[0]}, FALSE) AS __non_key_match"
+            non_key_match = f"(src.{key_columns[0]} <=> tgt.{key_columns[0]}) AS __non_key_match"
         else:
-            non_key_match = f"COALESCE((" + " AND ".join([f"src.{item} = tgt.{item}" for item in non_key_columns]) + "), FALSE) AS __non_key_match"
+            non_key_match = f"(" + " AND ".join([f"src.{item} <=> tgt.{item}" for item in non_key_columns]) + ") AS __non_key_match"
         select_key_list = ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in key_columns])
         target_left_join_sql = f"""
 SELECT
