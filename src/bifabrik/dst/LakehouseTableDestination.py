@@ -44,6 +44,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__addNARecord = False
         self.__addBadValueRecord = False
         self.__scd2RowStartTimestamp = None
+        self.__scd2ExcludeColumns = []
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -85,6 +86,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__tableLocation = self.__lhBasePath + "/Tables/" + self.__targetSchemaName + '/' + self.__targetTableName
         self.__addNARecord = self.__tableConfig.addNARecord
         self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
+        self.__scd2ExcludeColumns = self.__tableConfig.scd2ExcludeColumns
         self.__tableExists = self.__tableExistsF()
 
         incrementMethod = mergedConfig.destinationTable.increment
@@ -563,6 +565,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         all_columns = self.__data.columns
         key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
         non_key_columns = self.__list_diff(self.__list_diff(all_columns, key_columns), [self.__identityColumn, self.__insertDateColumn, row_start_column, row_end_column, current_row_column])
+        non_key_historized_columns = self.__list_diff(non_key_columns, self.__scd2ExcludeColumns)
         soft_deletes = self.__tableConfig.scd2SoftDelete
         
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
@@ -627,8 +630,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             """
             
             lgr.info('running SQL merge to handle soft deletes')
-            print('soft delete sql:')
-            print(soft_deletes_sql)
+            lgr.info('soft delete sql:')
+            lgr.info(soft_deletes_sql)
             self._spark.sql(soft_deletes_sql)
         
         # 3. target left join source to find matches
@@ -653,7 +656,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if len(non_key_columns) == 0:
             non_key_match = f"(src.{key_columns[0]} <=> tgt.{key_columns[0]}) AS __non_key_match"
         else:
-            non_key_match = f"(" + " AND ".join([f"src.{item} <=> tgt.{item}" for item in non_key_columns]) + ") AS __non_key_match"
+            non_key_match = f"(" + " AND ".join([f"src.{item} <=> tgt.{item}" for item in non_key_historized_columns]) + ") AS __non_key_match"
         select_key_list = ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in key_columns])
         target_left_join_sql = f"""
 SELECT
@@ -663,8 +666,8 @@ FROM {src_view_name} AS src
 LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND tgt.`{current_row_column}` = TRUE
 """
         lgr.info('running SQL left join to find matching rows')
-        print('left join sql')
-        print(target_left_join_sql)
+        lgr.info('left join sql')
+        lgr.info(target_left_join_sql)
         df_left_join = self._spark.sql(target_left_join_sql)
         left_join_temp_name = f"temp_match_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         
@@ -689,8 +692,8 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         #src_filtered_sql = f'SELECT src.*, CURRENT_TIMESTAMP() AS {row_start_column}, CAST(9999-12-31 AS TIMESTMP) AS {row_end_column}, TRUE AS {current_row_column} \
         #FROM {src_view_name} src INNER JOIN {left_join_temp_name} AS lj ON {join_condition_src_left_join}'
 
-        print('filtered source query')
-        print(src_filtered_sql)
+        lgr.info('filtered source query')
+        lgr.info(src_filtered_sql)
         df_src_filtered = self._spark.sql(src_filtered_sql)
         
         # 7. generate identity column for the source data if configured
@@ -709,13 +712,12 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
             WHEN MATCHED AND tgt.`{current_row_column}` = TRUE THEN UPDATE {end_date_merge_update}
             """
         lgr.info('end-dating old rows')
-        print('end-date old rows SQL')
-        print(enddate_old_rows_sql)
+        lgr.info(enddate_old_rows_sql)
         self._spark.sql(enddate_old_rows_sql)
 
         # 8. append all source rows to target
         
-        print('appending new / updated data')
+        lgr.info('appending new / updated data')
         df_src_filtered_with_id.write.mode("append").format("delta").save(self.__tableLocation)
         
 

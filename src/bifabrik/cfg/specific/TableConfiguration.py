@@ -23,6 +23,7 @@ class TableConfiguration(Configuration):
         self.__rowEndColumn = 'RowEnd'
         self.__currentRowColumn = 'CurrentRow'
         self.__scd2SoftDelete = False
+        self.__scd2ExcludeColumns = []
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -213,3 +214,17 @@ class TableConfiguration(Configuration):
     @scd2SoftDelete.setter(key='scd2SoftDelete')
     def scd2SoftDelete(self, val):
         self.__scd2SoftDelete = val
+
+    @CfgProperty
+    def scd2ExcludeColumns(self) -> bool:
+        """For SCD 2 increment - a list of untracked non-key columns - these will not trigger a new row version if their value changes
+        default []
+        """
+        return self.__scd2ExcludeColumns
+    @scd2ExcludeColumns.setter(key='scd2ExcludeColumns')
+    def scd2ExcludeColumns(self, val):
+        t = str(type(val))
+        if t == "<class 'str'>":
+            self.__scd2ExcludeColumns = val.split(',')
+        else:
+            self.__scd2ExcludeColumns = val
