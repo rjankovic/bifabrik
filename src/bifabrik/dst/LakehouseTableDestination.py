@@ -653,15 +653,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #select_non_key_list = ", " + ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in non_key_columns])
         # non-key match condition
 
-        if len(non_key_columns) == 0:
-            non_key_match = f"(src.{key_columns[0]} <=> tgt.{key_columns[0]}) AS __non_key_match"
+
+        key_match = " AND ".join([f"src.{item} <=> tgt.{item}" for item in key_columns])
+        if len(non_key_historized_columns) == 0:
+            combined_match = f"({key_match}) AS __scd2_combined_match"
         else:
-            non_key_match = f"(" + " AND ".join([f"src.{item} <=> tgt.{item}" for item in non_key_historized_columns]) + ") AS __non_key_match"
+            combined_match = f"({key_match} AND " + " AND ".join([f"src.{item} <=> tgt.{item}" for item in non_key_historized_columns]) + ") AS __scd2_combined_match"
         select_key_list = ", ".join([f"src.{item} AS src_{item}, tgt.{item} AS tgt_{item}" for item in key_columns])
         target_left_join_sql = f"""
 SELECT
 /*+ BROADCAST(src) */ 
-{select_key_list}, {non_key_match} 
+{select_key_list}, {combined_match} 
 FROM {src_view_name} AS src
 LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND tgt.`{current_row_column}` = TRUE
 """
@@ -673,15 +675,15 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         
         # 4. for matched rows, find rows where all non-key attributes are the same as before and remove them from source
 
-        df_left_join.printSchema()
-        df_left_join = df_left_join.filter('`__non_key_match` = FALSE')
+        #df_left_join.printSchema()
+        df_left_join = df_left_join.filter('`__scd2_combined_match` = FALSE')
         df_left_join.createOrReplaceTempView(left_join_temp_name)
         self.__data.createOrReplaceTempView(src_view_name)
         
         #end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
         #end_date_merge_update = f'SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
 
-        src_view_name_filtered_with_id = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_filtered_with_id"
+        #src_view_name_filtered_with_id = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_filtered_with_id"
         join_condition_src_left_join = " AND ".join([f"src.`{item}` = lj.`src_{item}`" for item in key_columns])
         
         # 6. add RowStart, RowEnd and CurrentRow to source rows
