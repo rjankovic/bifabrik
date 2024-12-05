@@ -21,7 +21,8 @@ If you want to save data to a different lakehouse / workspace, check out [cross-
 The `increment` setting of the destination task has 4 options
  - overwrite
  - append
- - merge
+ - merge (SCD 1)
+ - SCD 2
  - snapshot
 
 ### overwrite
@@ -66,6 +67,37 @@ FROM LH_Stage.vNewOrders
 > This is done before applying the increment logic.
 
 ### merge
+
+This is basically the *slowly changing dimenstion type 1* option. To get this working, you need to configure the `mergeKeyColumns` array (the business key based on which to merge).
+
+```python
+bif.fromSql('''
+
+SELECT Variable_Code
+,AVG(`Value`) AS AvgValue
+FROM LakeHouse1.Survey2021
+GROUP BY Variable_Code
+
+''').toTable('SCDTest1') \
+  .increment('merge') \
+  .mergeKeyColumns(['Variable_Code']) \
+  .run()
+```
+
+Internally, Spark SQL `MERGE` statement is used to insrt new rows and update rows that get matched using the merge key. The key can have multiple columns specified in the array.
+
+> For larger tables, the SparkSQL `MERGE` implementation can run into memory issues. Therefore, if both the destination table and source dataset cross a certain threshold, `bifabrik` wiil, by default, use a step-by-step method of merging.
+> First, it will identify the records that will be affected by the merge. These are then copied to a temporary table and the merge is performed there so that the whole table doesn't need to be part of the merge operation.
+> Finally, the data is copied back to the original destination table. This approach has larger overhead, but it can handle large tables.
+>
+> To check or change the settings, use the following properties
+> ```python
+> bif.config.destinationTable.largeTableMethodEnabled # default True
+> bif.config.destinationTable.largeTableMethodSourceThresholdGB # default 0.2
+> bif.config.destinationTable.largeTableMethodDestinationThresholdGB # default 20
+> ```
+
+### SCD 2
 
 This is basically the *slowly changing dimenstion type 1* option. To get this working, you need to configure the `mergeKeyColumns` array (the business key based on which to merge).
 
