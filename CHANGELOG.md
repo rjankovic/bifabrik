@@ -3,7 +3,7 @@
 ## v0.11.0 (2024-12-05)
  - SCD 2 support for lakehouse destination
 
-## v0.10.5 (2024-11-10)
+## v0.10.5 (2024-11-29)
  - cross-lakehouse lakehouse bug fixed for merge operation
  - support for lakehouses with schemas
 

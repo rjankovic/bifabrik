@@ -148,6 +148,11 @@ bif
 )
 ```
 
+> The `RowEnd` timestamp is set to `9999-12-31 00:00` for active rows. When a new version of the record is loaded, The `RowEnd` will be set to the same timestamp as the `RowStart` of the new row.
+> Thus, when writing a lookup JOIN to find the record active at time `X`, it could look like this:
+> 
+> `RowStart <= X AND RowEnd > X`
+
 ### snapshot
 
 For this option, you need to configure the `snapshotKeyColumns` array to the column or columnss that specify the snapshot.
