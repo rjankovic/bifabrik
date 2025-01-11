@@ -395,9 +395,11 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         tableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
         tableGB = tableBytes / 1024 / 1024 / 1024
+        # empty placeholder value
+        inputGB = 0
         lgr.info(f'Target GB: {tableGB}')
 
-        largetTableModeEnabled =  self.__tableConfig.largeTableMethodEnabled
+        largeTableModeEnabled =  self.__tableConfig.largeTableMethodEnabled
         sourceSizeThreshold = self.__tableConfig.largeTableMethodSourceThresholdGB
         targetSizeThreshold = self.__tableConfig.largeTableMethodDestinationThresholdGB
 
@@ -405,7 +407,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # only do this if the target table size threshold is crossed
         # and the large table method is enabled
 
-        if tableGB >= targetSizeThreshold and largetTableModeEnabled:
+        if tableGB >= targetSizeThreshold and largeTableModeEnabled:
 
             lgr.info(f'writing to {src_temp_table_name_withid}')
             
@@ -447,7 +449,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         scd1_update = f"WHEN MATCHED THEN UPDATE SET \
             {update_list} "
 
-        if tableGB < targetSizeThreshold or inputGB < sourceSizeThreshold:
+        if tableGB < targetSizeThreshold or inputGB < sourceSizeThreshold or (not largeTableModeEnabled):
             # small table - direct update / insert
             merge_sql_update_basic = f"MERGE INTO {mergeDbRef}{self.__targetTableName} AS tgt \
             USING {src_temp_table_name_withid}  AS src \
@@ -606,8 +608,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         deduplicated_count = deduplicated.count()
         if orig_count > deduplicated_count:
             duplicates_df = self.__data.exceptAll(deduplicated)
-            display(duplicates_df)
-            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
+            duplicates_string = duplicates_df.to_string(max_rows=5)
+            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName} - \n{duplicates_string}')
         
         # 2. if soft deletes are enabled, end-date deleted rows (target left join source...)
 
