@@ -46,6 +46,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__addBadValueRecord = False
         self.__scd2RowStartTimestamp = None
         self.__scd2ExcludeColumns = []
+        self.__partitionByColumns = []
+        self.__partitionsDefined = False
 
     def __str__(self):
         return f'Table destination: {self.__targetTableName}'
@@ -88,6 +90,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__addNARecord = self.__tableConfig.addNARecord
         self.__addBadValueRecord = self.__tableConfig.addBadValueRecord
         self.__scd2ExcludeColumns = self.__tableConfig.scd2ExcludeColumns
+        self.__partitionByColumns = self.__tableConfig.partitionByColumns
+        self.__partitionsDefined = len(self.__partitionByColumns) > 0
         self.__tableExists = self.__tableExistsF()
 
         incrementMethod = mergedConfig.destinationTable.increment
@@ -272,10 +276,18 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__data = commons.addBadValueRecord(self.__data, self._spark, self.__targetTableName, self.__identityColumn)
 
     def __overwriteTarget(self):
-        self.__data.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
+        writer = self.__data.write
+        if self.__partitionsDefined:
+            writer = writer.partitionBy(self.__partitionByColumns)
+
+        writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(self.__tableLocation)
 
     def __appendTarget(self):
-        self.__data.write.mode("append").format("delta").save(self.__tableLocation)
+        writer = self.__data.write
+        if self.__partitionsDefined:
+            writer = writer.partitionBy(self.__partitionByColumns)
+
+        writer.mode("append").format("delta").save(self.__tableLocation)
 
     def __resolveSchemaDifferences(self):
         lgr = lg.getLogger()
@@ -566,7 +578,12 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #df_full = spark.sql(f'SELECT * FROM `{tgt_temp_table_name}`')
         df_full = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
         lgr.info(f'writing {df_full.count()} rows')
-        df_full.write.mode("overwrite").format("delta").save(self.__tableLocation)
+        
+        writer = df_full.write
+        if self.__partitionsDefined:
+            writer = writer.partitionBy(self.__partitionByColumns)
+
+        writer.write.mode("overwrite").format("delta").save(self.__tableLocation)
 
         self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
         self._spark.sql(f'DROP TABLE IF EXISTS {tgt_temp_table_name}')
@@ -734,7 +751,13 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         # 8. append all source rows to target
         
         lgr.info('appending new / updated data')
-        df_src_filtered_with_id.write.mode("append").format("delta").save(self.__tableLocation)
+
+        writer = df_src_filtered_with_id.write
+        if self.__partitionsDefined:
+            writer = writer.partitionBy(self.__partitionByColumns)
+
+        writer.mode("append").format("delta").save(self.__tableLocation)
+        #df_src_filtered_with_id.write.mode("append").format("delta").save(self.__tableLocation)
         
 
     def __snapshotTarget(self):

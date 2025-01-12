@@ -25,6 +25,7 @@ class TableConfiguration(Configuration):
         self.__currentRowColumn = 'CurrentRow'
         self.__scd2SoftDelete = False
         self.__scd2ExcludeColumns = []
+        self.__partitionByColumns = []
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -240,3 +241,17 @@ class TableConfiguration(Configuration):
             self.__scd2ExcludeColumns = val.split(',')
         else:
             self.__scd2ExcludeColumns = val
+
+    @CfgProperty
+    def partitionByColumns(self) -> bool:
+        """For SCD 2 increment - a list of columns by which to partition the destination table
+        default []
+        """
+        return self.__partitionByColumns
+    @partitionByColumns.setter(key='partitionByColumns')
+    def partitionByColumns(self, val):
+        t = str(type(val))
+        if t == "<class 'str'>":
+            self.__partitionByColumns = val.split(',')
+        else:
+            self.__partitionByColumns = val
