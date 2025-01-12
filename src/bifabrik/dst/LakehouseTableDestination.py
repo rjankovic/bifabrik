@@ -38,6 +38,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__lhBasePath = None
         self.__identityColumn = None
         self.__insertDateColumn = None
+        self.__updateDateColumn = None
         self.__tableExists = False
         self.__logger = None
         self.__tableLocation = None
@@ -107,6 +108,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             self.__insertIdentityColumn()
 
         self.__insertInsertDateColumn()
+        self.__insertUpdateDateColumn()
         self.__insertNARecord()
         self.__insertBadValueRecord()
         self.__insertScd2TrackingColumns()
@@ -201,6 +203,16 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertDateColumn = insertDateColumn
         ts = time.time()
         r = self.__data.withColumn(insertDateColumn, lit(ts).cast("timestamp"))
+        self.__data = r
+    
+    def __insertUpdateDateColumn(self):
+        updateDateColumn = self.__tableConfig.updateDateColumn
+        if updateDateColumn is None:
+            return
+        
+        self.__updateDateColumn = updateDateColumn
+        ts = time.time()
+        r = self.__data.withColumn(updateDateColumn, lit(ts).cast("timestamp"))
         self.__data = r
     
     def __insertScd2TrackingColumns(self):        

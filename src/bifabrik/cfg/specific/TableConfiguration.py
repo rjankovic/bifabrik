@@ -10,6 +10,7 @@ class TableConfiguration(Configuration):
         self.__increment = None
         self.__identityColumnPattern = None
         self.__insertDateColumn = None
+        self.__updateDateColumn = None
         self.__mergeKeyColumns = []
         self.__snapshotKeyColumns = []
         self.__invalidCharactersInColumnNamesReplacement = '_'
@@ -104,6 +105,17 @@ class TableConfiguration(Configuration):
     @insertDateColumn.setter(key='insertDateColumn')
     def insertDateColumn(self, val):
         self.__insertDateColumn = val
+    
+    @CfgProperty
+    def updateDateColumn(self) -> str:
+        """The name of the timestamp column to be added to each record, reflecting the time when the record was inserted or last updated.
+        This gets updated during SCD1 updates, unlike insertDateColumn
+        default None
+        """
+        return self.__updateDateColumn
+    @updateDateColumn.setter(key='updateDateColumn')
+    def updateDateColumn(self, val):
+        self.__updateDateColumn = val
 
     @CfgProperty
     def invalidCharactersInColumnNamesReplacement(self) -> str:
