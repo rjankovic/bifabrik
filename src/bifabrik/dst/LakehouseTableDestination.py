@@ -435,7 +435,14 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
             lgr.info(f'writing to {src_temp_table_name_withid}')
             
-            uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
+            #uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
+
+            lgr.info(f'Partitioning source by {self.__partitionByColumns}')
+            print(f'Partitioning source by {self.__partitionByColumns}')
+            writer = uni_df.write
+            if self.__partitionsDefined:
+                writer = writer.partitionBy(self.__partitionByColumns)
+            writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
             
             # waiting for the new table to "come online"
             time.sleep(10)
@@ -455,8 +462,23 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             # delete_src_temp_table_name_withid = True
         else:
             inputBytes = 0
-            uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+            #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
 
+            input_row_count = uni_df.count()
+
+            if(input_row_count < 100000):
+                uni_df.createOrReplaceTempView(src_temp_table_name_withid)
+            else:
+                lgr.info(f'Partitioning source by {self.__partitionByColumns}')
+                print(f'Partitioning source by {self.__partitionByColumns}')
+                writer = uni_df.write
+                if self.__partitionsDefined:
+                    writer = writer.partitionBy(self.__partitionByColumns)
+                writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
+                
+                # waiting for the new table to "come online"
+                time.sleep(10)
+                
         lgr.info('checking for duplicates')
         duplicates_check = self._spark.sql(f'''
         SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
