@@ -438,7 +438,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             #uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
 
             lgr.info(f'Partitioning source by {self.__partitionByColumns}')
-            print(f'Partitioning source by {self.__partitionByColumns}')
+            #print(f'Partitioning source by {self.__partitionByColumns}')
             writer = uni_df.write
             if self.__partitionsDefined:
                 writer = writer.partitionBy(self.__partitionByColumns)
@@ -470,7 +470,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                 uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             else:
                 lgr.info(f'Partitioning source by {self.__partitionByColumns}')
-                print(f'Partitioning source by {self.__partitionByColumns}')
+                #print(f'Partitioning source by {self.__partitionByColumns}')
                 writer = uni_df.write
                 if self.__partitionsDefined:
                     writer = writer.partitionBy(self.__partitionByColumns)
