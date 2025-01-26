@@ -250,6 +250,10 @@ bif.fromCsv('CsvFiles/dimBranch.csv') \
     .insertDateColumn('InsertTimestamp').run()
 ```
 
+### Update timestamp
+
+There is another similar setting - `updateDateColumn`. This behaves the same as `insertDateColumn` most of the time, except for merge (SCD1) updates - `insertDateColumn` stays the same when a SCD1 row gets updated, but `updateDateColumn` changes.
+
 ## Fixing invalid column names
 
 The characters `(space),;{}()\n\t=` are invalid in delta tables. By default, `bifabrik` replace these with and underscore (`_`) so that these invalid characters in column names don't stop you from loading your data.
