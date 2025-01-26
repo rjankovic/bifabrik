@@ -123,6 +123,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # if the target target table does not exist yet, just handle it as an overwrite
         if not(self.__tableExists):
+            if incrementMethod == 'merge':
+                # even if the table does not exist, check for duplicate merge keys
+                self.__checkDuplicatesInMerge()
             self.__overwriteTarget()
         elif incrementMethod == 'overwrite':
             self.__overwriteTarget()
@@ -486,7 +489,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         HAVING COUNT(*) > 1
         ''')
         if duplicates_check.count() > 0:
-            display(duplicates_check)
+            duplicates_check.show(10)
             raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
 
         #mergeDbRef = f'{self.__lhMeta.lakehouseName}.' 
@@ -610,6 +613,19 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
         self._spark.sql(f'DROP TABLE IF EXISTS {tgt_temp_table_name}')
 
+    def __checkDuplicatesInMerge(self):
+        key_columns = list(map(lambda x: self.__sanitizeColumnName(x), self.__tableConfig.mergeKeyColumns))
+        
+        if len(key_columns) == 0:
+            raise Exception('No key columns set for merge increment. Please set the mergeKeyColumns property in destinationTable configuration to the list of column names.')
+
+        duplicates = self.__data.groupBy(*key_columns).count().where(col('count') > 1)
+        
+        if duplicates.count() > 0:
+            duplicates.show(10)
+            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
+
+
     def __scd2Target(self):
         lgr = lg.getLogger()
         row_start_column = self.__tableConfig.rowStartColumn
@@ -658,9 +674,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         orig_count = self.__data.count()
         deduplicated_count = deduplicated.count()
         if orig_count > deduplicated_count:
-            duplicates_df = self.__data.exceptAll(deduplicated)
-            duplicates_string = duplicates_df.to_string(max_rows=5)
-            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName} - \n{duplicates_string}')
+            #duplicates_df = self.__data.exceptAll(deduplicated)
+            raise Exception(f'There are duplicate records about to be merged into {self.__targetTableName}')
         
         # 2. if soft deletes are enabled, end-date deleted rows (target left join source...)
 
