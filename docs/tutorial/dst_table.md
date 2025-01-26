@@ -167,6 +167,30 @@ Here, the snapshot is "replaced". That is, all the rows from the target table th
 
 This solves the *deleted rows* issue - if some rows get deleted in the source, you can remove them in the lakehouse by reloading the corresponding snapshot. The `merge` increment, by comparison, does not remove rows that were deleted in the source.
 
+### Partitioning
+
+Creating partitions in your lakehouse tables can improve performance and help you handle large volumes of data. Create partitions on the columns that are frequently used in joins or filters.
+
+You can set pertitions for a specific table using the `partitionByColumns` setting. This can be either an array or a comma-separated string of column names.
+
+```python
+import bifabrik as bif
+
+(
+bif
+    .fromSparkDf(df_src)
+    .toTable('My_SCD1_Table')
+    .partitionByColumns('YearMonth')
+    .increment('merge')
+    .mergeKeyColumns(['BusinessKey'])
+    .run()
+)
+```
+
+If you use the same partitioning column for many tables, you can also make partitioning a general setting before loading specific tables:
+
+```bif.config.destinationTable.partitionByColumns = ['PARTITION_KEY']```
+
 ## Identity column
 
 You can configure the `identityColumnPattern` to add an auto-increment column to the table. The name of the column can contain the name of the table / lakehouse.
