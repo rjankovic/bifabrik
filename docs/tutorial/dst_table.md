@@ -167,7 +167,7 @@ Here, the snapshot is "replaced". That is, all the rows from the target table th
 
 This solves the *deleted rows* issue - if some rows get deleted in the source, you can remove them in the lakehouse by reloading the corresponding snapshot. The `merge` increment, by comparison, does not remove rows that were deleted in the source.
 
-### Partitioning
+## Partitioning
 
 Creating partitions in your lakehouse tables can improve performance and help you handle large volumes of data. Create partitions on the columns that are frequently used in joins or filters.
 
