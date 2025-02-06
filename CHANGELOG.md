@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.12.0 (2025-02-XX)
+ - Partitions support
+ - Update date setting for merge (SCD1) tables
+ - Duplicate keys prevention for SCD1 tables
+
 ## v0.11.0 (2024-12-05)
  - SCD 2 support for lakehouse destination
 
