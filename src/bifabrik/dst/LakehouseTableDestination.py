@@ -116,7 +116,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertNARecord()
         self.__insertBadValueRecord()
         self.__insertScd2TrackingColumns()
-
+        
         self.__resolveSchemaDifferences()
         
         self.__filterByWatermark()
@@ -295,6 +295,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     def __resolveSchemaDifferences(self):
         lgr = lg.getLogger()
 
+        lgr.info('resolve schema differences...')
+
         if not(self.__tableExists):
             return
         if self.__incrementMethod == 'overwrite':
@@ -304,8 +306,10 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         df_old = self._spark.sql(f"SELECT * FROM {target_table} LIMIT 0")
         cols_new = self._spark.createDataFrame(self.__data.dtypes, ["new_name", "new_type"])
         cols_old = self._spark.createDataFrame(df_old.dtypes, ["old_name", "old_type"])
-        cols_new = cols_new.filter(cols_new.new_name != self.__identityColumn)
-        cols_old = cols_old.filter(cols_old.old_name != self.__identityColumn)
+        
+        if self.__identityColumn is not None:
+            cols_new = cols_new.filter(cols_new.new_name != self.__identityColumn)
+            cols_old = cols_old.filter(cols_old.old_name != self.__identityColumn)
 
         compare = (
             cols_new.join(cols_old, cols_new.new_name == cols_old.old_name, how="outer")
@@ -316,6 +320,22 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             .filter((col('old_name') == '') | (col('new_name') == ''))
 
         canAddColumns = self.__tableConfig.canAddNewColumns
+
+        
+        # lgr.info('old table columns')
+        # lgr.info(self.__getShowString(cols_old))
+        # lgr.info('new table columns')
+        # lgr.info(self.__getShowString(cols_new))
+
+        # lgr.info('schema compare')
+        # lgr.info(self.__getShowString(compare))
+        lgr.info('schema difference')
+        lgr.info(self.__getShowString(difference))
+        #print('schema compare')
+        #compare.show()
+        #print('schema difference')
+        #difference.show()
+
 
         if canAddColumns:
             solvable = difference.where(difference.old_name == '')
@@ -872,5 +892,11 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         
         filter = f'{watermarkColumn} > "{max_watermark}"'
         self.__data = self.__data.filter(filter)
+
+    def __getShowString(self, df, n=20, truncate=True, vertical=False):
+        if isinstance(truncate, bool) and truncate:
+            return(df._jdf.showString(n, 20, vertical))
+        else:
+            return(df._jdf.showString(n, int(truncate), vertical))
         # print(filter)
         # print(self.__data.count())

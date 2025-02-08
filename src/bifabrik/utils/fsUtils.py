@@ -74,7 +74,6 @@ def normalizeRelativeSparkPath(path: str):
     r = 'Files' + r
     return r
 
-# abfss://6dcac488-f099-451a-91f1-0945791bf22c@onelake.dfs.fabric.microsoft.com/a2939674-cc1c-4814-9094-8c16e5682502/Files/CsvFiles
 def normalizeAbfsPath(path: str, lakehouseBasePath: str, inFiles = False, inTables = False):
     """Normalizes a path to the form of "abfss://{workspaceid}@onelake.dfs.fabric.microsoft.com/{lakehouseid}/Files/CsvFiles or .../Tables/Table1"
     """
