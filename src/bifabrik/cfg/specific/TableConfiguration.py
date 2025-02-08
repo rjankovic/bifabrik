@@ -15,6 +15,7 @@ class TableConfiguration(Configuration):
         self.__snapshotKeyColumns = []
         self.__invalidCharactersInColumnNamesReplacement = '_'
         self.__canAddNewColumns = True
+        self.__allowMissingColumnsInSource = True
         self.__addNARecord = False
         self.__addBadValueRecord = False
         self.__largeTableMethodEnabled = True
@@ -137,7 +138,17 @@ class TableConfiguration(Configuration):
     @canAddNewColumns.setter(key='canAddNewColumns')
     def canAddNewColumns(self, val):
         self.__canAddNewColumns = val
-    
+
+    @CfgProperty
+    def allowMissingColumnsInSource(self) -> bool:
+        """If the table already exists and the input dataset has missing columns, add the columns to the source with empty values.
+        default True
+        """
+        return self.__allowMissingColumnsInSource
+    @allowMissingColumnsInSource.setter(key='allowMissingColumnsInSource')
+    def allowMissingColumnsInSource(self, val):
+        self.__allowMissingColumnsInSource = val
+
     @CfgProperty
     def addNARecord(self) -> bool:
         """Add a dimension "N/A" record with identity -1, N/A for strings, 0 for numbers. identityColumnPattern needs to be configured when this is enabled.

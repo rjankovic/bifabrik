@@ -116,7 +116,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         self.__insertNARecord()
         self.__insertBadValueRecord()
         self.__insertScd2TrackingColumns()
-        
+
         self.__resolveSchemaDifferences()
         
         self.__filterByWatermark()
@@ -320,6 +320,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             .filter((col('old_name') == '') | (col('new_name') == ''))
 
         canAddColumns = self.__tableConfig.canAddNewColumns
+        allowMissingColumnsInSource = self.__tableConfig.allowMissingColumnsInSource
 
         
         # lgr.info('old table columns')
@@ -337,12 +338,19 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         #difference.show()
 
 
-        if canAddColumns:
-            solvable = difference.where(difference.old_name == '')
-            insolvable = difference.where(difference.old_name != '')
-        else:
-            solvable = difference.where(difference.old_type == '____none____')
-            insolvable = difference
+        # filter helper
+        # dff = df.where( ~(~( ((df.LayerName == 'Gold') & (df.TableName.like('DM%'))) |  ((df.LayerName == 'Silver') & (df.TableName == 'Branches')) )) )
+        # display(dff)
+
+        # if canAddColumns:
+        
+        solvable = difference.where(((difference.old_name == '') & (canAddColumns == lit(True))) | ((difference.new_name == '') & (allowMissingColumnsInSource == lit(True))))
+        insolvable = difference.where(~(((difference.old_name == '') & (canAddColumns == lit(True))) | ((difference.new_name == '') & (allowMissingColumnsInSource == lit(True)))))
+        
+            #insolvable = difference.where(difference.old_name != '')
+        # else:
+        #     solvable = difference.where(difference.old_type == '____none____')
+        #     insolvable = difference
 
         if insolvable.count() > 0:
             err = f'Schema difference detected in table {target_table} that cannot be merged:'
@@ -358,7 +366,19 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             raise Exception(err)
 
         for r in solvable.collect():
-            tu.addTableColumnFromType(self.__lhMeta.lakehouseName, self.__targetTableName, r.new_name, r.new_type)
+            
+            # add new column to destination table
+            if r.old_name == '':
+                lgr.info(f'Adding new column {r.new_name} (r.new_type) to {self.__targetTableName}')
+                tu.addTableColumnFromType(self.__lhMeta.lakehouseName, self.__targetTableName, r.new_name, r.new_type)
+            # add missing column to source df
+            elif r.new_name == '':
+                lgr.info(f'Adding empty column {r.old_name} to source table')
+                self.__data = self.__data.withColumn(r.old_name, lit(None))
+            # this shouldnot really happen in the solvable set
+            else:
+                raise Exception(f'unexpected schema difference: {r}')
+
 
 
     def __mergeTarget(self):
