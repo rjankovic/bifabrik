@@ -272,6 +272,7 @@ Sometimes, we need to add new columns to an existing table. If the table is a fu
 
 If there is a different increment menthod and the target table already exists, `bifabrik` will compare the structure of the target table against the incoming dataset. After this
   - if there are new columns in the input data, these columns will be added to the target table (for the old records, these columns will be empty)
+  - if there are columns in the target table that are not in the source, these will be written to the target table with `NULL` values
   - if there are any other differences between the table schemas, `bifabrik` throws an error - deleting / renaming / changing data type of columns cannot be resolved automatically for now
 
 This column adding feature is __enabled by default__. If you want, you can disable it like this:
@@ -282,7 +283,10 @@ import bifabrik as bif
 # disable adding columns for the whole session
 bif.config.destinationTable.canAddNewColumns = False
 
-# disable adding columns for a specific pipeline
+# disable filling missing columns in source with NULL
+bif.config.destinationTable.allowMissingColumnsInSource = False
+
+# alternatively, you can configure this for a specific pipeline
 bif.fromSql('''
   SELECT ShipmentId
   ,CountryCode
