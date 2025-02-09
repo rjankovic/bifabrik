@@ -1,9 +1,11 @@
 # Changelog
 
-## v0.12.0 (2025-02-XX)
+## v0.12.0 (2025-02-09)
  - Partitions support
  - Update date setting for merge (SCD1) tables
  - Duplicate keys prevention for SCD1 tables
+ - New config option - `destinationTable.allowMissingColumnsInSource`
+ - Bug fixes (duplicates prevention for merge destination, adding new columns when identity column is enabled)
 
 ## v0.11.0 (2024-12-05)
  - SCD 2 support for lakehouse destination
