@@ -171,7 +171,7 @@ This solves the *deleted rows* issue - if some rows get deleted in the source, y
 
 Creating partitions in your lakehouse tables can improve performance and help you handle large volumes of data. Create partitions on the columns that are frequently used in joins or filters.
 
-You can set pertitions for a specific table using the `partitionByColumns` setting. This can be either an array or a comma-separated string of column names.
+You can set partitions for a specific table using the `partitionByColumns` setting. This can be either an array or a comma-separated string of column names.
 
 ```python
 import bifabrik as bif
