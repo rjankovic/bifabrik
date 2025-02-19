@@ -13,6 +13,7 @@ import datetime
 import notebookutils.mssparkutils.fs
 from bifabrik.utils import tableUtils as tu
 import bifabrik.dst.CommonDestinationUtils as commons
+from unidecode import unidecode
 
 class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -169,7 +170,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         name = colName        
         for i in invalids:
             name = name.replace(i, replacement)
-        return name
+        name_without_accents = unidecode(name)
+        return name_without_accents
 
     def __insertIdentityColumn(self):
         df_res = self.__insertIdentityColumnToDf(self.__data)
