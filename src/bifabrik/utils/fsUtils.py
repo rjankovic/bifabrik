@@ -365,7 +365,17 @@ def mapLakehouses(workspaceId: str, workspaceName: str):
         # the lakehouse list API will start returning 429 when too many requests are received
         print(f'Waiting 70s - lakehouse list API congestion [{workspaceName}]')
         time.sleep(70)
-        lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
+        try:
+            lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
+        except Exception as ex:
+            print(f'Waiting 140s - lakehouse list API congestion [{workspaceName}]')
+            time.sleep(140)
+            try:
+                lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
+            except Exception as ex:
+                print(f'Waiting 280s - lakehouse list API congestion [{workspaceName}]')
+                time.sleep(280)
+                lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
 
     for lh in lhs:
         l = LakehouseMeta()
