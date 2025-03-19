@@ -18,7 +18,7 @@ class TableConfiguration(Configuration):
         self.__allowMissingColumnsInSource = True
         self.__addNARecord = False
         self.__addBadValueRecord = False
-        self.__largeTableMethodEnabled = True
+        self.__largeTableMethodEnabled = False
         self.__largeTableMethodSourceThresholdGB: float = 0.2
         self.__largeTableMethodDestinationThresholdGB: float = 20
         self.__rowStartColumn = 'RowStart'
@@ -172,7 +172,7 @@ class TableConfiguration(Configuration):
     @CfgProperty
     def largeTableMethodEnabled(self) -> bool:
         """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table
-        default True
+        default False
         """
         return self.__largeTableMethodEnabled
     @largeTableMethodEnabled.setter(key='largeTableMethodEnabled')
