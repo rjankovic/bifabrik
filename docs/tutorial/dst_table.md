@@ -88,9 +88,29 @@ Internally, Spark SQL `MERGE` statement is used to insrt new rows and update row
 
 #### Merging large tables
 
-todo
+When running the SparkSQL `MERGE` command with large tables, you may run into memory issues. Partitioning usually helps with this, especially if you can include the partitioning column in the merge key columns so that the merge operation can use partition pruning.
 
-> For large tables, the SparkSQL `MERGE` implementation can run into memory issues. Therefore, if both the destination table and source dataset cross a certain threshold, `bifabrik` can, if you choose to, use a step-by-step method of merging.
+The code could look like this (see the partitioning section later in this article).
+
+```python
+import bifabrik as bif
+
+(
+bif
+    .fromSparkDf(df_src)
+    .toTable('My_SCD1_Table')
+    .partitionByColumns('CreatedDate')
+    .increment('merge')
+    .mergeKeyColumns(['BusinessKey', 'CreatedDate'])
+    .run()
+)
+```
+
+Also, in order to take advantage of partitioning on the source data side as well as the destination, `bifabrik` will, if the source data is over 1,000,000 rows, materialize the source into a temporary table and partition this table (if partitioning is configured) before running `MERGE`.
+
+You can change the threshold for materializing the source data in a merge by setting the `mergeSourceMaterializationThresholdRowcount` option.
+
+> There is another option for large tables without partitions - if both the destination table and source dataset cross a certain threshold, `bifabrik` can, if you choose to, use a step-by-step method of merging.
 > First, it will identify the records that will be affected by the merge. These are then copied to a temporary table and the merge is performed there so that the whole table doesn't need to be part of the merge operation.
 > Finally, the data is copied back to the original destination table. This approach has larger overhead, but it can handle large tables.
 >
