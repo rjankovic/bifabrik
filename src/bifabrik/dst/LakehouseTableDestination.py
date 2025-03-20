@@ -514,6 +514,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         sourceSizeThreshold = self.__tableConfig.largeTableMergeMethodSourceThresholdGB
         targetSizeThreshold = self.__tableConfig.largeTableMergeMethodDestinationThresholdGB
 
+        targetTableGB = 0
         if largeTableModeEnabled:
             targetTableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
             targetTableGB = targetTableBytes / 1024 / 1024 / 1024
