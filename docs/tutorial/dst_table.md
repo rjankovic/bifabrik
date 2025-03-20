@@ -86,16 +86,21 @@ GROUP BY Variable_Code
 
 Internally, Spark SQL `MERGE` statement is used to insrt new rows and update rows that get matched using the merge key. The key can have multiple columns specified in the array.
 
-> For larger tables, the SparkSQL `MERGE` implementation can run into memory issues. Therefore, if both the destination table and source dataset cross a certain threshold, `bifabrik` wiil, by default, use a step-by-step method of merging.
+#### Merging large tables
+
+todo
+
+> For large tables, the SparkSQL `MERGE` implementation can run into memory issues. Therefore, if both the destination table and source dataset cross a certain threshold, `bifabrik` can, if you choose to, use a step-by-step method of merging.
 > First, it will identify the records that will be affected by the merge. These are then copied to a temporary table and the merge is performed there so that the whole table doesn't need to be part of the merge operation.
 > Finally, the data is copied back to the original destination table. This approach has larger overhead, but it can handle large tables.
 >
 > To check or change the settings, use the following properties
 > ```python
-> bif.config.destinationTable.largeTableMethodEnabled # default True
-> bif.config.destinationTable.largeTableMethodSourceThresholdGB # default 0.2
-> bif.config.destinationTable.largeTableMethodDestinationThresholdGB # default 20
+> bif.config.destinationTable.largeTableMergeMethodEnabled # default False
+> bif.config.destinationTable.largeTableMergeMethodSourceThresholdGB # default 0.2
+> bif.config.destinationTable.largeTableMergeMethodDestinationThresholdGB # default 20
 > ```
+> However, I wouldn't recommend using this method. If you run into memory bottlenecks, partitioning can usually help.
 
 ### SCD 2
 
