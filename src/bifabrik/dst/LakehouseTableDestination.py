@@ -570,8 +570,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             # print('getting source count')
             # input_row_count = uni_df.count()
 
-            print(str(datetime.now()))
-            print(f'source count: {input_row_count}')
+            # print(str(datetime.now()))
+            # print(f'source count: {input_row_count}')
 
             if(input_row_count <= merge_materialization_threshold):
                 uni_df.createOrReplaceTempView(src_temp_table_name_withid)
