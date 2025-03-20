@@ -112,17 +112,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         if (incrementMethod != 'merge' and incrementMethod != 'scd2') or self.__identityColumn is None or not(self.__tableExists):
             self.__insertIdentityColumn()
 
-        print('insert inserted date')
+        #print('insert inserted date')
         self.__insertInsertDateColumn()
         self.__insertUpdateDateColumn()
-        print('insert N/A')
+        #print('insert N/A')
         self.__insertNARecord()
-        print('insert BadValue')
+        #print('insert BadValue')
         self.__insertBadValueRecord()
-        print('insert scd2 tracking')
+        #print('insert scd2 tracking')
         self.__insertScd2TrackingColumns()
 
-        print('resolve schema differences')
+        #print('resolve schema differences')
         self.__resolveSchemaDifferences()
         
         self.__filterByWatermark()
@@ -390,10 +390,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
     def __mergeTarget(self):
         
-        MERGE_MATERIALIZATION_THRESHOLD = 1000000
-
-        print(str(datetime.now()))
-        print('running merge')
+        # print(str(datetime.now()))
+        # print('running merge')
 
         lgr = lg.getLogger()
         all_columns = self.__data.columns
@@ -426,17 +424,20 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         # temp table name in case we needed to use the large table approach
         src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_withid"
         
+
+        merge_materialization_threshold = self.__tableConfig.mergeSourceMaterializationThresholdRowcount
+
         # if there are partitions, we're dealing with a big table
         # in that case, save the source to a temp table immediately to help with JOINs, instead of a view
         
         input_row_count = self.__data.count()
-        if(input_row_count > MERGE_MATERIALIZATION_THRESHOLD):
+        if(input_row_count > merge_materialization_threshold):
                 writer = self.__data.write
                 if self.__partitionsDefined:
                     writer = writer.partitionBy(self.__partitionByColumns)
             
-                print(str(datetime.now()))
-                print(f'writing to initial src temp table {src_view_name}')
+                # print(str(datetime.now()))
+                # print(f'writing to initial src temp table {src_view_name}')
 
                 writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_view_name}')
                 
@@ -456,8 +457,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         LEFT JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
         WHERE tgt.`{key_columns[0]}` IS NULL
         '''
-        print('news df SQL')
-        print(src_news_df_sql)
+        # print('news df SQL')
+        # print(src_news_df_sql)
         src_news_df = self._spark.sql(src_news_df_sql)
         
         # 2. generate IDs for the news DF independently - we don't want to mix these with the updates
@@ -468,12 +469,13 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         identityColumnPattern = self.__tableConfig.identityColumnPattern
         
-        print(str(datetime.now()))
-        print('handling identity')
+        # print(str(datetime.now()))
+        # print('handling identity')
         
         if identityColumnPattern is None:
+            # SELECT /*+ BROADCAST(src) */ src.*
             src_updates_df = self._spark.sql(f'''
-            SELECT /*+ BROADCAST(src) */ src.* 
+            SELECT src.* 
             FROM {src_view_name} AS src
             INNER JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
             ''')    
@@ -486,8 +488,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             INNER JOIN {mergeDbRef}{self.__targetTableName} AS tgt ON {join_condition}
             '''
 
-            print('update df SQL')
-            print(src_updates_df_sql)
+            # print('update df SQL')
+            # print(src_updates_df_sql)
             src_updates_df = self._spark.sql(src_updates_df_sql)
         
         # 4. create an unified dataframe
@@ -501,35 +503,39 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # get the target table size
 
-        print(str(datetime.now()))
-        print('getting the size of the target table')
+        # print(str(datetime.now()))
+        # print('getting the size of the target table')
 
-        tableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
-        tableGB = tableBytes / 1024 / 1024 / 1024
-        # empty placeholder value
+        tableGB = 0
         inputGB = 0
-        lgr.info(f'Target GB: {tableGB}')
-
-        largeTableModeEnabled =  self.__tableConfig.largeTableMethodEnabled
-        sourceSizeThreshold = self.__tableConfig.largeTableMethodSourceThresholdGB
-        targetSizeThreshold = self.__tableConfig.largeTableMethodDestinationThresholdGB
 
 
-        print(str(datetime.now()))
-        print('size getting complete')
+        largeTableModeEnabled =  self.__tableConfig.largeTableMergeMethodEnabled
+        sourceSizeThreshold = self.__tableConfig.largeTableMergeMethodSourceThresholdGB
+        targetSizeThreshold = self.__tableConfig.largeTableMergeMethodDestinationThresholdGB
 
-        print(f'Large table mode enabled: {largeTableModeEnabled}')
+        if largeTableModeEnabled:
+            targetTableBytes = self._spark.sql(f'describe detail {mergeDbRef}{self.__targetTableName}').select("sizeInBytes").collect()[0][0]
+            targetTableGB = targetTableBytes / 1024 / 1024 / 1024
+            # empty placeholder value
+            lgr.info(f'Target GB: {targetTableGB}')
+
+        # print(str(datetime.now()))
+        # print('size getting complete')
+
+        # print(f'Large table mode enabled: {largeTableModeEnabled}')
 
         # to find out the source data sie, we need to save the source dataframe to a table
         # only do this if the target table size threshold is crossed
         # and the large table method is enabled
 
-        if tableGB >= targetSizeThreshold and largeTableModeEnabled:
+        if targetTableGB >= targetSizeThreshold and largeTableModeEnabled:
 
             lgr.info(f'writing to {src_temp_table_name_withid}')
             
-            print(str(datetime.now()))
-            print(f'writing to {src_temp_table_name_withid} - large table mode')
+            # print(str(datetime.now()))
+            # print(f'writing to {src_temp_table_name_withid} - large table mode')
+
             #uni_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
 
             lgr.info(f'Partitioning source by {self.__partitionByColumns}')
@@ -559,35 +565,37 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             inputBytes = 0
             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
 
-            print(str(datetime.now()))
+            # print(str(datetime.now()))
             # print('getting source count')
             # input_row_count = uni_df.count()
 
             print(str(datetime.now()))
             print(f'source count: {input_row_count}')
 
-            if(input_row_count <= MERGE_MATERIALIZATION_THRESHOLD):
+            if(input_row_count <= merge_materialization_threshold):
                 uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             else:
-                lgr.info(f'Partitioning source by {self.__partitionByColumns}')
+                
+                # print(str(datetime.now()))
+                # print(f'Partitioning source by {self.__partitionByColumns}')
 
-
-                print(str(datetime.now()))
-                print(f'Partitioning source by {self.__partitionByColumns}')
                 #print(f'Partitioning source by {self.__partitionByColumns}')
                 writer = uni_df.write
                 if self.__partitionsDefined:
+                    lgr.info(f'Partitioning merge source by {self.__partitionByColumns}')
                     writer = writer.partitionBy(self.__partitionByColumns)
                 writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
                 
-                print(str(datetime.now()))
-                print(f'created {src_temp_table_name_withid}')
+
+                # print(str(datetime.now()))
+                # print(f'created {src_temp_table_name_withid}')
+                
                 # waiting for the new table to "come online"
                 time.sleep(10)
                 
         lgr.info('checking for duplicates')
-        print(str(datetime.now()))
-        print('checking for duplicates')
+        # print(str(datetime.now()))
+        # print('checking for duplicates')
         duplicates_check = self._spark.sql(f'''
         SELECT {key_col_list}, COUNT(*) FROM {src_temp_table_name_withid}
         GROUP BY {key_col_list}
@@ -624,18 +632,18 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             lgr.info('merge update')
             lgr.info(merge_sql_update_basic)
             
-            print(str(datetime.now()))
-            print('merge update')
-            print(merge_sql_update_basic)
+            # print(str(datetime.now()))
+            # print('merge update')
+            # print(merge_sql_update_basic)
             
             self._spark.sql(merge_sql_update_basic)
 
             lgr.info('merge insert')
             lgr.info(merge_sql_insert_basic)
             
-            print(str(datetime.now()))
-            print('merge insert')
-            print(merge_sql_insert_basic)
+            # print(str(datetime.now()))
+            # print('merge insert')
+            # print(merge_sql_insert_basic)
             
             
             self._spark.sql(merge_sql_insert_basic)
@@ -644,7 +652,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
             return
         
-        msg = 'large table mrege strategy'
+        msg = 'large table mrege strategy - rebuilding the target table'
         lgr.info(msg)
         print(msg)
         
@@ -657,7 +665,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         '''
 
         lgr.info(tgt_df_query)
-        print(tgt_df_query)
+        # print(tgt_df_query)
         tgt_df = self._spark.sql(tgt_df_query)
 
         tgt_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{tgt_temp_table_name}')

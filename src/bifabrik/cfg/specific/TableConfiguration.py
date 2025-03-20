@@ -18,9 +18,10 @@ class TableConfiguration(Configuration):
         self.__allowMissingColumnsInSource = True
         self.__addNARecord = False
         self.__addBadValueRecord = False
-        self.__largeTableMethodEnabled = False
-        self.__largeTableMethodSourceThresholdGB: float = 0.2
-        self.__largeTableMethodDestinationThresholdGB: float = 20
+        self.__largeTableMergeMethodEnabled = False
+        self.__largeTableMergeMethodSourceThresholdGB: float = 0.2
+        self.__largeTableMergeMethodDestinationThresholdGB: float = 20
+        self.__mergeSourceMaterializationThresholdRowcount: int = 1000000
         self.__rowStartColumn = 'RowStart'
         self.__rowEndColumn = 'RowEnd'
         self.__currentRowColumn = 'CurrentRow'
@@ -170,34 +171,45 @@ class TableConfiguration(Configuration):
         self.__addBadValueRecord = val
 
     @CfgProperty
-    def largeTableMethodEnabled(self) -> bool:
+    def largeTableMergeMethodEnabled(self) -> bool:
         """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table
         default False
         """
-        return self.__largeTableMethodEnabled
-    @largeTableMethodEnabled.setter(key='largeTableMethodEnabled')
-    def largeTableMethodEnabled(self, val):
-        self.__largeTableMethodEnabled = val
+        return self.__largeTableMergeMethodEnabled
+    @largeTableMergeMethodEnabled.setter(key='largeTableMergeMethodEnabled')
+    def largeTableMergeMethodEnabled(self, val):
+        self.__largeTableMergeMethodEnabled = val
 
     @CfgProperty
-    def largeTableMethodSourceThresholdGB(self) -> float:
+    def largeTableMergeMethodSourceThresholdGB(self) -> float:
         """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table - threshold for the size of the source data in GB
         default 0.2
         """
-        return self.__largeTableMethodSourceThresholdGB
-    @largeTableMethodSourceThresholdGB.setter(key='largeTableMethodSourceThresholdGB')
-    def largeTableMethodSourceThresholdGB(self, val):
-        self.__largeTableMethodSourceThresholdGB = val
+        return self.__largeTableMergeMethodSourceThresholdGB
+    @largeTableMergeMethodSourceThresholdGB.setter(key='largeTableMergeMethodSourceThresholdGB')
+    def largeTableMergeMethodSourceThresholdGB(self, val):
+        self.__largeTableMergeMethodSourceThresholdGB = val
     
     @CfgProperty
-    def largeTableMethodDestinationThresholdGB(self) -> float:
+    def largeTableMergeMethodDestinationThresholdGB(self) -> float:
         """For large tables in merge mode, first load the changed records to a separate temp table and perform the merge there before appending back to the original table - threshold for the size of the destination table in GB
         default 20
         """
-        return self.__largeTableMethodDestinationThresholdGB
-    @largeTableMethodDestinationThresholdGB.setter(key='largeTableMethodDestinationThresholdGB')
-    def largeTableMethodDestinationThresholdGB(self, val):
-        self.__largeTableMethodDestinationThresholdGB = val
+        return self.__largeTableMergeMethodDestinationThresholdGB
+    @largeTableMergeMethodDestinationThresholdGB.setter(key='largeTableMergeMethodDestinationThresholdGB')
+    def largeTableMergeMethodDestinationThresholdGB(self, val):
+        self.__largeTableMergeMethodDestinationThresholdGB = val
+
+    @CfgProperty
+    def mergeSourceMaterializationThresholdRowcount(self) -> float:
+        """For large tables, merge increment is more efficient if the source data is first materialized into a table and partitioned in the same manner as the target table to enable partition pruning.
+        If the source rowcount is above this threshold, the table will be materialized before merging.
+        default 1000000
+        """
+        return self.__mergeSourceMaterializationThresholdRowcount
+    @mergeSourceMaterializationThresholdRowcount.setter(key='mergeSourceMaterializationThresholdRowcount')
+    def mergeSourceMaterializationThresholdRowcount(self, val):
+        self.__mergeSourceMaterializationThresholdRowcount = val
 
     @CfgProperty
     def rowStartColumn(self) -> str:
