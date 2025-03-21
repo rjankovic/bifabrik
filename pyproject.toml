@@ -1,13 +1,14 @@
-[tool.poetry]
+[project]
 name = "bifabrik"
 version = "0.12.16"
 description = "Microsoft Fabric ETL toolbox"
-authors = ["Radovan Jankovič <jankovic.rj@gmail.com>"]
+authors = [{name = "Radovan Jankovič", email =  "jankovic.rj@gmail.com"}]
 license = "MIT"
 readme = "README.md"
 homepage = "https://rjankovic.github.io/bifabrik/"
 documentation = "https://rjankovic.github.io/bifabrik/"
 repository = "https://github.com/rjankovic/bifabrik/"
+changelog = "https://github.com/rjankovic/bifabrik/blob/main/CHANGELOG.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
