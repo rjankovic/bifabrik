@@ -146,4 +146,23 @@ def restoreToPIT(tables, timestamp):
         print(f"Restoring `{h.tableName}` to version {h.version} ({h.timestamp})")
         rsql = f"RESTORE TABLE `{h.tableName}` TO VERSION AS OF {h.version}"
         spark.sql(rsql)
-        
+
+def wrapInBackticks(table_name):
+    '''Wraps the parts of a table name in backticks.
+    
+    Examples:
+    table1 -> `table1` 
+    db.table1 -> `db`.`table1` 
+    `table1` -> `table1`
+    '''
+    # Split the input into parts using "."
+    parts = table_name.split(".")
+
+    # Add backticks to each part if not already wrapped
+    wrapped_parts = [
+        part if part.startswith("`") and part.endswith("`") else f"`{part}`"
+        for part in parts
+    ]
+
+    # Join the parts back together with "."
+    return ".".join(wrapped_parts)

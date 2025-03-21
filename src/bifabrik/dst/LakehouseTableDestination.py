@@ -441,7 +441,8 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
                 writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_view_name}')
                 
-                time.sleep(10)
+                self.__ensureTableIsReady(src_view_name)
+                #time.sleep(10)
         else:
             self.__data.createOrReplaceTempView(src_view_name)
         
@@ -547,7 +548,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_temp_table_name_withid}')
             
             # waiting for the new table to "come online"
-            time.sleep(10)
+            
+            self.__ensureTableIsReady(src_temp_table_name_withid)
+            #time.sleep(10)
 
             #uni_df.createOrReplaceTempView(src_temp_table_name_withid)
             #input_row_count = uni_df.count()
@@ -592,7 +595,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                 # print(f'created {src_temp_table_name_withid}')
                 
                 # waiting for the new table to "come online"
-                time.sleep(10)
+                
+                self.__ensureTableIsReady(src_temp_table_name_withid)
+                #time.sleep(10)
                 
         lgr.info('checking for duplicates')
         # print(str(datetime.now()))
@@ -649,6 +654,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             
             self._spark.sql(merge_sql_insert_basic)
             
+            self._spark.sql(f'DROP TABLE IF EXISTS {src_view_name}')
             self._spark.sql(f'DROP TABLE IF EXISTS {src_temp_table_name_withid}')
 
             return
@@ -672,7 +678,9 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         tgt_df.write.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{tgt_temp_table_name}')
 
         # waiting for the new tables to "come online"
-        time.sleep(10)
+        
+        self.__ensureTableIsReady(tgt_temp_table_name)
+        #time.sleep(10)
 
         
         df_tgt_temp = self._spark.read.format('delta').load(f'Tables/{tgt_temp_table_name}')
@@ -974,6 +982,30 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
         # if df_f.count() > 0:
         #     return True
         # return False
+
+    def __ensureTableIsReady(self, tableName: str):
+        """After a delta table is written to the Tables/ folder in a lakehouse, 
+        it can take a few seconds before it is available in SparkSQL.
+        This function waits for up to 28 seconds (4 + 8 + 16) checking if the table is SQL-ready.
+        When it's ready, the function returns. If it isn't, an exception is thrown.
+
+        table_name is either a simple name or [lakehouse.table_name]
+        """
+
+        table_name_wrapped = tu.wrapInBackticks(tableName)
+        wait_time = 2
+        total_wait = 0
+        while wait_time <= 16:
+            try:
+                df = self._spark.sql(f'SELECT * FROM {table_name_wrapped} LIMIT 0')
+                return
+            except Exception as e:
+                if wait_time == 16:
+                    print(f'The table {table_name_wrapped} still not found after {total_wait} seconds')
+                    raise e
+            wait_time = wait_time * 2
+            time.sleep(wait_time)
+            total_wait = total_wait + wait_time
 
     def __filterByWatermark(self):
         if not(self.__tableExists):
