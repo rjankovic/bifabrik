@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.12.0 (2025-03-22)
+ - Removing accents from column names
+ - Better merge performance for large tables (materialization and partitioning)
+ - Semantic link API congestion prevention (when gathering lakehouse metadata)
+
 ## v0.12.0 (2025-02-09)
  - Partitions support
  - Update date setting for merge (SCD1) tables
