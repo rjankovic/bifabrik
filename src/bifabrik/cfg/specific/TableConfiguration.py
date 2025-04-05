@@ -28,6 +28,7 @@ class TableConfiguration(Configuration):
         self.__scd2SoftDelete = False
         self.__scd2ExcludeColumns = []
         self.__partitionByColumns = []
+        self.__ensureTableIsReadyAfterSaving = True
 
     @CfgProperty
     def watermarkColumn(self) -> str:
@@ -278,3 +279,13 @@ class TableConfiguration(Configuration):
             self.__partitionByColumns = val.split(',')
         else:
             self.__partitionByColumns = val
+    
+    @CfgProperty
+    def ensureTableIsReadyAfterSaving(self) -> bool:
+        """It can take a few seconds before a newly created table is available in SparkSQL - with this option, the data saving pipeline waits for the table to be available
+        default True
+        """
+        return self.__ensureTableIsReadyAfterSaving
+    @ensureTableIsReadyAfterSaving.setter(key='ensureTableIsReadyAfterSaving')
+    def ensureTableIsReadyAfterSaving(self, val):
+        self.__ensureTableIsReadyAfterSaving = val

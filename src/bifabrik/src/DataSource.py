@@ -30,6 +30,13 @@ class DataSource(Task):
         """
         return self.toLakehouseTable(targetTableName, targetSchemaName)
     
+    def toTempTable(self) -> LakehouseTableDestination:
+        """Savees the data to a temp table with a unique name (generated from the ID of the pipeline).
+        """
+        temp_table_id = self._pipeline._id.replace('-', '')
+        temp_table_name = f'temp_{temp_table_id}'
+        return self.toLakehouseTable(targetTableName = temp_table_name)
+    
     def toLakehouseTable(self, targetTableName: str, targetSchemaName: str = 'dbo') -> LakehouseTableDestination:
         """Sets the lakehouse destination table name.
         The name can contain a schema as in 'schema.table' or you can specify the schema in the targetSchemaName parameter.

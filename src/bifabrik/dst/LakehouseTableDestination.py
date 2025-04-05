@@ -146,6 +146,12 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         else:
             raise Exception(f'Unrecognized increment type: {incrementMethod}')
 
+        if self.__tableConfig.ensureTableIsReadyAfterSaving:
+            if not self.__data.rdd.isEmpty():
+                table_name_full_check_existence = f"{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}`{self.__targetTableName}`"
+                self.__ensureTableIsReady(table_name_full_check_existence)
+
+        self._result = self.__targetTableName
         self._completed = True
         
     def __list_diff(self, first_list, second_list):
