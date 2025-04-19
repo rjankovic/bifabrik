@@ -378,20 +378,23 @@ def mapLakehouses(workspaceId: str, workspaceName: str):
                 lhs = notebookutils.mssparkutils.lakehouse.list(workspaceId)
 
     for lh in lhs:
-        l = LakehouseMeta()
-        l.lakehouseName = lh.displayName
-        l.lakehouseId = lh.id
-        l.workspaceName = workspaceName
-        l.workspaceId = workspaceId
-        l.basePath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lh.id}"
+        try:
+            l = LakehouseMeta()
+            l.lakehouseName = lh.displayName
+            l.lakehouseId = lh.id
+            l.workspaceName = workspaceName
+            l.workspaceId = workspaceId
+            l.basePath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{lh.id}"
 
-        dbo_path = f"{l.basePath}/Tables/dbo"
-        if notebookutils.mssparkutils.fs.exists(dbo_path):
-            l.schemasEnabled = True
-        else:
-            l.schemasEnabled = False
+            dbo_path = f"{l.basePath}/Tables/dbo"
+            if notebookutils.mssparkutils.fs.exists(dbo_path):
+                l.schemasEnabled = True
+            else:
+                l.schemasEnabled = False
 
-        lm.addLakehouse(l)
+            lm.addLakehouse(l)
+        except Exception as ex:
+            print(f'Error when loading lakehouses from {workspaceName}: {ex}')
     return lm
 
 def mapWorkspacesUsingSempy():

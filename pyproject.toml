@@ -1,6 +1,6 @@
 [project]
 name = "bifabrik"
-version = "0.13.4"
+version = "0.13.5"
 description = "Microsoft Fabric ETL toolbox"
 authors = [{name = "Radovan Jankovič", email =  "jankovic.rj@gmail.com"}]
 license = "MIT"
