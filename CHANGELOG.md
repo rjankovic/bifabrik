@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.14.0 (2025-04-20)
+ - Temporary table support
+ - `ensureTableIsReadyAfterSaving` option for lakehouse tables enabled by default
+ - Better error handling when loading lakehouse metadata
+
 ## v0.13.0 (2025-03-22)
  - Removing accents from column names
  - Better merge performance for large tables (materialization and partitioning)
