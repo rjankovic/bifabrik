@@ -327,6 +327,28 @@ bif.fromSql('''
 
 Also, some of these [table utilities](util_table.md) can come in handy.
 
+## Temporary tables
+
+Sometimes, you need to save your intermediate results in a temporary table. The issue is that SparkSQL doesn't really have the concept of temporary tables. You can, instead, just save the data to an "ordinary" table, but that can bring about a specific issue. Let's say you have different notebooks and each of those saves data to the `temp_data` table before processing it further. What happens then if your notebooks run in parallel? The notebooks will be overwriting the table between each other.
+
+To prevent this, `bifabrik` offers quasi-temporary tables. This creates a normal table with a randomly generated unique name (containing a GUID) and returns the name of the new table. For this, use `toTempTable()` instead of `toTable()`:
+
+```python
+temp_table_name = \
+    bif.fromSql('SELECT * FROM vw_temp_source') \
+    .toTempTable() \
+    .run()
+```
+
+The table name can then be referenced in python like this:
+
+```python
+spark.sql(f'''
+SELECT *
+FROM `{temp_table_name}`
+''')
+```
+
 ## Everything all at once
 
 An example combining different aspects of the configuration
