@@ -387,7 +387,7 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
             # add missing column to source df
             elif r.new_name == '':
                 lgr.info(f'Adding empty column {r.old_name} to source table')
-                self.__data = self.__data.withColumn(r.old_name, lit(None))
+                self.__data = self.__data.withColumn(r.old_name, lit(0))
             # this shouldnot really happen in the solvable set
             else:
                 raise Exception(f'unexpected schema difference: {r}')
