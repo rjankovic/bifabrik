@@ -13,6 +13,7 @@ from bifabrik.cfg.specific.TableConfiguration import TableConfiguration
 from bifabrik.cfg.specific.SecurityConfiguration import SecurityConfiguration
 from bifabrik.cfg.specific.ValidationConfiguration import ValidationConfiguration
 from bifabrik.cfg.specific.JdbcConfiguration import JdbcConfiguration
+from bifabrik.cfg.specific.LineageConfiguration import LineageConfiguration
 
 import notebookutils.mssparkutils.fs
 
@@ -41,6 +42,7 @@ class CompleteConfiguration(ConfigContainer):
         self.__security = SecurityConfiguration()
         self.__validation = ValidationConfiguration()
         self.__jdbc = JdbcConfiguration()
+        self.__lineage = LineageConfiguration()
         super().__init__()
         
 
@@ -102,6 +104,11 @@ class CompleteConfiguration(ConfigContainer):
     def jdbc(self) -> JdbcConfiguration:
         """JDBC configuration"""
         return self.__jdbc
+    
+    @property
+    def lineage(self) -> LineageConfiguration:
+        """Data lineage configuration"""
+        return self.__lineage
     
     def serialize(self) -> str:
         """Serializes the configuration to a string"""
