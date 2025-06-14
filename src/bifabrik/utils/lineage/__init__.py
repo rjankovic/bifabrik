@@ -1,6 +1,8 @@
 """Data lineage module
 Track and save data lineage information for dataframes saved to the lakehouse as tables.
 """
+import notebookutils.mssparkutils
+
 import time
 from datetime import datetime
 from typing import List
@@ -10,6 +12,8 @@ from typing import Set
 from typing import Dict
 import traceback
 
+import bifabrik.utils.fsUtils as fsu
+
 from bifabrik.utils.lineage.LineageContext import LineageContext
 from bifabrik.utils.lineage.LineageExpressionId import LineageExpressionId
 from bifabrik.utils.lineage.DataFrameLineage import DataFrameLineage
@@ -18,9 +22,43 @@ from bifabrik.utils.lineage.LineageDependency import LineageDependency
 from bifabrik.utils.lineage.LineageSerializationHelper import LineageSerializationHelper
 from bifabrik.utils.lineage.VisitorPattern import visit_node
 
-def save_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = None, saveFolder = None):
-    pass
+"""Save dataframe lineage information to the lakehouse as JSON."""
+def save_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = None, outputFolder = None):
+    current_lakehouse = fsu.currentLakehouse()
+    if current_lakehouse is None:
+        print('Warning: No default lakehouse is not set, skipping data lineage')
+        return
+    
+    print('getting lineage information for dataframe')
+    df_lineage = get_df_lineage(df, targetTableName, targetLakehouseName)
+    if df_lineage is None:
+        # this should never happen, but just in case
+        return
+    print('OK')
 
+    out_lakehouse_name = df_lineage.context.targetLakehouseName
+    out_table_name = df_lineage.context.targetTableName
+    if out_table_name is None:
+        out_table_name = '__UNKNOWN__'
+    
+    ts = df_lineage.context.executionDateTime
+    ts_formatted = formatted = ts.strftime("%Y%m%d_%H%M%S") + f"_{ts.microsecond // 1000:03d}"
+    file_name = f"{out_lakehouse_name}_{out_table_name}_{ts_formatted}.json"
+
+    print(f'Saving lineage information for {out_lakehouse_name}.{out_table_name} to {file_name}')
+    logging_lh_path = current_lakehouse['basePath']
+
+    targetFolderPath = fsu.normalizeAbfsFilePath(outputFolder, lakehouseBasePath = logging_lh_path)
+    path = f'{outputFolder}/{file_name}'
+    targetFilePath = fsu.normalizeAbfsFilePath(path, lakehouseBasePath = logging_lh_path)
+
+    print(f'Lineage file path: {targetFilePath}')
+    notebookutils.mssparkutils.fs.mkdirs(targetFolderPath)
+    lineage_json = df_lineage.to_json()
+    notebookutils.mssparkutils.fs.put(targetFilePath, lineage_json, True)
+    print(f'Lineage information saved to {targetFilePath}')
+
+"""Get dataframe lineage information as an object from the analyzed plan of the dataframe."""
 def get_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = None) -> DataFrameLineage:
     query_execution = df._jdf.queryExecution()
     analyzed_plan = query_execution.analyzed()

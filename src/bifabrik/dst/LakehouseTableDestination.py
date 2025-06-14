@@ -14,6 +14,7 @@ import notebookutils.mssparkutils.fs
 from bifabrik.utils import tableUtils as tu
 import bifabrik.dst.CommonDestinationUtils as commons
 from unidecode import unidecode
+import bifabrik.utils.lineage as lineage_util
 
 class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
     """Saves data to a lakehouse table.
@@ -152,6 +153,14 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
                 self.__ensureTableIsReady(table_name_full_check_existence)
 
         self._result = self.__targetTableName
+
+        #save data lineage
+        lineage_config = mergedConfig.lineage
+        if lineage_config is not None and lineage_config.lineageEnabled:
+            self.__logger.info(f'Saving data lineage for table {self.__targetTableName} to {lineage_config.lineageFolder}')
+            lineage_output_folder = lineage_config.lineageFolder
+            lineage_util.save_df_lineage(input, targetTableName = self.__targetTableName, targetLakehouseName = self.__lhMeta.lakehouseName, outputFolder = lineage_output_folder)
+
         self._completed = True
         
     def __list_diff(self, first_list, second_list):
