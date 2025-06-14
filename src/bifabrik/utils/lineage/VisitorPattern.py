@@ -9,6 +9,10 @@ from typing import Dict
 Add any dependencies discovered in this node to the list
 Return expression of sub-expressions
 """
+"""
+Add any dependencies discovered in this node to the list
+Return expression of sub-expressions
+"""
 def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
     res_expressions: list[LineageExpressionId] = []
     #try:
@@ -19,22 +23,22 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
     #class_name_5 = node.getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass().getName()
 
     
-    #####################
+    ####################
     # print('VISITING NODE')
     # print(class_name_1)
     # print(class_name_2)
     # print(class_name_3)
-    #####################
+    ####################
 
 
     #print(class_name_4)
     #print(class_name_5)
     
     #####################
-    #print(node)
+    # print(node)
     #####################
     
-    
+
 
     # optimistic expectations
     handled = True
@@ -53,6 +57,12 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             return visit_unary_expression(node, dependencies)
         case "org.apache.spark.sql.catalyst.expressions.Attribute":
             return visit_attribute(node, dependencies)
+        case "org.apache.spark.sql.catalyst.plans.logical.WithCTE":
+            return visit_cte(node, dependencies)
+        case "org.apache.spark.sql.catalyst.plans.logical.CTERelationRef":
+            return visit_cte_relation_ref(node, dependencies)
+        case "org.apache.spark.sql.catalyst.plans.logical.Union":
+            return visit_union(node, dependencies)
         case _:
             handled = False
             
@@ -80,6 +90,7 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             #print(class_name_1)
             #print(class_name_2)
             child_node = node.child()
+        
             return visit_node(child_node, dependencies)
         case _:
             handled = False
@@ -105,6 +116,12 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             handled = False
 
     return res_expressions
+    # ... return the IDs that were discovered while visiting this
+    # except Exception as e:
+    #     # TODO
+    #     print('EXCEPTION')
+    #     print(e)
+    #     return res_expressions
     # ... return the IDs that were discovered while visiting this
 
 
@@ -236,6 +253,26 @@ def visit_logical_relation(node, dependencies : list[LineageDependency]) -> list
 
     return res_expressions
 
+def visit_cte_relation_ref(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
+    #print('VISITING CTE REF')
+    
+    res_expressions: list[LineageExpressionId] = []
+
+    r = node
+
+    r_pa = r.producedAttributes()
+    r_pai = r_pa.toIndexedSeq()
+    
+    r_pal = [r_pai.apply(i) for i in range(r_pai.size())]
+
+    # kind of redundant, these expressions appear in the CTE definition already
+    for pa in r_pal:
+        #print(pa)
+        expr_id = LineageExpressionId(pa)
+        res_expressions.append(expr_id)
+
+    return res_expressions
+
 
 def visit_unary_expression(node, dependencies : list[LineageDependency]) -> List[LineageExpressionId]:
     #print('VISITING UNARY EXPRESSION')
@@ -364,5 +401,48 @@ def visit_aggregate(node, dependencies : list[LineageDependency]) -> List[Lineag
 
 
     #aggregates.append(node)
+
+    return res_expressions
+
+def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
+    #TODO: this is incomplete! only the first query in the UNION is mapped correctly
+    
+    #print('VISITING UNION')
+    #print(node.byName())
+    class_name_1 = node.getClass().getName()
+    #print(class_name_1)
+
+    #print(node)
+
+    res_expressions: list[LineageExpressionId] = []
+
+    #help(node)
+
+
+    children = node.children().toIndexedSeq()
+    children_python = [children.apply(i) for i in range(children.size())]
+    
+    for ch in children_python:
+        #print('UNION CHILD')
+        #print(ch)
+        #print(ch.getClass().getName())
+        child_expressions = visit_node(ch, dependencies)
+        res_expressions.extend(child_expressions)
+
+    return res_expressions
+
+def visit_cte(node, dependencies : list[LineageDependency]) -> List[LineageExpressionId]:
+    #print('VISITING CTE')
+    
+    #help(node)
+    #class_name_1 = node.getClass().getName()
+    res_expressions: list[LineageExpressionId] = []
+
+    children = node.children().toIndexedSeq()
+    children_python = [children.apply(i) for i in range(children.size())]
+    
+    for ch in children_python:
+        child_expressions = visit_node(ch, dependencies)
+        res_expressions.extend(child_expressions)
 
     return res_expressions

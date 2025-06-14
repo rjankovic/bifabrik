@@ -29,34 +29,34 @@ def save_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = 
         print('Warning: No default lakehouse is not set, skipping data lineage')
         return
     
-    print('getting lineage information for dataframe')
+    #print('getting lineage information for dataframe')
     df_lineage = get_df_lineage(df, targetTableName, targetLakehouseName)
     if df_lineage is None:
         # this should never happen, but just in case
         return
-    print('OK')
+    #print('OK')
 
     out_lakehouse_name = df_lineage.context.targetLakehouseName
     out_table_name = df_lineage.context.targetTableName
     if out_table_name is None:
-        out_table_name = '__UNKNOWN__'
+        out_table_name = '__UNKNOWN_TABLE__'
     
     ts = df_lineage.context.executionDateTime
     ts_formatted = formatted = ts.strftime("%Y%m%d_%H%M%S") + f"_{ts.microsecond // 1000:03d}"
     file_name = f"{out_lakehouse_name}_{out_table_name}_{ts_formatted}.json"
 
-    print(f'Saving lineage information for {out_lakehouse_name}.{out_table_name} to {file_name}')
+    #print(f'Saving lineage information for {out_lakehouse_name}.{out_table_name} to {file_name}')
     logging_lh_path = current_lakehouse['basePath']
 
     targetFolderPath = fsu.normalizeAbfsFilePath(outputFolder, lakehouseBasePath = logging_lh_path)
     path = f'{outputFolder}/{file_name}'
     targetFilePath = fsu.normalizeAbfsFilePath(path, lakehouseBasePath = logging_lh_path)
 
-    print(f'Lineage file path: {targetFilePath}')
+    #print(f'Lineage file path: {targetFilePath}')
     notebookutils.mssparkutils.fs.mkdirs(targetFolderPath)
     lineage_json = df_lineage.to_json()
     notebookutils.mssparkutils.fs.put(targetFilePath, lineage_json, True)
-    print(f'Lineage information saved to {targetFilePath}')
+    #print(f'Lineage information saved to {targetFilePath}')
 
 """Get dataframe lineage information as an object from the analyzed plan of the dataframe."""
 def get_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = None) -> DataFrameLineage:
