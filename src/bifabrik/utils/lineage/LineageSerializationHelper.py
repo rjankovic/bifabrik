@@ -1,3 +1,6 @@
+from bifabrik.utils.lineage.LineageExpressionId import LineageExpressionId
+from bifabrik.utils.lineage.LineageTableColumnId import LineageTableColumnId
+
 class LineageSerializationHelper:
     @classmethod
     def deserialize_class(cls, data):
