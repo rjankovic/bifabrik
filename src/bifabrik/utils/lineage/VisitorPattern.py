@@ -7,11 +7,7 @@ from typing import Dict
 
 """
 Add any dependencies discovered in this node to the list
-Return expression of sub-expressions
-"""
-"""
-Add any dependencies discovered in this node to the list
-Return expression of sub-expressions
+Return list of sub-expressions
 """
 def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
     res_expressions: list[LineageExpressionId] = []
