@@ -403,27 +403,53 @@ def visit_aggregate(node, dependencies : list[LineageDependency]) -> List[Lineag
 def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
     #TODO: this is incomplete! only the first query in the UNION is mapped correctly
     
-    #print('VISITING UNION')
-    #print(node.byName())
+    # print('VISITING UNION')
+    # print(node)
     class_name_1 = node.getClass().getName()
     #print(class_name_1)
 
-    #print(node)
-
     res_expressions: list[LineageExpressionId] = []
-
-    #help(node)
-
 
     children = node.children().toIndexedSeq()
     children_python = [children.apply(i) for i in range(children.size())]
     
+    union_output_columns = []
+
+    first_child = True
     for ch in children_python:
-        #print('UNION CHILD')
-        #print(ch)
-        #print(ch.getClass().getName())
+        # print('UNION CHILD')
+        # print(ch)
+        # print(ch.getClass().getName())
+        
+        project_list = get_project_list_python(ch.projectList())
+
+        i = 0
+        for proj in project_list:
+            expr_id = LineageExpressionId(proj)
+            
+            sub_references = visit_node(proj, dependencies)
+            for sub_ref in sub_references:
+                #print('DEPENDENCY FROM UNION FIRST CHILD')
+                dependencies.append(LineageDependency(source = sub_ref, target = expr_id))
+
+            res_expressions.append(expr_id)
+            res_expressions.extend(sub_references)
+
+            
+            # the first query in the union sets the output columns
+            # all other queries are set as "inputs" of these output columns
+
+            if first_child:
+                union_output_columns.append(expr_id)
+            else:
+                dependencies.append(LineageDependency(source = expr_id, target = union_output_columns[i]))
+            
+            i = i + 1
+            
         child_expressions = visit_node(ch, dependencies)
         res_expressions.extend(child_expressions)
+        first_child = False
+
 
     return res_expressions
 

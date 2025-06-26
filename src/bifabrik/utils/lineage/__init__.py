@@ -167,10 +167,14 @@ def get_df_lineage(df, targetTableName: str = None, targetLakehouseName: str = N
             
             # in some cases, there is no dependency - the column goes straight from the table (SELECT C FROM TABLE)
             # for those direct outputs, add a dependency to get the primary logical relation reference (using the expression ranking)
-            if len(dependency_lists[output.id]) == 0:
-                if output.id in expressions_cleared_by_id:
-                    primary_expression = expressions_cleared_by_id[output.id]
-                    dependency_lists[output.id].append(primary_expression)
+            
+            # however, do not preface this with the following condition
+            ### if len(dependency_lists[output.id]) == 0:
+            # wince this "direct dependency" can occur in a UNION as well, where cle column already has a source, but not the one from the first query of the UNION
+            
+            if output.id in expressions_cleared_by_id:
+                primary_expression = expressions_cleared_by_id[output.id]
+                dependency_lists[output.id].append(primary_expression)
                     #print(f'--- {primary_expression}')
 
             output_columns.append(DataFrameLineageOutputColumn(output, dependency_lists[output.id]))
