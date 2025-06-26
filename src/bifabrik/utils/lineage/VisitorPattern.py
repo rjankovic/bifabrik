@@ -410,16 +410,46 @@ def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExp
 
     res_expressions: list[LineageExpressionId] = []
 
-    children = node.children().toIndexedSeq()
-    children_python = [children.apply(i) for i in range(children.size())]
+    children_python = [node]
+
+    unwrapped = False
+    while not unwrapped:
+        unwrapped = True
+        for i in range(0, len(children_python)):
+            ch = children_python[i]
+            child_type = ch.getClass().getName()
+            if child_type == "org.apache.spark.sql.catalyst.plans.logical.Union":
+                #print('UNION IN UNION')
+                unwrapped = False
+                ch_children = ch.children().toIndexedSeq()
+                ch_children_python = [ch_children.apply(i) for i in range(ch_children.size())]
+                children_python[i:i+1] = ch_children_python
+                #print('RECHECK')
+                break
+
+    # children = node.children().toIndexedSeq()
+    # children_python = [children.apply(i) for i in range(children.size())]
     
+# case "org.apache.spark.sql.catalyst.plans.logical.Union":
+#             return visit_union(node, dependencies)
+
     union_output_columns = []
+
+
+    # print(f'union children: {len(children_python)}')
+    
+    # for ch in children_python:
+    #     print('UNION CHILD')
+    #     print(ch)
+    #     print(ch.getClass().getName())
+    #     print(ch.getClass().getSuperclass().getName())
 
     first_child = True
     for ch in children_python:
         # print('UNION CHILD')
         # print(ch)
         # print(ch.getClass().getName())
+        # print(ch.getClass().getSuperclass().getName())
         
         project_list = get_project_list_python(ch.projectList())
 
