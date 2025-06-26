@@ -121,18 +121,12 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
     # ... return the IDs that were discovered while visiting this
 
 
-
-def visit_project_node(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
-    
-    #print('VISITING PROJECTION')
-    
-    project_list = node.projectList()
-
-    #print('PROJECT LIST')
-
+"""Get the project items as a python list from the scala project node
+"""
+def get_project_list_python(project_list):
     class_name_1 = project_list.getClass().getName()
-    #class_name_2 = project_list.getClass().getSuperclass().getName()
-    #class_name_3 = project_list.getClass().getSuperclass().getSuperclass().getName()
+    class_name_2 = project_list.getClass().getSuperclass().getName()
+    class_name_3 = project_list.getClass().getSuperclass().getSuperclass().getName()
 
     # the project list can be either a list or a vector - get projection items in each case
     if class_name_1 == 'scala.collection.immutable.Vector':
@@ -147,8 +141,6 @@ def visit_project_node(node, dependencies : list[LineageDependency]) -> list[Lin
     #project_list_iterator = project_list.productIterator().toIndexedSeq()
     #project_list_python_outer = [project_list_iterator.apply(i) for i in range(project_list_iterator.size())]
 
-    res_expressions: list[LineageExpressionId] = []
-
     project_list_python = []
     for proj_outer in project_list_python_outer:
         proj_outer_class_name = proj_outer.getClass().getName()
@@ -161,15 +153,27 @@ def visit_project_node(node, dependencies : list[LineageDependency]) -> list[Lin
                 project_list_python.append(proj_elem)
         else:
             project_list_python.append(proj_outer)
+    
+    return project_list_python
 
+def visit_project_node(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
+    
+    #print('VISITING PROJECTION')
+    
+    project_list = node.projectList()
+    res_expressions: list[LineageExpressionId] = []
+
+    #print('PROJECT LIST')
+
+    project_list_python = get_project_list_python(project_list)
 
     # print('PROJECT ITEMS')
     # for proj in project_list_python:
     #     print(proj)
 
     for proj in project_list_python:    
-        #proj_class_name = proj.getClass().getName()
-        #proj_class_name2 = proj.getClass().getSuperclass().getName()
+        proj_class_name = proj.getClass().getName()
+        proj_class_name2 = proj.getClass().getSuperclass().getName()
         
         expr_id = LineageExpressionId(proj)
         
@@ -195,7 +199,6 @@ def visit_project_node(node, dependencies : list[LineageDependency]) -> list[Lin
     #res_references.update(child_refs)
 
     return res_expressions
-
 
 def visit_join_node(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
     #print('VISITING JOIN')
