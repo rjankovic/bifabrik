@@ -106,6 +106,8 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             return visit_node(child_node, dependencies)
         case "org.apache.spark.sql.catalyst.expressions.BinaryOperator":
             return visit_binary_operator(node, dependencies)
+        case "org.apache.spark.sql.catalyst.expressions.BinaryExpression":
+            return visit_binary_operator(node, dependencies)
         case "org.apache.spark.sql.catalyst.expressions.Expression":
             return visit_expression(node, dependencies)
         case "org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction":
@@ -369,13 +371,18 @@ def visit_attribute(node, dependencies : list[LineageDependency]) -> List[Lineag
 
 
 def visit_binary_operator(node, dependencies : list[LineageDependency]) -> List[LineageExpressionId]:
-    #print('VISITING BINARY OPERATOR')
+    # print('VISITING BINARY OPERATOR')
     
-    class_name_1 = node.getClass().getName()
+    #class_name_1 = node.getClass().getName()
     res_expressions: list[LineageExpressionId] = []
     
     l = node.left()
     r = node.right()
+
+    # print('L')
+    # print(l)
+    # print('R')
+    # print(r)
 
     child_expressions_left = visit_node(l, dependencies)
     child_expressions_right = visit_node(r, dependencies)
@@ -471,12 +478,32 @@ def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExp
 
     first_child = True
     for ch in children_python:
+        ch_class = ch.getClass().getName()
+        ch_super_class = ch.getClass().getSuperclass().getName()
+        
         # print('UNION CHILD')
         # print(ch)
-        # print(ch.getClass().getName())
-        # print(ch.getClass().getSuperclass().getName())
-        
-        project_list = get_project_list_python(ch.projectList())
+        # print(ch_class)
+        # print(ch_super_class)
+
+        # UNION children can be projections or aggregates
+        if ch_super_class == "org.apache.spark.sql.catalyst.plans.logical.AggregateLike":
+            # print('AGGREGATE IN UNION')
+            a_seq = ch.aggregateExpressions()
+            aggregate_list_iterator = a_seq.toIndexedSeq()
+            aggregate_list_python = [aggregate_list_iterator.apply(i) for i in range(aggregate_list_iterator.size())]
+            project_list = aggregate_list_python
+        elif ch_class == "org.apache.spark.sql.catalyst.plans.logical.Distinct":
+            #help(ch)
+            ch_ch = ch.child()
+            ch_ch_class = ch_ch.getClass().getName()
+            # print(ch_ch_class)
+            project_list = get_project_list_python(ch_ch.projectList())
+            
+        # org.apache.spark.sql.catalyst.plans.logical.Distinct
+        # org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+        else: 
+            project_list = get_project_list_python(ch.projectList())
 
         i = 0
         for proj in project_list:
