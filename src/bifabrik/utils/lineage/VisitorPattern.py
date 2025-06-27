@@ -59,6 +59,8 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             return visit_cte_relation_ref(node, dependencies)
         case "org.apache.spark.sql.catalyst.plans.logical.Union":
             return visit_union(node, dependencies)
+        case "org.apache.spark.sql.execution.LogicalRDD":
+            return visit_logical_rdd(node, dependencies)
         case _:
             handled = False
             
@@ -248,6 +250,26 @@ def visit_logical_relation(node, dependencies : list[LineageDependency]) -> list
         res_expressions.append(expr_id)
         #print(expr_id)
         #print(pa.getClass().getName())
+
+
+    return res_expressions
+
+def visit_logical_rdd(node, dependencies : list[LineageDependency]) -> list[LineageExpressionId]:
+    # print('VISITING LOGICAL RDD')
+    
+    res_expressions: list[LineageExpressionId] = []
+
+    r = node
+    r_pa = r.producedAttributes()
+    r_pai = r_pa.toIndexedSeq()
+    
+    r_pal = [r_pai.apply(i) for i in range(r_pai.size())]
+
+    for pa in r_pal:
+        expr_id = LineageExpressionId(pa)
+        res_expressions.append(expr_id)
+        # print(expr_id)
+        # print(pa.getClass().getName())
 
 
     return res_expressions
