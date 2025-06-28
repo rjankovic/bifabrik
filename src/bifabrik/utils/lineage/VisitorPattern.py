@@ -132,11 +132,25 @@ def get_project_list_python(project_list):
     class_name_2 = project_list.getClass().getSuperclass().getName()
     class_name_3 = project_list.getClass().getSuperclass().getSuperclass().getName()
 
+    # print('PROJECT LIST WRAP')
+    # print(class_name_1)
+    # print(class_name_2)
+    # print(class_name_3)
+
     # the project list can be either a list or a vector - get projection items in each case
     if class_name_1 == 'scala.collection.immutable.Vector':
         #print('PROJECT VECTOR')
         project_list_python_outer = [project_list.apply(i) for i in range(project_list.size())]
+    elif class_name_3 == 'scala.collection.mutable.AbstractSeq':
+        project_list_python_outer = [project_list.apply(i) for i in range(project_list.size())]
         
+        # print('MUTABLE COLLECTION')
+        # for x in project_list_python_outer:
+        #     print(x)
+
+        # scala.collection.mutable.ArrayBuffer
+        # scala.collection.mutable.AbstractBuffer
+        # scala.collection.mutable.AbstractSeq
     else:
         project_list_iterator = project_list.productIterator().toIndexedSeq()
         project_list_python_outer = [project_list_iterator.apply(i) for i in range(project_list_iterator.size())]
