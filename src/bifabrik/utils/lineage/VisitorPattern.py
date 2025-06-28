@@ -19,20 +19,20 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
     #class_name_5 = node.getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass().getName()
 
     
-    ####################
+    # ###################
     # print('VISITING NODE')
     # print(class_name_1)
     # print(class_name_2)
     # print(class_name_3)
-    ####################
+    # ###################
 
 
     #print(class_name_4)
     #print(class_name_5)
     
-    #####################
+    # ####################
     # print(node)
-    #####################
+    # ####################
     
 
 
@@ -61,6 +61,10 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             return visit_union(node, dependencies)
         case "org.apache.spark.sql.execution.LogicalRDD":
             return visit_logical_rdd(node, dependencies)
+        case "org.apache.spark.sql.catalyst.plans.logical.LocalRelation":
+            return visit_logical_rdd(node, dependencies)
+        case "org.apache.spark.sql.catalyst.plans.logical.OneRowRelation":
+            return visit_logical_rdd(node, dependencies)
         case _:
             handled = False
             
@@ -85,10 +89,13 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
             return visit_aggregate_function(node, dependencies)
         # subqueries
         case "org.apache.spark.sql.catalyst.plans.QueryPlan":
-            #print(class_name_1)
-            #print(class_name_2)
+            
+            # print(node)
+            # print(class_name_1)
+            # print(class_name_2)
+            # print(class_name_3)
+
             child_node = node.child()
-        
             return visit_node(child_node, dependencies)
         case _:
             handled = False
@@ -100,8 +107,12 @@ def visit_node(node, dependencies : list[LineageDependency]) -> list[LineageExpr
     match class_name_3:
         # subqueries
         case "org.apache.spark.sql.catalyst.plans.QueryPlan":
-            #print(class_name_1)
-            #print(class_name_2)
+            
+            # print(node)
+            # print(class_name_1)
+            # print(class_name_2)
+            # print(class_name_3)
+
             child_node = node.child()
             return visit_node(child_node, dependencies)
         case "org.apache.spark.sql.catalyst.expressions.BinaryOperator":
@@ -250,8 +261,21 @@ def visit_logical_relation(node, dependencies : list[LineageDependency]) -> list
 
     r = node
     
-    table_identifier = r.catalogTable().get().identifier().toString()
-    #print(table_identifier)
+    # print('GETTING CATALOG TABLE FROM')
+    # print(node)
+
+
+    catalog_table = r.catalogTable()
+
+    # print('---------------------')
+    str_catalog_table = str(catalog_table)
+    # print(str_catalog_table)
+    # print('---------------------')
+
+    table_identifier: str = None
+    if str_catalog_table != 'None':
+        table_identifier = r.catalogTable().get().identifier().toString()
+        #print(table_identifier)
 
     
 
@@ -262,7 +286,10 @@ def visit_logical_relation(node, dependencies : list[LineageDependency]) -> list
 
     for pa in r_pal:
         #print(pa)
-        expr_id = LineageTableColumnId(pa, table_identifier)
+        if table_identifier is not None:
+            expr_id = LineageTableColumnId(pa, table_identifier)
+        else:
+            expr_id = LineageExpressionId(pa)
         res_expressions.append(expr_id)
         #print(expr_id)
         #print(pa.getClass().getName())
