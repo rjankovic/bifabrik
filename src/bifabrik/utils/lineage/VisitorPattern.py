@@ -485,6 +485,8 @@ def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExp
 
     children_python = [node]
 
+    # convert from nested unions to a list of projections
+
     unwrapped = False
     while not unwrapped:
         unwrapped = True
