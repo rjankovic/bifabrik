@@ -491,6 +491,15 @@ def visit_union(node, dependencies : list[LineageDependency]) -> list[LineageExp
         for i in range(0, len(children_python)):
             ch = children_python[i]
             child_type = ch.getClass().getName()
+            if child_type == "org.apache.spark.sql.catalyst.plans.logical.Deduplicate":
+                unwrapped = False
+                # print('DE-DEDUPLICATE')
+                # print(ch)
+                ch_ch = ch.child()
+                # print('DE-DEDUPLICATE CHILD')
+                # print(ch_ch)
+                children_python[i] = ch_ch
+                break
             if child_type == "org.apache.spark.sql.catalyst.plans.logical.Union":
                 #print('UNION IN UNION')
                 unwrapped = False
