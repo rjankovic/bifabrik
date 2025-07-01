@@ -1,8 +1,10 @@
 from datetime import datetime
 import time
+import json
 import notebookutils.mssparkutils
 
 class LineageContext:
+    """Metadata about the notebook and bifabrik pipeline execution context"""
     def __init__(self, targetLakehouseName: str = None, targetTableName: str = None):
         self.__executionDateTime = time.time()
         self.__workspaceName = notebookutils.mssparkutils.runtime.context['currentWorkspaceName']
@@ -16,39 +18,48 @@ class LineageContext:
 
     @property
     def executionDateTime(self):
+        """Execution time of the bifabrik table load"""
         edt = self.__executionDateTime
         return datetime.fromtimestamp(edt)
 
     @property
     def workspaceName(self):
+        """Workspace in which the load was executed"""
         return self.__workspaceName
 
     @property
     def workspaceId(self):
+        """Workspace in which the load was executed"""
         return self.__workspaceId
 
     @property
     def targetLakehouseName(self):
+        """The target lakehouse to which bifabrik saved this data"""
         return self.__targetLakehouseName
 
     @property
     def targetTableName(self):
+        """The target table to which bifabrik saved this data"""
         return self.__targetTableName
 
     @property
     def notebookName(self):
+        """The name of the notebook in which bifabrik was executed"""
         return self.__notebookName
 
     @property
     def notebookId(self):
+        """The ID of the notebook in which bifabrik was executed"""
         return self.__notebookId
 
     @property
     def userName(self):
+        """The name of the user who executed the bifabrik table load"""
         return self.__userName
 
     @property
     def userId(self):
+        """The ID of the user who executed the bifabrik table load"""
         return self.__userId
 
     # Serialization to JSON
@@ -64,6 +75,9 @@ class LineageContext:
             "userName": self.__userName,
             "userId": self.__userId
         }
+    
+    def __str__(self):
+        return json.dumps(self.to_json_object(), indent=4)
 
     # Deserialization from JSON
     @classmethod

@@ -1,5 +1,52 @@
 """Data lineage module
 Track and save data lineage information for dataframes saved to the lakehouse as tables.
+
+    Example usage
+    -------------
+
+    Notebook 1 - eanble lineage tracking and load a table
+    --------------------------------------------
+    
+    >>> import bifabrik as bif
+    >>>
+    >>> # lineage tracking is disabled by default
+    >>> bif.config.lineage.lineageEnabled = True
+    >>> bif.config.lineage.lineageFolder = 'Files/bifabrik_lineage'
+    >>>
+    >>> # after you have enabled lineage, just load a table as per usual
+    >>> (
+    >>>     bif.fromSql('SELECT User_ID, Email, Alias FROM Bronze.daktela_users')
+    >>>        .toTable('Users_Test')
+    >>>        .destinationLakehouse('Silver')
+    >>>        .run()
+    >>> )
+    
+
+    Notebook 2 - process the lineage files in the folder
+    (each load of a lakehouse table creates a JSON file in the folder)
+    --------------------------------------------
+    
+    >>> from bifabrik.utils.lineage.DataFrameLineage import DataFrameLineage
+    >>> 
+    >>> file_path = f'/lakehouse/default/Files/bifabrik_lineage/Silver_Users_Test_20250701_192332_381.json'
+    >>> with open(file_path, "r") as file:
+    >>>     file_content = file.read()
+    >>>
+    >>> df_lineage = DataFrameLineage.fromJson(file_content)
+    >>>
+    >>> # handle the lineage info as needed
+    >>>
+    >>> # check for parsing errors - this shouldn't happen too often though :)
+    >>> if df_lineage.error is not None:
+    >>>     print(df_lineage.error)
+    >>> 
+    >>> for c in df_lineage.columns:
+    >>>     print(f'output column {c.name}')
+    >>>     for dep in c.tableColumnDependencies:
+    >>>         print(f'--- depends on {dep.dbName}.{dep.tableName}.{dep.name}')
+    >>> 
+    >>> # the context of the bifabrik load execution
+    >>> print(df_lineage.context)
 """
 import notebookutils.mssparkutils
 

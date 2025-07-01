@@ -99,6 +99,7 @@ class DataFrameLineage:
     # Deserialization from JSON
     @classmethod
     def from_json_object(cls, data):
+        """Read a JSON-like object and deserialize a DataFrameLineage object."""
         #data = json.loads(json_str)
         # columns: list[DataFrameLineageOutputColumn], dependencies: list[LineageDependency], expressions: list[LineageExpressionId]
         instance = cls()
@@ -112,8 +113,19 @@ class DataFrameLineage:
         return instance
     
     def to_json(self):
+        """Serialize the DataFrameLineage object to a JSON string."""
+        return json.dumps(self.to_json_object())
+
+    def toJson(self):
+        """Serialize the DataFrameLineage object to a JSON string."""
         return json.dumps(self.to_json_object())
     
     @classmethod
     def from_json(cls, json_string):
+        """Read a JSON string and deserialize a DataFrameLineage object."""
+        return cls.from_json_object(json.loads(json_string))
+    
+    @classmethod
+    def fromJson(cls, json_string):
+        """Read a JSON string and deserialize a DataFrameLineage object. This is the recommended method to use."""
         return cls.from_json_object(json.loads(json_string))
