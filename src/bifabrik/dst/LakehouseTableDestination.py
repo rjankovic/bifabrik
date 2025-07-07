@@ -788,10 +788,10 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
         non_key_historized_columns = self.__list_diff(non_key_columns, self.__scd2ExcludeColumns)
         soft_deletes = self.__tableConfig.scd2SoftDelete
         
-        src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
+        #src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
         # temp table name in case we needed to use the large table approach
         src_temp_table_name_withid = f"temp_src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}_withid"
-        self.__data.createOrReplaceTempView(src_view_name)
+        #self.__data.createOrReplaceTempView(src_view_name)
         db_reference = f'{self.__lhMeta.lakehouseName}.{self.__sechemaRefPrefix}' 
         
         # print('key columns')
@@ -832,7 +832,17 @@ class LakehouseTableDestination(DataDestination, TableDestinationConfiguration):
 
         # will be used throughout the method
         src_view_name = f"src_{self.__lhMeta.lakehouseName}_{self.__targetTableName}"
-        self.__data.createOrReplaceTempView(src_view_name)
+        
+        # materialize the source data to a temp table
+        writer = self.__data.write
+        if self.__partitionsDefined:
+            writer = writer.partitionBy(self.__partitionByColumns)
+        writer.mode("overwrite").format("delta").option("overwriteSchema", "true").save(f'Tables/{src_view_name}')
+        #self.__data.createOrReplaceTempView(src_view_name)
+
+        # waiting for the new table to "come online"
+        self.__ensureTableIsReady(src_view_name)
+        
         end_date_merge_update = f'SET tgt.{row_end_column} = CAST({self.__scd2RowStartTimestamp} AS TIMESTAMP), tgt.{current_row_column} = FALSE'
         #end_date_merge_update = f'UPDATE SET tgt.{row_end_column} = CURRENT_TIMESTAMP(), tgt.{current_row_column} = FALSE'
         
@@ -946,6 +956,8 @@ LEFT JOIN {db_reference}{self.__targetTableName} AS tgt ON {join_condition} AND 
 
         writer.mode("append").format("delta").save(self.__tableLocation)
         #df_src_filtered_with_id.write.mode("append").format("delta").save(self.__tableLocation)
+
+        self._spark.sql(f'DROP TABLE IF EXISTS {src_view_name}')
         
 
     def __snapshotTarget(self):
