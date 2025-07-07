@@ -6,7 +6,36 @@ from bifabrik.utils.lineage.LineageContext import LineageContext
 import json
 
 class DataFrameLineage:
+    """
+    The container for the lineage of a bifabrik pipeline saving data to a lakehouse table, 
+    including its columns, dependencies, expressions, logical plan, and the notebook execution context.
+    When lineage tracking is eanbled in the config, this object is created and saved as a JSON string to the bifabrik.config.lineage.lineageFolder folder in the default lakehouse.
+
+    Example usage
+    -------------
     
+    >>> from bifabrik.utils.lineage.DataFrameLineage import DataFrameLineage
+    >>> 
+    >>> file_path = f'/lakehouse/default/Files/bifabrik_lineage/Silver_Users_Test_20250701_192332_381.json'
+    >>> with open(file_path, "r") as file:
+    >>>     file_content = file.read()
+    >>>
+    >>> df_lineage = DataFrameLineage.fromJson(file_content)
+    >>>
+    >>> # handle the lineage info as needed
+    >>>
+    >>> # check for parsing errors - this shouldn't happen too often though :)
+    >>> if df_lineage.error is not None:
+    >>>     print(df_lineage.error)
+    >>> 
+    >>> for c in df_lineage.columns:
+    >>>     print(f'output column {c.name}')
+    >>>     for dep in c.tableColumnDependencies:
+    >>>         print(f'--- depends on {dep.dbName}.{dep.tableName}.{dep.name}')
+    >>> 
+    >>> # the context of the bifabrik load execution
+    >>> print(df_lineage.context)
+    """
     def __init__(self, columns: list[DataFrameLineageOutputColumn] = [], dependencies: list[LineageDependency] = [], expressions: list[LineageExpressionId] = [], 
         logicalPlan: str = None, targetLakehouseName: str = None, targetTableName: str = None, error = None):
         self.__columns = columns
