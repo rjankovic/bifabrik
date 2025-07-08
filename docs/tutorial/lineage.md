@@ -6,7 +6,7 @@ This will give you column-level mapping from the source to destination tables.
 
 ## How it works
 
-When lineage is enabled, `bifabrik` parses each dataframe that is being saved to a lakehouse. 
+When lineage is enabled, `bifabrik` parses each dataframe (or dataframe coming from a SQL query) that is being saved to a lakehouse. 
 
 The lineage information is then saved as a JSON file in a folder in the default lakehouse where you can process it further.
 
