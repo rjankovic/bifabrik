@@ -29,5 +29,6 @@ A python library to make a BI dev's life easier when working with MS Fabric. Use
    - [File system](/tutorial/util_fs.md)
    - [Logging](/tutorial/util_log.md)
    - [Fabric REST API](/tutorial/util_api.md)
+- [Data lineage](/tutorial/lineage.md)
 
 **[Report an issue / feature request](https://github.com/rjankovic/bifabrik/issues)**  
