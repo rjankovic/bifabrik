@@ -12,7 +12,7 @@ The lineage information is then saved as a JSON file in a folder in the default 
 
 The JSON files can be deserialized to `DataFrameLineage` objects that you can use to traverse the columns and their lineage.
 
-Thus, in a typical scenario you will be running a bunch of notebooks loading different tables with lineage enabled before processing the lineage e.g. once a day.
+Thus, in a typical scenario, you will be running a bunch of notebooks loading different tables with lineage enabled before processing the lineage folder e.g. once a day.
 
 ## Example
 
