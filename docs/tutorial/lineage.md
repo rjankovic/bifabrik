@@ -1,4 +1,4 @@
-# Data Lineage
+# Data lineage
 
 ...
 
