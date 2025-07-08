@@ -1,6 +1,6 @@
 # Data lineage
 
-When you use `bifabrik` to transform data and save data to [lakehouse tables](/tutorial/dst_table.md), you can enable data lineage tracking. 
+When you use `bifabrik` to transform data and save it to [lakehouse tables](/tutorial/dst_table.md), you can enable data lineage tracking. 
 
 This will give you column-level mapping from the source to destination tables.
 
