@@ -104,4 +104,8 @@ The context has the following properties:
 }
 ```
 
+Note that issues can happen when parsing the lineage. In that case, the dependencies will not be contained in the output file. Instead, you will find the error message in the `error` property (as seen above).
+
+If you encounter issues, you can report them through the [GitHub issues page](https://github.com/rjankovic/bifabrik/issues).
+
 [Back](../index.md)
