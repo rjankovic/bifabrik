@@ -104,8 +104,8 @@ The context has the following properties:
 }
 ```
 
-Note that issues can happen when parsing the lineage. In that case, the dependencies will not be contained in the output file. Instead, you will find the error message in the `error` property (as seen above).
-
-If you encounter issues, you can report them through the [GitHub issues page](https://github.com/rjankovic/bifabrik/issues).
+> Note that issues can happen when parsing the lineage. The tool is now focused on transformations between lakehouse tables, so it can run into issues if you, for example, read data from XML or some other format into a dataframe. In that case, the dependencies will not be contained in the output file. Instead, you may find an error message in the `error` property (as seen above).
+> 
+> If you encounter issues or need to track data lineage from sources other than tables, you can report them through the [GitHub issues page](https://github.com/rjankovic/bifabrik/issues).
 
 [Back](../index.md)
