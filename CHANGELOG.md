@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.15.0 (2025-07-09)
+ - Data lineage support
+ - Materializing source data for SCD2 lakehouse destination
+
 ## v0.14.0 (2025-04-20)
  - Temporary table support
  - `ensureTableIsReadyAfterSaving` option for lakehouse tables enabled by default
