@@ -101,8 +101,10 @@ GROUP BY Industry_name_NZSIOC
 # You can refer to a different source warehouse in the query, though.
 ```
 
-### More options
+### Data lineage
+You can track column-level lineage of your data transformations - see [the documentation](https://rjankovic.github.io/bifabrik/tutorial/lineage.html)
 
+### More options
 `bifabrik` can help with incremental loads, identity columns (auto-increment), dataframe transformations and more
 
 For example
