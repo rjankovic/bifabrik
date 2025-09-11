@@ -13,6 +13,7 @@ import time
 from IPython.display import clear_output
 import json
 import pyspark.sql.session as pss
+import requests
 
 __mounts = None
 __defaultWorkspaceId = spf.get_notebook_workspace_id()
@@ -404,12 +405,26 @@ def mapWorkspacesUsingSempy():
     global __defaultLakehouseId
     global __defaultLakehouseRefName
 
-    wss = spf.list_workspaces()
+    #wss = spf.list_workspaces()
     #display(wss)
     #print(type(wss[wss.Type == 'Workspace']))
-    for wix, ws in wss[wss.Type == 'Workspace'].iterrows():
-        lm = mapLakehouses(workspaceId = ws['Id'], workspaceName = ws['Name'])
+    
+    token = notebookutils.mssparkutils.credentials.getToken("https://api.fabric.microsoft.com/")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get("https://api.fabric.microsoft.com/v1/workspaces", headers=headers)
+    wss = resp.json()['value']
+    for ws in wss:
+        if ws['type'] != 'Workspace':
+            continue
+        ws_id = ws['id']
+        ws_name = ws['displayName']
+        lm = mapLakehouses(workspaceId = ws_id, workspaceName = ws_name)
         __workspaceMap.addWorkspace(lm)
+    #     print(ws_id)
+    #     print(ws_name)
+    # for wix, ws in wss[wss.Type == 'Workspace'].iterrows():
+        # lm = mapLakehouses(workspaceId = ws['Id'], workspaceName = ws['Name'])
+        # __workspaceMap.addWorkspace(lm)
 
     if __defaultWorkspaceId not in __workspaceMap:
         mwslm = mapLakehouses(workspaceId = __defaultWorkspaceId, workspaceName = 'My workspace')
