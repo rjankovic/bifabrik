@@ -1,9 +1,7 @@
 # bifabrik
 Microsoft Fabric ETL toolbox
 
-## What is the point?
- - make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks
- - reduce repetitive code by setting preferences in config files
+**The library aims to make BI development in Microsoft Fabric easier by providing a fluent API for common ETL tasks.**
 
 See the **[project page](https://rjankovic.github.io/bifabrik/)** for info on all the features and check the **[changelog](https://github.com/rjankovic/bifabrik/blob/main/CHANGELOG.md)** to see what's new.
 
