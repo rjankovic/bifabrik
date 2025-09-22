@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.15.2 (2025-09-22)
+ - Removed dependency on sempy so that bifabrik can be used in notebooks run by service principals
+
 ## v0.15.0 (2025-07-09)
  - Data lineage support
  - Materializing source data for SCD2 lakehouse destination
