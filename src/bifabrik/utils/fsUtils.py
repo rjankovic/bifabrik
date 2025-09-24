@@ -417,7 +417,13 @@ def mapWorkspacesUsingSempy():
         if ws['type'] != 'Workspace':
             continue
         ws_id = ws['id']
+        
+        ## reconsider later - we want to map all workspaces, not just the default one
+        # if ws_id != __defaultWorkspaceId:
+        #     continue
+
         ws_name = ws['displayName']
+        #print(f'Mapping workspace {ws_name} [{ws_id}]')
         lm = mapLakehouses(workspaceId = ws_id, workspaceName = ws_name)
         __workspaceMap.addWorkspace(lm)
     #     print(ws_id)
@@ -451,8 +457,9 @@ def mapWorkspaces():
         spark.sparkContext._conf.set(map_config_key, serialized)
 
 
+#####
 mapWorkspaces()
-
+#####
 
 def getLakehouseMeta(lakehouse: str, workspace: str = None, suppressNotFound = False) -> LakehouseMeta:
     """
