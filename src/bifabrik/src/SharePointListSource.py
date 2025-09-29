@@ -2,9 +2,9 @@ from bifabrik.src.DataSource import DataSource
 from bifabrik.cfg.SharePointListSourceConfiguration import SharePointListSourceConfiguration
 from pyspark.sql.dataframe import DataFrame
 from bifabrik.utils import log
-from shareplum import Site, folder
-from shareplum import Office365
-from shareplum.site import Version
+#from shareplum import Site, folder
+#from shareplum import Office365
+#from shareplum.site import Version
 import notebookutils.mssparkutils.credentials
 
 class SharePointListSource(DataSource, SharePointListSourceConfiguration):
@@ -33,6 +33,12 @@ class SharePointListSource(DataSource, SharePointListSourceConfiguration):
         return f'SharePointListSource source: {self.__siteUrl}/Lists/{self.__listName}'
     
     def execute(self, input):
+
+        self._result = None
+        self._completed = True
+        raise Exception('SharePointListSource is currently disabled, please use the office365.sharepoint library instead')
+        return
+
         lgr = log.getLogger()
         mergedConfig = self._pipeline.configuration.mergeToCopy(self)
         self.__mergedConfig = mergedConfig

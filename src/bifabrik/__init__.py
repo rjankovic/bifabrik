@@ -38,7 +38,7 @@ from pandas.core.frame import DataFrame as PandasDf
 
 # read version from installed package
 from importlib.metadata import version
-__version__ = version("bifabrik")
+#__version__ = version("bifabrik")
 __loggername__ = "bifabrik_logger"
 
 #import bifabrik

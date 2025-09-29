@@ -3,7 +3,7 @@ File system utilities - glob pattern search, Fabric path normalization and more
 """
 
 import notebookutils.mssparkutils.fs
-import glob2
+#import glob2
 import regex
 import sempy.fabric as spf
 import logging
@@ -161,8 +161,9 @@ def filePatternSearch(path: str, lakehouse: str = None, workspace: str = None, u
                 continue
             subLocations = notebookutils.mssparkutils.fs.ls(location)
             subLocationNames = [fi.name for fi in subLocations]
-            subLocationsFilteredT = glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
-            subLocationsFiltered = [x[0] for x in subLocationsFilteredT] 
+            #subLocationsFilteredT =   glob2.fnmatch.filter(subLocationNames, pathPt, True, False, None)
+            #subLocationsFiltered = [x[0] for x in subLocationsFilteredT] 
+            subLocationsFiltered = [x for x in subLocationNames if regex.match(regex.escape(pathPt).replace(r'\*', '.*').replace(r'\?', '.'), x, regex.IGNORECASE)] 
             #print(subLocationsFiltered)
             subLocationsDict = {}
             for sbl in subLocations:
